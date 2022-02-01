@@ -1,0 +1,45 @@
+/*
+.box {
+    display: grid;
+    grid-template-columns: 100px 350px calc(100% - 450px);
+    align-items: center;
+    margin-top: 5px;
+    !*justify-items: center;*!
+}
+
+.box > div {    !*Количество на странице*!
+    text-align: center;
+    display: flex;
+    justify-content: flex-end;
+}
+.box > div button {    !*Количество на странице*!
+    grid-column: 3 / 3;
+    grid-row: 1 / 1;
+    text-align: center;
+    padding: 8px 0;
+    width: 41px;
+    background-color: #1d1b31;
+    color: white;
+}
+.box > div button.active {    !*Количество на странице*!
+    background-color: #f3f3f3;
+    color: #1d1b31;
+    border: 2px solid #1d1b31;
+}
+.box > div div {    !*Количество на странице*!
+    !*padding: 8px 11px;*!
+    height: 36px;
+    width: 38px;
+    font-size: 28px;
+}
+
+.box > select { !*страницы*!
+    grid-column: 1 / 1;
+    grid-row: 1 / 1;
+    width: 70px;
+    padding: 5px 5px;
+}
+.box > span {   !*Описание*!
+    grid-column: 2 / 2;
+    grid-row: 1 / 1;
+}*/

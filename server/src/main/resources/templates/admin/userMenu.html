@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!-- Created by CodingLab |www.youtube.com/c/CodingLabYT-->
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Редактирование пользователя</title>
+    <link rel="stylesheet" th:href="@{/css/userMenu.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section">
+    <div class="main">
+        <form th:method="Patch" th:action="@{/admin/users/{id}(id=${user.getId()})}" class="menu" th:object="${user}" method="post">
+            <input type="text" placeholder="Login" readonly th:field="*{username}" id="username">
+            <input type="password" placeholder="Password" th:field="*{password}" id="password">
+            <select size="1" th:field="*{role}" id="role">
+                <option th:each="oneRole : ${roles}" th:value="${oneRole.getId()}" th:text="${oneRole.getFullName()}"></option>
+            </select>
+            <input type="number" min="1" placeholder="Табельный номер" th:field="*{tabNum}" id="tabNum">
+            <input type="text" placeholder="ФИО" th:field="*{FIO}" id="FIO">
+            <input type="submit" class="buttonMenu" value="Сохранить"/>
+            <a th:href="@{/admin/users}" class="buttonMenu">Отмена</a>
+        </form>
+    </div>
+</section>
+</body>
+</html>

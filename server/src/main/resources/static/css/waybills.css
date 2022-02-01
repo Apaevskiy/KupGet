@@ -1,0 +1,64 @@
+
+#addProduct {
+    width: 100%;
+    height: 100%;
+}
+#addProduct input, select{
+    width: 90%;
+    padding: 5px 5px;
+    margin: 0 20px;
+}
+
+#addProduct input:active, :focus, textarea:active, :focus, select:active, :focus{
+    outline: 2px ridge #1d1b31;
+    outline-offset: -2px;
+}
+#addProduct textarea{
+    width: 95%;
+    /*padding-left: 5px;*/
+    resize: none;
+    height: 80px;
+    margin-left: 20px;
+    margin-right: 20px;
+}
+#addProduct label{
+    width: 90%;
+    margin: 0 20px;
+    display: block;
+    vertical-align: bottom;
+}
+#addProductToTableButton{
+    width: 250px;
+    margin: 0 20px 0 0;
+    display: initial;
+}
+#addProductButton{
+    width: 200px;
+}
+#backButton{
+    width: 180px;
+    margin: 0 0 0 20px;
+    display: initial;
+}
+.hidden{
+    display: none;
+}
+.form{
+    display: grid;
+    grid-template-rows: 20px 30px 15px 20px 30px 15px 20px 30px 15px 27px 25px 20px 120px;
+    align-items: center;
+    justify-items: center;
+    width: 100%;
+}
+.form input[type='number'], input[type='date']{
+    text-align: center;
+}
+#productTable tr:hover #addButton button {
+}
+#addButton button {
+    background-color: rgba(0, 0, 0, 0);
+    font-size: 16px;
+    border: none;
+    width: 100%;
+    height: 100%;
+}

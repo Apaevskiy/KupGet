@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title> Авторизация КУП "Горэлектротранспорт" </title>
+    <link media="all" rel="stylesheet" th:href="@{/login/login.css}" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body th:style="'background: url(/login/background.jpg); background-repeat:no-repeat; background-size: cover;'">
+
+<div class="main">
+    <div class="menu">
+        <form th:action="@{/login}" method="post" style="height: inherit">
+            <table style="height: inherit; width: 100%">
+                <tr class = "header"><td><h1>Портал</h1></td></tr>
+                <tr class="inputForm"><td><input type="text" placeholder="Login" name="username"></td></tr>
+                <tr class="inputForm"><td><input type="password" placeholder="Password" name="password"></td></tr>
+                <tr style="vertical-align: center; color: red;"><td><div th:if="${param.error}">Неверный логин или пароль.</div></td></tr>
+                <tr><td><div th:if="${param.logout}">Вы вышли из аккаунта.</div></td></tr>
+                <tr class="buttonForm"><td><input type="submit" class="button" value="Войти"/></td></tr>
+            </table>
+        </form>
+    </div>
+</div>
+</body>
+</html>

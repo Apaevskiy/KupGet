@@ -1,0 +1,269 @@
+.inputForm {
+    box-sizing: border-box;
+    display: table-row;
+    margin-top: 20px;
+    width: 300px;
+    height: 300px;
+    child-align: middle;
+}
+
+html {
+    background: #f3f3f3;
+}
+
+input {
+    width: 90%;
+    padding: 5px 5px;
+    margin: 0;
+}
+
+label {
+    width: 90%;
+    height: 15px;
+    margin: 0 30px;
+}
+
+.messageArea {
+    /*height: 100%;*/
+    height: 200px;
+    margin-top: 20px;
+    width: 100%;
+    font-size: 30px;
+    resize: none;
+    background-color: #f3f3f3;
+    border: none;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 1.5;
+    visibility: hidden;
+}
+
+.messageArea:focus {
+    outline: 0;
+}
+
+.messageArea.error {
+    visibility: visible;
+    color: darkred;
+}
+
+.messageArea.message {
+    visibility: visible;
+    color: darkgreen;
+}
+
+.divWorkPlace {
+    width: 300px;
+    height: inherit;
+    float: left;
+    position: relative;
+    text-align: center;
+}
+
+.divTableOfProducts {
+    width: calc(100% - 300px);
+    float: right;
+    height: 100%;
+    overflow: hidden;
+}
+
+.scrollDiv {
+    overflow: auto;
+    height: 90%;
+}
+
+.tableOfProducts {
+    width: 100%;
+    border: 2px solid #ccc;
+}
+
+.tableOfProducts thead th {
+    font-weight: bold;
+    text-align: center;
+    border: 1px solid #ccc;
+    padding: 5px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    position: relative;
+}
+.tableOfProducts thead th:after {
+    position: absolute;
+    bottom: 50%;
+    right: 15px;
+    margin-top: -50%;
+}
+.tableOfProducts thead th.asc:after {
+    content:' \27A4';
+    transform: rotate(270deg) translate(-50%, 50%);
+}
+.tableOfProducts thead th.desc:after {
+    content: ' \27A4';
+    transform: rotate(90deg) translate(50%, -50%);
+}
+
+.tableOfProducts tbody tr:hover {
+    background: rgba(200, 206, 236, 0.56);
+    border-color: rgba(200, 206, 236, 0.56);
+}
+
+.tableOfProducts tbody tr:nth-child(even):hover {
+    background: rgba(200, 206, 236, 0.56);
+    border-color: rgba(200, 206, 236, 0.56);
+}
+
+.tableOfProducts td {
+    word-break: break-all;
+    text-align: left;
+    /*border: none;*/
+    padding: 10px 10px;
+    font-size: 14px;
+    vertical-align: top;
+    border: 1px solid #dddddd;
+}
+
+.tableOfProducts tbody tr:nth-child(even) {
+    background: #e7e7e7;
+}
+
+.home-section table img, #deleteButton {
+    width: 17px;
+    height: 20px;
+}
+
+#deleteButton form {
+    width: inherit;
+    height: inherit;
+}
+
+#deleteButton {
+    padding: 0;
+    width: 50px;
+    height: 25px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#editButton {
+    padding: 0;
+    width: 50px;
+    height: 25px;
+    vertical-align: middle;
+    text-align: center;
+}
+
+#deleteButton button {
+    width: inherit;
+    height: inherit;
+    border: none;
+    background-color: rgba(0, 0, 0, 0);
+    cursor: pointer;
+}
+
+#addButton a {
+    text-decoration: none;
+}
+
+#addButton img {
+    width: 25px;
+    height: 25px;
+}
+
+#addButton div {
+    width: max-content;
+    display: grid;
+    grid-template-columns: 25px max-content;
+
+}
+
+#addButton span {
+    padding: 5px;
+    width: inherit;
+}
+
+.buttonMenu {
+    background-color: #1d1b31;
+    border: none;
+    color: white;
+    padding: 15px 10px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    display: block;
+    width: auto;
+    margin-left: auto;
+    margin-right: auto;
+    cursor: pointer;
+    -webkit-transition-duration: 0.4s; /* Safari */
+    transition-duration: 0.4s;
+}
+
+.buttonMenu:hover {
+    box-shadow: 0 12px 16px 0 rgb(29, 27, 49), 0 17px 50px 0 rgb(29, 27, 49);
+}
+
+.invalid {
+    border: 2px solid red;
+}
+
+.errorField {
+    color: red;
+    font-size: 12px;
+    vertical-align: top;
+}
+
+.select {
+    color: white;
+    background-color: #1d1b31 !important;
+}
+
+.select:hover {
+}
+
+.box {
+    display: grid;
+    grid-template-columns: 100px 550px calc(100% - 650px);
+    align-items: center;
+    margin-top: 5px;
+    /*justify-items: center;*/
+}
+
+.box > div { /*Количество на странице*/
+    text-align: center;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.box > div button { /*Количество на странице*/
+    grid-column: 3 / 3;
+    grid-row: 1 / 1;
+    text-align: center;
+    padding: 8px 0;
+    width: 41px;
+    background-color: #1d1b31;
+    color: white;
+}
+
+.box > div button.active { /*Количество на странице*/
+    background-color: #f3f3f3;
+    color: #1d1b31;
+    border: 2px solid #1d1b31;
+}
+
+.box > div div { /*Количество на странице*/
+    /*padding: 8px 11px;*/
+    height: 36px;
+    width: 38px;
+    font-size: 28px;
+}
+
+.box > select { /*страницы*/
+    grid-column: 1 / 1;
+    grid-row: 1 / 1;
+    width: 70px;
+    padding: 5px 5px;
+}
+
+.box > span { /*Описание*/
+    grid-column: 2 / 2;
+    grid-row: 1 / 1;
+}

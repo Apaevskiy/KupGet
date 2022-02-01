@@ -1,0 +1,6 @@
+.divWorkPlace{
+    display: grid;
+    grid-template-rows: 100px 100px 100px 200px;
+    align-items: center;
+    justify-items: center;
+}

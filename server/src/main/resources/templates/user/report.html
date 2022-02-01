@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- Created by CodingLab |www.youtube.com/c/CodingLabYT-->
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr"
+      xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5 ">
+<head>
+    <meta charset="UTF-8">
+    <title>Отчёт</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <link rel="stylesheet" th:href="@{/css/report.css}">
+    <script th:src="@{/dataTable/jquery.js}"></script>
+    <script th:src="@{/dataTable/paginator.js}"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section " id="waybillsPage">
+    <div class="divWorkPlace">
+        <form class="productsFilter">
+            <label for="dateStartTF">Начало периода</label>
+            <input type="date" id="dateStartTF" name="dateBegin"/>
+            <label for="dateEndTF">Конец периода</label>
+            <input type="date" id="dateEndTF" name="dateEnd"/>
+            <button class="buttonMenu" id="getProductsButton">Загрузить список товаров</button>
+        </form>
+        <textarea class="messageArea" id="message" readonly></textarea>
+        <button class="buttonMenu" id="getExcelFileButton">Выгрузить в Excel</button>
+    </div>
+    <div class="divTableOfProducts">
+        <div class="scrollDiv">
+            <table class="tableOfProducts" id="productTable">
+                <thead>
+                <tr>
+                    <th rowspan="2" sec:authorize="hasRole('ROLE_ADMIN')">Сотрудник</th>
+                    <th onclick="sortTable(1, 'num')" rowspan="2">Номер накладной</th>
+                    <th onclick="sortTable(2, 'str')" rowspan="2">Дата списания</th>
+                    <th onclick="sortTable(3, 'str')" rowspan="2">Комментарий</th>
+                    <th onclick="sortTable(4, 'num')" rowspan="2">Шифр учёта</th>
+                    <th onclick="sortTable(5, 'str')" rowspan="2">Наименование</th>
+                    <th onclick="sortTable(6, 'str')" rowspan="2">Ед. изм.</th>
+                    <th onclick="sortTable(7, 'str')" rowspan="2">Статус</th>
+                    <th colspan="2">Количество</th>
+                    <th onclick="sortTable(8, 'num')" rowspan="2">Цена</th>
+                    <th onclick="sortTable(9, 'num')" rowspan="2">Сумма</th>
+                </tr>
+                <tr>
+                    <th onclick="sortTable(7, 'num')">Выписано</th>
+                    <th onclick="sortTable(8, 'num')">Списано</th>
+                </tr>
+                </thead>
+                <tbody id="dest">
+                <!--/*@thymesVar id="products" type="kup.get.energy.energyJournal.entity.energy.ProductsOnMaster"*/-->
+                <tr th:each="product : ${products}">
+                    <td class="id" style="display: none" th:text="${product.getId()}"></td>
+                    <td  sec:authorize="hasRole('ROLE_ADMIN')" th:text="${product.getProductsOnMaster().getUser().getFIO()}"></td>
+                    <td th:text="${product.getProductsOnMaster().getProduct().getWaybills().getId()}"></td>
+                    <td th:text="${product.getDateWrittenOf()}"></td>
+                    <td th:text="${product.getComment()}"></td>
+                    <td th:text="${product.getProductsOnMaster().getProduct().getType().getId()}"></td>
+                    <td th:text="${product.getProductsOnMaster().getProduct().getType().getName()}"></td>
+                    <td th:text="${product.getProductsOnMaster().getProduct().getType().getUnit()}"></td>
+                    <td th:text="${product.getProductsOnMaster().getProduct().getStatus()}"></td>
+                    <td class="remaining" th:text="${product.getNumberRequire()}"></td>
+                    <td class="remaining" th:text="${product.getRemaining()}"></td>
+                    <td class="price" style="word-break: normal"
+                        th:text="${#numbers.formatDecimal(product.getProductsOnMaster().getProduct().getPrice(),2, 'COMMA', 2, 'POINT')}"></td>
+                    <td class="sum" style="word-break: normal"
+                        th:text="${#numbers.formatDecimal(product.getRemaining()*product.getProductsOnMaster().getProduct().getPrice(),2, 'COMMA', 2, 'POINT')}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="index_native" class="box"></div>
+    </div>
+</section>
+<meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+<meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+<script th:src="@{/js/report.js}"></script>
+<script>
+    let box = paginator({
+        table: document.getElementById("productTable"),
+        box: document.getElementById("index_native"),
+        box_mode: "button"
+    });
+</script>
+</body>
+</html>

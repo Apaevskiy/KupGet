@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.text.Font?>
+
+<fx:root fx:id="informationPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="486.0" prefWidth="650.0" stylesheets="@../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
+   <BorderPane prefHeight="328.0" prefWidth="650.0" style="-fx-background-color: #f1f1f1;" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <right>
+         <Button fx:id="switchToRightButton" mnemonicParsing="false" prefHeight="0.0" prefWidth="0.0" styleClass="arrowButton" text="&gt;" textFill="#000000c0" BorderPane.alignment="CENTER">
+            <font>
+               <Font name="Berlin Sans FB Demi Bold" size="37.0" />
+            </font>
+            <cursor>
+               <Cursor fx:constant="DEFAULT" />
+            </cursor>
+         </Button>
+      </right>
+      <left>
+         <Button fx:id="switchToLeftButton" mnemonicParsing="false" prefHeight="33.0" prefWidth="0.0" styleClass="arrowButton" text="&lt;" textFill="#000000bf" BorderPane.alignment="CENTER">
+            <font>
+               <Font name="Berlin Sans FB Demi Bold" size="37.0" />
+            </font>
+            <cursor>
+               <Cursor fx:constant="DEFAULT" />
+            </cursor>
+         </Button>
+      </left>
+      <center>
+         <AnchorPane prefHeight="374.0" prefWidth="430.0" BorderPane.alignment="CENTER">
+            <children>
+               <AnchorPane fx:id="updatePane1" prefHeight="200.0" prefWidth="200.0" styleClass="updateInformationPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <children>
+                     <Label fx:id="releaseLabel1" alignment="CENTER" layoutX="77.0" layoutY="146.0" AnchorPane.bottomAnchor="300.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="10.0">
+                        <font>
+                           <Font size="16.0" />
+                        </font>
+                     </Label>
+                     <Label fx:id="informationLabel1" layoutX="67.0" layoutY="136.0" styleClass="informationLabel" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="100.0">
+                        <font>
+                           <Font size="16.0" />
+                        </font>
+                     </Label>
+                  </children></AnchorPane>
+               <AnchorPane fx:id="updatePane2" layoutX="10.0" layoutY="10.0" prefHeight="200.0" prefWidth="200.0" styleClass="updateInformationPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <children>
+                     <Label fx:id="releaseLabel2" alignment="CENTER" AnchorPane.bottomAnchor="300.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="10.0">
+                        <font>
+                           <Font size="16.0" />
+                        </font>
+                     </Label>
+                     <Label fx:id="informationLabel2" layoutX="67.0" layoutY="136.0" styleClass="informationLabel" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="100.0">
+                        <font>
+                           <Font size="16.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </AnchorPane>
+            </children>
+         </AnchorPane>
+      </center>
+      <top>
+         <Pane prefHeight="30.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+      </top>
+      <bottom>
+         <GridPane maxHeight="40.0" minHeight="40.0" prefHeight="40.0" BorderPane.alignment="CENTER">
+           <columnConstraints>
+             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+             <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+           </columnConstraints>
+           <rowConstraints>
+             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+           </rowConstraints>
+            <children>
+               <AnchorPane prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1">
+                  <children>
+                     <Label fx:id="countPageLabel" layoutX="117.0" layoutY="5.0" text="/ 0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <font>
+                           <Font size="14.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </AnchorPane>
+               <AnchorPane prefHeight="200.0" prefWidth="200.0">
+                  <children>
+                     <Label fx:id="pageLabel" alignment="CENTER_RIGHT" text="0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <padding>
+                           <Insets right="5.0" />
+                        </padding>
+                        <font>
+                           <Font size="14.0" />
+                        </font>
+                     </Label>
+                  </children>
+               </AnchorPane>
+            </children>
+         </GridPane>
+      </bottom>
+   </BorderPane>
+</fx:root>

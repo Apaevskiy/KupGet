@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Изменение накладных</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <script th:src="@{/dataTable/jquery.js}"></script>
+    <script th:src="@{/dataTable/paginator.js}"></script>
+    <script th:src="@{/js/actions.js}"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        .sort{
+            display: grid;
+            grid-template-rows: 25px 30px 25px 30px 25px 30px 25px 30px 25px 30px 200px;
+            align-items: center;
+            justify-items: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section " id="waybillsPage">
+    <div class="divWorkPlace">
+        <form action="#" class="sort">
+            <label for="waybillsId">Номер накладной</label>
+            <input type="number" id="waybillsId" min="1" name="waybillsId">
+            <label for="person">Сотрудник</label>
+            <input type="text" id="person" name="person">
+            <label for="department">Подразделение</label>
+            <input type="text" id="department" name="department">
+            <label for="dateBefore">Дата от</label>
+            <input type="date" id="dateBefore" name="dateBefore"/>
+            <label for="dateAfter">Дата до</label>
+            <input type="date" id="dateAfter" name="dateAfter"/>
+            <button class="buttonMenu" id="getWaybills">Загрузить список накладных</button>
+        </form>
+        <textarea class="messageArea" id="message" readonly></textarea>
+    </div>
+    <div class="divTableOfProducts">
+        <div class="scrollDiv">
+            <table class="tableOfProducts" id="productTable">
+                <thead>
+                <tr>
+                    <th onclick="sortTable(0, 'num')">Номер накладной</th>
+                    <th onclick="sortTable(1, 'str')">Дата</th>
+                    <th onclick="sortTable(2, 'str')">Затребовал</th>
+                    <th onclick="sortTable(3, 'str')">Подразделение</th>
+                </tr>
+                </thead>
+                <tbody id="dest">
+                <!--/*@thymesVar id="waybills" type="kup.get.energy.energyJournal.entity.energy.Waybills"*/-->
+                <tr th:each="waybill : ${waybills}">
+                    <td class="id" th:text="${waybill.getId()}"></td>
+                    <td th:text="${waybill.getDate()}"></td>
+                    <td th:text="${waybill.getPerson()}"></td>
+                    <td th:text="${waybill.getDepartment()}"></td>
+                    <td class="editButton">
+                        <a th:href="@{/admin/waybills/{waybillsId}(waybillsId=${waybill.getId()})}">
+                            <img th:src="@{/dataTable/edit.png}" alt="Редактировать накладную">
+                        </a>
+                    </td>
+                    <td class="deleteButton">
+                        <form th:method="DELETE"
+                              th:action="@{/admin/waybills/{waybillsId}(waybillsId = ${waybill.getId()})}">
+                            <button style="width: inherit; height: inherit; background: none; border: none;">
+                                <img th:src="@{/dataTable/delete.png}" alt="Удалить накладную">
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+                <tr>
+                    <td colspan="11" id="addButton">
+                        <a th:href="@{/user/waybills}">
+                            <div>
+                                <img th:src="@{/dataTable/add.png}" alt="Добавить накладную">
+                                <span>Добавить накладную</span>
+                            </div>
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="index_native" class="box"></div>
+    </div>
+</section>
+<meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+<meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+<script th:if="${message}" th:inline="javascript">
+    message(document.querySelector("#message"), [[${message}]]);
+</script>
+<script th:if="${error}" th:inline="javascript">
+    error(null, document.querySelector("#message"), [[${error}]]);
+</script>
+<script>
+    let box = paginator({
+        table: document.getElementById("productTable"),
+        box: document.getElementById("index_native"),
+        box_mode: "button"
+    });
+</script>
+</body>
+</html>

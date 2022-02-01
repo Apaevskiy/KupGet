@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Накладные</title>
+    <link rel="stylesheet" th:href="@{/css/waybills.css}">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section " id="waybillsPage">
+    <div class="divWorkPlace">
+        <div class="form">
+            <label for="numberWaybills">Номер накладной</label>
+            <input type="number" id="numberWaybills" min="1">
+            <label class="errorField" id="numberWaybillsError"></label>
+            <label for="person">Через кого</label>
+            <input type="text" id="person">
+            <label class="errorField" id="personError"></label>
+            <label for="department">Затребовал</label>
+            <input type="text" id="department">
+            <label class="errorField" id="departmentError"></label>
+            <label for="dateWaybillsTF">Дата</label>
+            <input type="date" id="dateWaybillsTF"/>
+            <label class="errorField" id="dateWaybillsError"></label>
+            <button class="buttonMenu" id="addWaybillsButton" style="margin-top: 0">Добавить накладную</button>
+        </div>
+        <textarea class="messageArea" id="message" readonly></textarea>
+    </div>
+    <div class="divTableOfProducts">
+        <table class="tableOfProducts" id="productTable">
+            <thead>
+            <tr>
+                <th rowspan="2">Шифр учёта</th>
+                <th rowspan="2">Наименование</th>
+                <th rowspan="2">Ед. изм.</th>
+                <th rowspan="2">Статус</th>
+                <th colspan="2">Количество</th>
+                <th rowspan="2">Цена</th>
+                <th rowspan="2">Сумма</th>
+            </tr>
+            <tr>
+                <th>Затребовано</th>
+                <th>Отпущено</th>
+            </tr>
+            </thead>
+            <tbody id="dest"></tbody>
+            <tr>
+                <td colspan="11" id="addButton">
+                    <button onclick="addProduct()">
+                        <div>
+                            <img th:src="@{/dataTable/add.png}" alt="Добавить товар">
+                            <span>Добавить товар</span>
+                        </div>
+                    </button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</section>
+<section class="home-section hidden" id="productPage">
+    <table id="addProduct">
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td rowspan="19"></td>
+            <td style="width: 30%;"><label for="numberRecordTF">Шифр учёта</label></td>
+            <td style="width: 30%;" rowspan="4"></td>
+            <td rowspan="19"></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="number" id="numberRecordTF" onchange="getTypeOfProduct()" required min="0"></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="numberRecordError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="nameTF">Наименование</label></td>
+        </tr>
+        <tr style="height: 50px">
+            <td colspan="2"><textarea rows="10" cols="45" id="nameTF"></textarea></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td colspan="2"><label class="errorField" id="nameError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="unitTF">Ед. изм.</label></td>
+            <td><label for="statusTF">Статус</label></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="text" id="unitTF"></td>
+            <td><select size="1" id="statusTF" required>
+                <option value="" disabled selected>Выберите один из пунктов</option>
+                <option value="Обслуживание">Обслуживание</option>
+                <option value="Ремонт">Ремонт</option>
+            </select></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="unitError"></label></td>
+            <td><label class="errorField" id="statusError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="numberRequireTF">Кол. затребовано</label></td>
+            <td><label for="numberReleasedTF">Кол. отпущено</label></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="number" id="numberRequireTF" required min="0" step="0.01"></td>
+            <td><input type="number" id="numberReleasedTF" required min="0" step="0.01"></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="numberRequireError"></label></td>
+            <td><label class="errorField" id="numberReleasedError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="priceTF">Цена</label></td>
+            <td rowspan="3"></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="number" id="priceTF" required min="0"></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="priceError"></label></td>
+        </tr>
+        <tr style="height: 5%">
+            <td colspan="2"></td>
+        </tr>
+        <tr style="height: 10%; vertical-align: top;">
+            <td style="text-align: right;">
+                <button class="buttonMenu" id="addProductToTableButton">Добавить товар</button>
+            </td>
+            <td style="text-align: left;">
+                <button class="buttonMenu" id="backButton">Отмена</button>
+            </td>
+        </tr>
+        <tr style="height: 15%">
+            <td colspan="2"></td>
+        </tr>
+    </table>
+</section>
+<meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+<meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+<script th:src="@{/js/waybills.js}"></script>
+</body>
+</html>

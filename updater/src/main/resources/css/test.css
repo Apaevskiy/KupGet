@@ -1,0 +1,51 @@
+.accordion .button {
+    -fx-pref-height: 30;
+    -fx-pref-width: 150;
+    -fx-background-color: #1E90FF;
+    -fx-text-fill: white;
+    -fx-font-size: 16px;
+    -fx-row-valignment: center;
+    -fx-column-halignment: center;
+}
+
+.hidden {
+    visibility: false;
+}
+
+.arrowButton {
+    -fx-focus-color: transparent;
+    -fx-background-insets: -1.4, 0, 1, 2;
+    -fx-focus-traversable: false;
+    -fx-background-color: transparent;
+}
+
+.informationLabel {
+    -fx-border-color: rgba(0, 0, 0, 0.51);
+    -fx-border-width: 3 0 0 0;
+}
+
+.updateInformationPane {
+    /*-fx-border-width: 3;*/
+    /*-fx-border-color: gray;*/
+    /*-fx-border-radius: 5;*/
+    -fx-background-color: #fff;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.51), 25, 0, 0, 0);
+    /*-fx-focus-color: transparent;*/
+    /*-fx-background-insets: -1.4, 0, 1, 2;*/
+    /*-fx-border-width: 20 20 20 20;
+    -fx-background-color: transparent;
+    -fx-border-color: lightgray;
+    -fx-stroke-line-cap: butt;
+    -fx-stroke-dash-offset: 6;*/
+}
+
+.progress-bar > .bar {
+    -fx-background-color: linear-gradient(
+            from 0px .75em to .75em 0px,
+            repeat,
+            -fx-accent 0%,
+            -fx-accent 49%,
+            derive(-fx-accent, 30%) 60%,
+            derive(-fx-accent, 30%) 99%
+    );
+}

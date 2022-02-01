@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!-- Created by CodingLab |www.youtube.com/c/CodingLabYT-->
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Действия пользователей</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <script th:src="@{/dataTable/jquery.js}"></script>
+    <script th:src="@{/dataTable/paginator.js}"></script>
+    <style>
+        .logsFilter {
+            display: grid;
+            grid-template-rows: 30px 35px 30px 35px 80px;
+            align-items: center;
+            justify-items: center;
+            width: 100%;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section " id="waybillsPage">
+    <div class="divWorkPlace">
+        <form class="logsFilter">
+            <label for="dateStartTF">Начало периода</label>
+            <input type="date" id="dateStartTF" name="dateBegin"/>
+            <label for="dateEndTF">Конец периода</label>
+            <input type="date" id="dateEndTF" name="dateEnd"/>
+            <button class="buttonMenu" id="getProductsButton">Загрузить список действий</button>
+        </form>
+    </div>
+    <div class="divTableOfProducts">
+        <div class="scrollDiv">
+            <table class="tableOfProducts" id="productTable">
+                <thead>
+                <tr>
+                    <th onclick="sortTable(0, 'num')" rowspan="2">Номер</th>
+                    <th onclick="sortTable(1, 'str')" rowspan="2">Пользователь</th>
+                    <th onclick="sortTable(2, 'str')" rowspan="2">Комментарий</th>
+                    <th onclick="sortTable(3, 'str')" rowspan="2">Дата</th>
+                </tr>
+                </thead>
+                <tbody id="dest">
+                <!--/*@thymesVar id="logs" type="kup.get.energy.energyJournal.entity.energy.Log"*/-->
+                <tr th:each="log : ${logs}">
+                    <td th:text="${log.getId()}"></td>
+                    <td th:text="${log.getUsername()}"></td>
+                    <td th:text="${log.getAction()}"></td>
+                    <td th:text="${log.getDate()}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div id="index_native" class="box"></div>
+    </div>
+</section>
+<meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+<meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+<script th:src="@{/js/report.js}"></script>
+<script>
+    let box = paginator({
+        table: document.getElementById("productTable"),
+        box: document.getElementById("index_native"),
+        box_mode: "button"
+    });
+</script>
+</body>
+</html>

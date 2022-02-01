@@ -1,0 +1,17 @@
+#getExcelFileButton{
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%)
+}
+
+.productsFilter{
+    display: grid;
+    grid-template-rows: 25px 30px 25px 30px 80px;
+    align-items: center;
+    justify-items: center;
+}
+input[type='date']{
+    width: 70%;
+}

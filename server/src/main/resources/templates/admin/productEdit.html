@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Накладные</title>
+    <link rel="stylesheet" th:href="@{/css/waybills.css}">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section" id="productPage">
+    <!--/*@thymesVar id="product" type="kup.get.energy.energyJournal.entity.energy.Product"*/-->
+    <table id="addProduct">
+        <form th:object="${product}" th:action="@{/admin/waybills/{waybillId}/product/{productId}(waybillId = *{waybills.getId()}, productId = *{id})}" th:method="PATCH">
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td rowspan="19"></td>
+            <td style="width: 30%;"><label for="numberRecordTF">Шифр учёта</label></td>
+            <td style="width: 30%;" rowspan="4"></td>
+            <td rowspan="19"></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="number" id="numberRecordTF" th:field="*{type.id}" required min="0"></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="numberRecordError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="nameTF">Наименование</label></td>
+        </tr>
+        <tr style="height: 50px">
+            <td colspan="2"><textarea rows="10" cols="45" id="nameTF" th:field="*{type.name}"></textarea></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td colspan="2"><label class="errorField" id="nameError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="unitTF">Ед. изм.</label></td>
+            <td><label for="statusTF">Статус</label></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="text" id="unitTF"  th:field="*{type.unit}"></td>
+            <td><select size="1" id="statusTF"  th:field="*{status}" required>
+                <option value="Обслуживание">Обслуживание</option>
+                <option value="Ремонт">Ремонт</option>
+            </select></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="unitError"></label></td>
+            <td><label class="errorField" id="statusError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="numberRequireTF">Кол. затребовано</label></td>
+            <td><label for="numberReleasedTF">Кол. отпущено</label></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="number" id="numberRequireTF" required min="1" step="0.01" th:field="*{numberRequire}"></td>
+            <td><input type="number" id="numberReleasedTF" onchange="checkRemaining()" step="0.01" required min="1" th:field="*{numberReleased}"></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="numberRequireError"></label></td>
+            <td><label class="errorField" id="numberReleasedError"></label></td>
+        </tr>
+        <tr style="height: 5%; vertical-align: bottom;">
+            <td><label for="priceTF">Цена</label></td>
+            <td><label for="remainingTF">Остаток</label></td>
+        </tr>
+        <tr style="height: 5%">
+            <td><input type="number" id="priceTF" required min="0" step="0.01" th:field="*{price}"></td>
+            <td><input type="number" id="remainingTF" disabled min="0" step="0.01" th:field="*{remaining}"></td>
+        </tr>
+        <tr style="height: 3%; vertical-align: top;">
+            <td><label class="errorField" id="priceError"></label></td>
+        </tr>
+        <tr style="height: 5%">
+            <td colspan="2"></td>
+        </tr>
+        <tr style="height: 10%; vertical-align: top;">
+            <td style="text-align: right;">
+                <button class="buttonMenu" id="editProductButton">Изменить товар</button>
+            </td>
+        </form>
+            <td style="text-align: left;">
+                <button class="buttonMenu" id="backButton">Отмена</button>
+            </td>
+        </tr>
+        <tr style="height: 15%">
+            <td colspan="2"></td>
+        </tr>
+    </table>
+</section>
+<meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+<meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+<script th:src="@{/js/productEdit.js}"></script>
+</body>
+</html>

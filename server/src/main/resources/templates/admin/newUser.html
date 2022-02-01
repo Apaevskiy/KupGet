@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить пользователя</title>
+    <link rel="stylesheet" th:href="@{/css/userMenu.css}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section">
+    <div class="main">
+        <form th:method="PUT" th:action="@{/admin/users/new}" class="menu" th:object="${user}"  method="post" >
+            <input type="text" placeholder="Login" th:field="*{username}" id="username" required>
+            <input type="password" placeholder="Password" th:field="*{password}" id="password" required>
+            <select size="1" th:field="*{role}" id="role" required>
+                <option th:each="oneRole : ${roles}" th:value="${oneRole.getId()}" th:text="${oneRole.getFullName()}"></option>
+            </select>
+            <input type="number" min="1" placeholder="Табельный номер" th:field="*{tabNum}" id="tabNum" required>
+            <input type="text" placeholder="ФИО" th:field="*{FIO}" id="FIO" required>
+            <input type="submit" class="buttonMenu" value="Сохранить"/>
+            <a th:href="@{/admin/users}" class="buttonMenu">Отмена</a>
+        </form>
+    </div>
+</section>
+</body>
+</html>

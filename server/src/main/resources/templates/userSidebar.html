@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="https://www.thymeleaf.org/thymeleaf-extras-springsecurity5"
+      lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="userSidebar">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}" type="text/css">
+    <link rel="stylesheet" th:href="@{/css/boxicons.css}" type="text/css">
+    <div class="logo-details">
+        <div class="logo_name">Энергослужба</div>
+        <i class='bx bx-menu' id="btn"></i>
+    </div>
+    <ul class="nav-list">
+        <div sec:authorize="hasAnyRole('ROLE_USER','ROLE_ADMIN')">
+            <li>
+                <a href="/user/waybills">
+                    <i class='bx bx-clipboard'></i>
+                    <span class="links_name">Добавить накладную</span>
+                </a>
+                <span class="tooltip">Добавить накладную</span>
+            </li>
+            <li>
+                <a href="/user/writeToMaster">
+                    <i class='bx bxs-edit'></i>
+                    <span class="links_name">Выписать мастеру</span>
+                </a>
+                <span class="tooltip">Выписать мастеру</span>
+            </li>
+            <li>
+                <a href="/user/writtenOff">
+                    <i class='bx bx-task'></i>
+                    <span class="links_name">Списать товар</span>
+                </a>
+                <span class="tooltip">Списать товар</span>
+            </li>
+            <li>
+                <a href="/user/report">
+                    <i class='bx bxs-report'></i>
+                    <span class="links_name">Отчёт</span>
+                </a>
+                <span class="tooltip">Отчёт</span>
+            </li>
+        </div>
+        <div sec:authorize="hasRole('ROLE_ADMIN')">
+            <li>
+                <a href="/admin/users">
+                    <i class='bx bx-user'></i>
+                    <span class="links_name">Пользователи</span>
+                </a>
+                <span class="tooltip">Пользователи</span>
+            </li>
+            <li>
+                <a href="/admin/waybills">
+                    <i class='bx bx-archive'></i>
+                    <span class="links_name">Изменить накладные</span>
+                </a>
+                <span class="tooltip">Изменить накладные</span>
+            </li>
+            <li>
+                <a href="/admin/log">
+                    <i class='bx bx-info-circle' ></i>
+                    <span class="links_name">Действия пользователей</span>
+                </a>
+                <span class="tooltip">Действия пользователей</span>
+            </li>
+        </div>
+        <li class="profile">
+            <div class="profile-details">
+                <div class="name_job">
+                    <div class="name" th:inline="text">[[${#httpServletRequest.remoteUser}]]</div>
+                </div>
+            </div>
+            <form th:action="@{/logout}" class="i" method="post" id="log_out">
+                <button id="logoutButton"><i class='bx bx-log-out' id="log_out_user"></i></button>
+            </form>
+            <span class="tooltip">Выйти из аккаунта</span>
+        </li>
+    </ul>
+
+    <script th:src="@{/js/sidebar.js}"></script>
+</div>
+</body>
+</html>

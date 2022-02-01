@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <title>Накладные</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}">
+    <script th:src="@{/dataTable/jquery.js}"></script>
+    <script th:src="@{/dataTable/paginator.js}"></script>
+    <script th:src="@{/js/actions.js}"></script>
+    <style>
+        .divWorkPlace form{
+            display: grid;
+            grid-template-rows: 25px 30px 25px 30px 25px 30px 25px 30px 80px 300px;
+            align-items: center;
+            justify-items: center;
+        }
+    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div th:insert="userSidebar :: userSidebar" class="sidebar"></div>
+<section class="home-section " id="waybillsPage" th:object="${waybill}">
+    <div class="divWorkPlace">
+        <form th:method="PATCH" th:action="@{/admin/waybills/{id}(id=*{id})}">
+            <!--/*@thymesVar id="waybill" type="kup.get.energy.energyJournal.entity.energy.Waybills"*/-->
+            <label for="numberWaybills">Номер накладной</label>
+            <input type="number" id="numberWaybills" min="1" th:field="*{id}" readonly>
+            <label for="person">Через кого</label>
+            <input type="text" id="person" th:field="*{person}">
+            <label for="department">Затребовал</label>
+            <input type="text" id="department" th:field="*{department}">
+            <label for="dateWaybillsTF">Дата</label>
+            <input type="date" id="dateWaybillsTF" th:field="*{date}">
+            <button class="buttonMenu" id="addWaybillsButton" style="margin-top: 0">Изменить накладную</button>
+            <textarea class="messageArea" id="message" readonly></textarea>
+        </form>
+    </div>
+    <div class="divTableOfProducts">
+        <div class="scrollDiv">
+            <table class="tableOfProducts" id="productTable">
+                <thead>
+                <tr>
+                    <th onclick="sortTable(1, 'num')" rowspan="3">Шифр учёта</th>
+                    <th onclick="sortTable(2, 'str')" rowspan="3">Наименование</th>
+                    <th onclick="sortTable(3, 'str')" rowspan="3">Ед. изм.</th>
+                    <th onclick="sortTable(4, 'str')" rowspan="3">Статус</th>
+                    <th colspan="3">Количество</th>
+                    <th onclick="sortTable(8, 'num')" rowspan="3">Цена</th>
+                    <th onclick="sortTable(9, 'num')" rowspan="3">Сумма</th>
+                </tr>
+                <tr>
+                    <th onclick="sortTable(5, 'num')">Затребовано</th>
+                    <th onclick="sortTable(6, 'num')">Отпущено</th>
+                    <th onclick="sortTable(7, 'num')">Осталось</th>
+                </tr>
+                </thead>
+                <tbody id="dest">
+                <tr th:each="product : ${products}">
+                    <td class="id" style="display: none" th:text="${product.getId()}"></td>
+                    <td th:text="${product.getType().getId()}"></td>
+                    <td th:text="${product.getType().getName()}"></td>
+                    <td th:text="${product.getType().getUnit()}"></td>
+                    <td th:text="${product.getStatus()}"></td>
+                    <td th:text="${product.getNumberRequire()}"></td>
+                    <td th:text="${product.getNumberReleased()}"></td>
+                    <td th:text="${product.getRemaining()}"></td>
+                    <td style="word-break: normal"
+                        th:text="${#numbers.formatDecimal(product.getPrice(),2, 2, 'POINT')}"></td>
+                    <td style="word-break: normal"
+                        th:text="${#numbers.formatDecimal(product.getNumberReleased()*product.getPrice(),2, 2, 'POINT')}"></td>
+                    <td id="editButton">
+                        <a th:href="@{/admin/waybills/{waybillsId}/product/{id}(id=${product.getId()}, waybillsId=*{id})}">
+                            <img th:src="@{/dataTable/edit.png}" alt="Редактировать товар">
+                        </a>
+                    </td>
+                    <td id="deleteButton">
+                        <form th:method="DELETE"
+                              th:action="@{/admin/waybills/{waybillsId}/product/{productId}
+                              (waybillsId = ${product.getWaybills().getId()}, productId=${product.getId()})}">
+                            <button>
+                                <img th:src="@{/dataTable/delete.png}" alt="Удалить товар">
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+
+                </tbody>
+                <tr>
+                    <td colspan="11" id="addButton">
+                        <a th:href="@{/admin/waybills/{waybillsId}/newProduct(waybillsId=*{id})}">
+                            <div>
+                                <img th:src="@{/dataTable/add.png}" alt="Добавить товар">
+                                <span>Добавить товар</span>
+                            </div>
+                        </a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="index_native" class="box"></div>
+    </div>
+</section>
+<meta id="_csrf" name="_csrf" th:content="${_csrf.token}"/>
+<meta id="_csrf_header" name="_csrf_header" th:content="${_csrf.headerName}"/>
+<script th:if="${message}" th:inline="javascript">
+    message(document.querySelector("#message"), [[${message}]]);
+</script>
+<script th:if="${error}" th:inline="javascript">
+    error(null, document.querySelector("#message"), [[${error}]]);
+</script>
+<script>
+    let box = paginator({
+        table: document.getElementById("productTable"),
+        box: document.getElementById("index_native"),
+        box_mode: "button"
+    });
+</script>
+</body>
+</html>
