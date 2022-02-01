@@ -4,7 +4,9 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.layout.AnchorPane;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Hooks;
 
+import java.net.UnknownHostException;
 import java.util.List;
 
 @Component
@@ -26,6 +28,12 @@ public class MainController {
     public void initialize() {
         workPlace.getChildren().addAll(settingController, updateController, informationController);
         hiddenPages(workPlace.getChildren(), updateController);
+
+        try {
+            updateController.checkUpdates();
+        } catch (UnknownHostException | NullPointerException e) {
+            hiddenPages(workPlace.getChildren(), settingController);
+        }
     }
 
     private void hiddenPages(List<Node> list, Node pane) {

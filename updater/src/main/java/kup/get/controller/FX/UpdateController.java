@@ -13,6 +13,7 @@ import kup.get.service.*;
 
 import javax.annotation.PostConstruct;
 import java.io.File;
+import java.net.UnknownHostException;
 import java.util.List;
 
 @FxmlLoader(path = "/fxml/updates.fxml")
@@ -43,8 +44,7 @@ public class UpdateController extends MyAnchorPane {
         this.socketController = socketController;
     }
 
-    @PostConstruct
-    public void checkUpdates() {
+    public void checkUpdates() throws UnknownHostException, NullPointerException {
         Version versionProgram = propertyService.getVersion();
         Version actualVersion = socketController.getActualVersion();
         if (actualVersion.getId() != versionProgram.getId()) {

@@ -28,11 +28,17 @@ public class PropertyService {
             e.printStackTrace();
         }
     }
-
-    public String getProperty(String key) {
-        return properties.get(key);
+    public String getIpServer(){
+        return properties.get("server.ip");
     }
-
+    public int getPortServer(){
+        return Integer.parseInt(properties.get("server.port"));
+    }
+    public void saveServerConfig(String ip, String port){
+        properties.put("server.ip", ip);
+        properties.put("version.port", port);
+        writeProperties();
+    }
     public Version getVersion() {
         return Version
                 .builder()
@@ -40,9 +46,9 @@ public class PropertyService {
                 .release(properties.get("version.release"))
                 .build();
     }
-
-    public void saveProperty(String key, String value) {
-        properties.put(key, value);
+    public void saveVersion(Version actualVersion) {
+        properties.put("version.id", String.valueOf(actualVersion.getId()));
+        properties.put("version.release", actualVersion.getRelease());
         writeProperties();
     }
 
@@ -61,9 +67,5 @@ public class PropertyService {
 
     }
 
-    public void saveVersion(Version actualVersion) {
-        properties.put("version.id", String.valueOf(actualVersion.getId()));
-        properties.put("version.release", actualVersion.getRelease());
-        writeProperties();
-    }
+
 }
