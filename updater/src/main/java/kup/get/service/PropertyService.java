@@ -1,11 +1,9 @@
 package kup.get.service;
 
 import kup.get.model.Version;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
-import javax.annotation.PostConstruct;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,7 +34,7 @@ public class PropertyService {
     }
     public void saveServerConfig(String ip, String port){
         properties.put("server.ip", ip);
-        properties.put("version.port", port);
+        properties.put("server.port", port);
         writeProperties();
     }
     public Version getVersion() {

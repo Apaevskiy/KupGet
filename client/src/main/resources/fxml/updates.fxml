@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.paint.Color?>
+<?import javafx.scene.paint.LinearGradient?>
+<?import javafx.scene.paint.Stop?>
+<?import javafx.scene.text.Font?>
+
+<fx:root fx:id="menuPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="650.0" stylesheets="@../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+   <AnchorPane layoutX="8.0" layoutY="7.0" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <children>
+         <ProgressBar fx:id="progressBar" layoutX="60.0" layoutY="317.0" prefHeight="33.0" prefWidth="548.0" progress="0.71" />
+         <Label fx:id="processInformationField" alignment="CENTER" layoutX="35.0" layoutY="157.0" prefHeight="136.0" prefWidth="597.0">
+            <font>
+               <Font name="Comic Sans MS" size="29.0" />
+            </font>
+            <textFill>
+               <LinearGradient endX="1.0" startY="1.0">
+                  <stops>
+                     <Stop>
+                        <color>
+                           <Color red="0.08235294371843338" blue="1.0" />
+                        </color>
+                     </Stop>
+                     <Stop offset="0.5077691126078223">
+                        <color>
+                           <Color />
+                        </color>
+                     </Stop>
+                     <Stop offset="1.0">
+                        <color>
+                           <Color red="0.08235294371843338" blue="1.0" />
+                        </color>
+                     </Stop>
+                  </stops>
+               </LinearGradient>
+            </textFill>
+         </Label>
+         <Label fx:id="progressText" alignment="TOP_CENTER" layoutX="280.0" layoutY="350.0" prefHeight="33.0" prefWidth="107.0" text="20%">
+            <font>
+               <Font size="13.0" />
+            </font>
+         </Label>
+      </children>
+   </AnchorPane>
+</fx:root>

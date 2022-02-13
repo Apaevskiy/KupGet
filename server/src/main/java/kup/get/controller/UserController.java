@@ -1,6 +1,6 @@
 package kup.get.controller;
 
-import kup.get.entity.energy.Product;
+import kup.get.entity.postgres.energy.Product;
 import kup.get.service.Services;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

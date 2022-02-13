@@ -1,6 +1,6 @@
 package kup.get.controller;
 
-import kup.get.entity.energy.User;
+import kup.get.entity.postgres.security.User;
 import kup.get.service.LogService;
 import kup.get.service.Services;
 import org.springframework.stereotype.Controller;

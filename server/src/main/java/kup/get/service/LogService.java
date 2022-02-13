@@ -1,7 +1,7 @@
 package kup.get.service;
 
-import kup.get.entity.energy.Log;
-import kup.get.repository.energy.LogRepository;
+import kup.get.entity.postgres.energy.Log;
+import kup.get.repository.postgres.energy.LogRepository;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 

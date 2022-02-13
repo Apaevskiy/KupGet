@@ -2,6 +2,7 @@ package kup.get.entity.alfa;
 
 import lombok.*;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -12,7 +13,11 @@ import javax.persistence.Table;
 @Setter
 @NoArgsConstructor
 public class Department {
+    @Column(name = "KU")
+    private long id;
     @Id
-    private long ku;
-    private String naim;
+    @Column(name = "KOD")
+    private long number;
+    @Column(name = "NAIM")
+    private String name;
 }

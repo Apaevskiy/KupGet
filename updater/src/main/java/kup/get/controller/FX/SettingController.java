@@ -4,14 +4,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
+import kup.get.config.RSocketClientConfig;
 import kup.get.model.Version;
 import kup.get.service.PropertyService;
-import org.springframework.messaging.rsocket.RSocketRequester;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.Optional;
 
@@ -30,7 +29,7 @@ public class SettingController extends MyAnchorPane {
     @FXML
     private Label versionInformationLabel;
 
-    public SettingController(PropertyService propertyService, UpdateController updateController, RSocketRequester requester) {
+    public SettingController(PropertyService propertyService, UpdateController updateController, RSocketClientConfig config) {
         versionInformationLabel.setText("Если вы читаете это сообщение, то звоните в отдел АСУ\nВерсия программы " + propertyService.getVersion().getRelease());
 
         ipField.setText(propertyService.getIpServer());
@@ -38,18 +37,18 @@ public class SettingController extends MyAnchorPane {
 
         saveButton.setOnAction(event -> {
             propertyService.saveServerConfig(ipField.getText(), portField.getText());
-//            try {
-
-                System.out.println();
-//                updateController.checkUpdates();
-//            } catch (UnknownHostException | NullPointerException e) {
-//                versionInformationLabel.setText("Что-то пошло не так!\nСохраните следующую информация для отдела АСУ:\n"+e.getMessage());
-//            }
+            String checkConnection = config.createRequester();
+            if (checkConnection.isEmpty()) {
+                this.getStyleClass().add("hidden");
+                updateController.checkUpdates();
+            } else {
+                versionInformationLabel.setText("Что-то пошло не так!\nСохраните следующую информация для отдела АСУ:\n" + checkConnection);
+            }
         });
         resetButton.setOnAction(event -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("Сброс данных");
-            alert.setHeaderText("Вы действительно хотите сбросить все данные? После сброса потребуется время для загрузки всех данных с сервера (автоматически).");
+            alert.setHeaderText("Вы действительно хотите сбросить все данные?\n После сброса потребуется время для загрузки всех данных с сервера (автоматически).");
             alert.setContentText("Нажмите ОК для сброса и Cancel для отмены");
 
             Optional<ButtonType> option = alert.showAndWait();
@@ -59,13 +58,17 @@ public class SettingController extends MyAnchorPane {
                     URL url = this.getClass().getResource("/program/program.jar");
                     if (url != null) {
                         Files.delete(new File(url.getFile()).toPath());
-                        updateController.checkUpdates();
+                        propertyService.saveVersion(Version.builder().id(0).release("0").build());
                     } else throw new NullPointerException("ResetButton in SettingController (url == null)");
-                } catch (IOException  | NullPointerException e) {
-                    versionInformationLabel.setText("Что-то пошло не так!\nСохраните следующую информация для отдела АСУ:\n"+e.getMessage());
+                } catch (IOException | NullPointerException e) {
+                    versionInformationLabel.setText("Что-то пошло не так!\nСохраните следующую информация для отдела АСУ:\n" + e.getMessage());
 
                 }
             }
         });
+    }
+
+    public void information(String error) {
+        versionInformationLabel.setText(versionInformationLabel.getText() + "\nОшибка: " + error);
     }
 }

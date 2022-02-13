@@ -1,10 +1,12 @@
 package kup.get.entity.alfa;
 
+import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+
 
 @Entity
 @Table(name = "sp_ol")
@@ -13,18 +15,26 @@ import javax.persistence.*;
 @NoArgsConstructor
 public class Person {
     @Id
-    private long KU;
-    private String TAB_NOM;
+    @Column(name = "KU")
+    private long id;
+
+    @Column(name = "TAB_NOM")
+    private String personnelNumber;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "k_podr", nullable = false)
-    private Department K_PODR;
+    private Department department;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "k_doljn", nullable = false)
-    private Position K_DOLJN;
+    private Position position;
 
-    private String FAM;
-    private String IM;
-    private String OTCH;
+    @Column(name = "FAM")
+    private String lastName;
+
+    @Column(name = "IM")
+    private String firstName;
+
+    @Column(name = "OTCH")
+    private String middleName;
 }

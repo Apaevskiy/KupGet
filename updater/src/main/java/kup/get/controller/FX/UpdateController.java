@@ -44,12 +44,14 @@ public class UpdateController extends MyAnchorPane {
         this.socketController = socketController;
     }
 
-    public void checkUpdates() throws UnknownHostException, NullPointerException {
+    public void checkUpdates() {
+        this.getStyleClass().removeAll("hidden");
         Version versionProgram = propertyService.getVersion();
-        Version actualVersion = socketController.getActualVersion();
-        if (actualVersion.getId() != versionProgram.getId()) {
-            updateProgram(versionProgram, actualVersion);
-        }
+        socketController.getActualVersion().doOnSuccess(version -> {
+            if (version.getId() != versionProgram.getId()) {
+                updateProgram(versionProgram, version);
+            }
+        }).subscribe();
     }
 
     private void updateProgram(Version version, Version actualVersion) {

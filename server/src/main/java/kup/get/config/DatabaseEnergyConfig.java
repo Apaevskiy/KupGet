@@ -24,7 +24,7 @@ import java.util.Map;
 @EnableJpaRepositories(
         entityManagerFactoryRef = "energyEntityManagerFactory",
         transactionManagerRef = "energyTransactionManager",
-        basePackages = {"kup.get.repository.energy"})
+        basePackages = {"kup.get.repository.postgres.*"})
 public class DatabaseEnergyConfig {
 
     @Primary
@@ -52,7 +52,7 @@ public class DatabaseEnergyConfig {
 
         return energyEntityManagerFactoryBuilder
                 .dataSource(energyDataSource)
-                .packages("kup.get.entity.energy")
+                .packages("kup.get.entity.postgres.*")
                 .persistenceUnit("energyDataSource")
                 .properties(energyJpaProperties)
                 .build();

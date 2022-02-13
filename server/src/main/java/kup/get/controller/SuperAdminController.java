@@ -1,10 +1,8 @@
 package kup.get.controller;
 
 import kup.get.config.ZipConfig;
-import kup.get.entity.energy.Version;
-import kup.get.service.VersionService;
-import kup.get.service.ZipService;
-import org.springframework.http.ResponseEntity;
+import kup.get.service.update.VersionService;
+import kup.get.service.update.ZipService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;

@@ -1,18 +1,14 @@
 package kup.get.config;
 
-import kup.get.entity.energy.FileOfProgram;
-import kup.get.service.ZipService;
+import kup.get.entity.postgres.update.FileOfProgram;
+import kup.get.service.update.ZipService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.ResourceUtils;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
 @Configuration
 public class ZipConfig {

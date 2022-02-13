@@ -1,24 +1,37 @@
 package kup.get.config;
 
+import io.rsocket.transport.netty.client.TcpClientTransport;
 import kup.get.service.PropertyService;
-import org.springframework.beans.TypeMismatchException;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.messaging.rsocket.RSocketRequester;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
-import java.net.UnknownHostException;
+import javax.annotation.PostConstruct;
+import java.net.ConnectException;
 
-@Configuration
+@Component
 public class RSocketClientConfig {
     private final PropertyService propertyService;
+    private RSocketRequester requester;
+    private final RSocketRequester.Builder builder;
 
-    public RSocketClientConfig(PropertyService propertyService) {
+    public RSocketClientConfig(PropertyService propertyService, RSocketRequester.Builder builder) {
         this.propertyService = propertyService;
+        this.builder = builder;
     }
-    @Bean
-    RSocketRequester requester(RSocketRequester.Builder builder){
-        return builder.tcp(propertyService.getIpServer(), propertyService.getPortServer());
+
+    public String createRequester() {
+        System.out.println("ip: "+propertyService.getIpServer() + " port: " + propertyService.getPortServer());
+        TcpClientTransport transport = TcpClientTransport.create(propertyService.getIpServer(), propertyService.getPortServer());
+        return transport.connect()
+                .flatMap(dc -> Mono.just(""))
+                .doOnSuccess(dc -> requester = builder.transport(transport))
+                .onErrorReturn(ConnectException.class,"ConnectException")
+                .onErrorReturn(Exception.class,"Exception")
+                .block();
+    }
+
+    public RSocketRequester getRequester() {
+        return requester;
     }
 }

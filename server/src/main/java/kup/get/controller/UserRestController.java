@@ -1,6 +1,6 @@
 package kup.get.controller;
 
-import kup.get.entity.energy.*;
+import kup.get.entity.postgres.energy.*;
 import kup.get.service.Services;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;

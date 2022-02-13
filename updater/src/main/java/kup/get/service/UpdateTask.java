@@ -25,7 +25,6 @@ public class UpdateTask extends Task<File> {
         this.queryTask = queryTask;
         this.version = version;
         this.threadQueryWriter = threadQueryWriter;
-
     }
 
     private void copy(String message) {
