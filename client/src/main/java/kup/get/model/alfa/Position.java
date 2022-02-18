@@ -1,4 +1,4 @@
-package kup.get.model;
+package kup.get.model.alfa;
 
 import lombok.Data;
 import lombok.Getter;

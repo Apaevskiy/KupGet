@@ -1,11 +1,22 @@
 package kup.get.config;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.SequentialTransition;
+import javafx.animation.Timeline;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.util.Callback;
+import javafx.util.Duration;
+import kup.get.model.traffic.TrafficVehicle;
 
 import java.io.IOException;
 import java.net.URL;
@@ -22,9 +33,9 @@ public abstract class MyAnchorPane extends AnchorPane {
             loader.setRoot(this);
             loader.setController(this);
             loader.load();
-
+            this.setVisible(false);
+            this.setOpacity(0);
             this.setId(this.getClass().getName());
-            this.getStyleClass().add("hidden");
             AnchorPane.setTopAnchor(this, 0.0);
             AnchorPane.setBottomAnchor(this, 0.0);
             AnchorPane.setLeftAnchor(this, 0.0);
@@ -33,6 +44,7 @@ public abstract class MyAnchorPane extends AnchorPane {
             throw new RuntimeException(exception);
         }
     }
+
     protected void createAlert(String header, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(header);
@@ -40,18 +52,23 @@ public abstract class MyAnchorPane extends AnchorPane {
         alert.setContentText(message);
         alert.showAndWait();
     }
-    protected <S, t> TableColumn<S, t> column(String title, Function<S, t> property) {
-        TableColumn<S, t> col = new TableColumn<>(title);
-        col.setCellValueFactory(cellData -> new SimpleObjectProperty<>(property.apply(cellData.getValue())));
-        return col;
+
+
+
+    protected SequentialTransition createTransition(Pane disappearancePane, Pane appearancePane) {
+        return createTransition(disappearancePane, appearancePane, 1300);
     }
-    protected <S, t> TableColumn<S, t> invisibleColumn(String title, Function<S, t> property) {
-        TableColumn<S, t> col = column(title, property);
-        col.setVisible(false);
-        return col;
-    }
-    protected <S, t> void onEditCommit(TableColumn<S, t> column, BiConsumer<S, t> consumer) {
-        column.setOnEditCommit(e ->
-                consumer.accept(e.getTableView().getItems().get(e.getTablePosition().getRow()), e.getNewValue()));
+
+    protected SequentialTransition createTransition(Pane disappearancePane, Pane appearancePane, long time) {
+        return new SequentialTransition(
+                new Timeline(
+                        new KeyFrame(Duration.millis(time*0.4),
+                                new KeyValue(disappearancePane.opacityProperty(), 0))),
+                new Timeline(
+                        new KeyFrame(Duration.millis(1),
+                                new KeyValue(disappearancePane.visibleProperty(), false),
+                                new KeyValue(appearancePane.visibleProperty(), true))),
+                new Timeline(new KeyFrame(Duration.millis(time*0.6),
+                        new KeyValue(appearancePane.opacityProperty(), 1))));
     }
 }

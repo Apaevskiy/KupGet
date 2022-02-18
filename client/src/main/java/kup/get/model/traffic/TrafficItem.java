@@ -1,5 +1,6 @@
-package kup.get.model;
+package kup.get.model.traffic;
 
+import kup.get.model.alfa.Person;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -8,7 +9,7 @@ import java.time.LocalDate;
 
 @Data
 @Builder
-public class Item {
+public class TrafficItem {
     private Long id;
     private String name;
     private String description;

@@ -3,9 +3,12 @@ package kup.get.entity.postgres.traffic;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import javax.persistence.*;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name="traffic_team")
@@ -17,12 +20,13 @@ public class TrafficTeam {
     private Long id;
 
     private String number;
+    private String workingMode;
 
-    @OneToMany
-    @JoinColumn(name = "traffic_people_id")
-    private List<TrafficPerson> trafficPeople;
+    @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+    @JoinColumn(name = "traffic_person_id")
+    private Set<TrafficPerson> trafficPeople;
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name = "traffic_item_id")
-    private List<TrafficItem> trafficItems;
+    private Set<TrafficItem> trafficItems;
 }

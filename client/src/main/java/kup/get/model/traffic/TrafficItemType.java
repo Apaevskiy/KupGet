@@ -1,9 +1,7 @@
-package kup.get.model;
+package kup.get.model.traffic;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Data
 @EqualsAndHashCode
@@ -25,5 +23,12 @@ public class TrafficItemType {
                 ", status=" + status +
                 ", changed=" + changed +
                 '}';
+    }
+
+    public void setItemType(TrafficItemType type) {
+        this.id = type.getId();
+        this.defaultDurationInMonth = type.getDefaultDurationInMonth();
+        this.status = type.isStatus();
+        this.name = type.getName();
     }
 }

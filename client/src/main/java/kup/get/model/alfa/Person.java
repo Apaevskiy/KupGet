@@ -1,14 +1,13 @@
-package kup.get.model;
+package kup.get.model.alfa;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 
 @Data
 @Builder
 public class Person {
-    private long id;
+    private Long id;
     private String personnelNumber;
     private Department department;
     private Position position;

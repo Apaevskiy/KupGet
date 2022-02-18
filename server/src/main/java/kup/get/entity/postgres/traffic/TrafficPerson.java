@@ -15,7 +15,13 @@ public class TrafficPerson {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    private String personnelNumber;
+
+    /*@ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.DETACH})
+    @JoinColumn(name = "traffic_team_id")
+    private TrafficTeam team;*/
+
     @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "traffic_item_id"/*, nullable = false*/)
+    @JoinColumn(name = "traffic_item_id")
     private List<TrafficItem> items;
 }
