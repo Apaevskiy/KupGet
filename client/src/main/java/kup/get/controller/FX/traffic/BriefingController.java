@@ -1,8 +1,6 @@
 package kup.get.controller.FX.traffic;
 
 import javafx.animation.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
@@ -11,9 +9,12 @@ import kup.get.config.*;
 import kup.get.controller.socket.SocketService;
 import kup.get.model.traffic.TrafficItem;
 import kup.get.model.alfa.Person;
+import kup.get.model.traffic.TrafficItemType;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
@@ -49,6 +50,8 @@ public class BriefingController extends MyAnchorPane {
 
     private SequentialTransition transition;
     private final SocketService socketService;
+    private int month;
+    private List<TrafficItemType> types = new ArrayList<>();
 
     public BriefingController(SocketService socketService) {
         this.socketService = socketService;
@@ -58,12 +61,12 @@ public class BriefingController extends MyAnchorPane {
         briefingTable
                 .headerColumn("Инструктажи по охране труда")
                 .column("Таб.№", trafficItem -> trafficItem.getPerson().getPersonnelNumber())
-                .column("Фамилия", trafficItem -> trafficItem.getPerson().getLastName())
-                .column("Имя", trafficItem -> trafficItem.getPerson().getFirstName())
-                .column("Отчество", trafficItem -> trafficItem.getPerson().getMiddleName())
+//                .column("Фамилия", trafficItem -> trafficItem.getPerson().getLastName())
+//                .column("Имя", trafficItem -> trafficItem.getPerson().getFirstName())
+//                .column("Отчество", trafficItem -> trafficItem.getPerson().getMiddleName())
                 .column("Комментарий", TrafficItem::getDescription)
-                .column("Дата последнего\nинструктажа", TrafficItem::getDateStart, TrafficItem::setDateStart, p ->  new DateEditingCell<>())
-                .column("Дата необходимого\nинструктажа", TrafficItem::getDateFinish, TrafficItem::setDateFinish, p ->  new DateEditingCell<>());
+                .editableColumn("Дата последнего\nинструктажа", TrafficItem::getDateStart, TrafficItem::setDateStart, p ->  new DateEditingCell<>())
+                .editableColumn("Дата необходимого\nинструктажа", TrafficItem::getDateFinish, TrafficItem::setDateFinish, p ->  new DateEditingCell<>());
 
 
         peopleTable
@@ -88,11 +91,11 @@ public class BriefingController extends MyAnchorPane {
                 transition = createTransition(addBriefingPage, briefingPane);
                 transition.play();
             }*/
-            fillInTheTables();
+
         });
         dateStartField.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-            dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(3));
+            dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(month));
         });
     }
 
@@ -106,11 +109,16 @@ public class BriefingController extends MyAnchorPane {
                 });
     }
 
-    private void fillInTheTables() {
+    public void fillInTheTables() {
         socketService.getBriefing(LocalDate.now())
-                .doOnNext(trafficItem -> briefingTable.getItems().add(trafficItem))
-                .subscribe();
-        socketService.getPeople().doOnNext(person -> peopleTable.getItems().add(person)).subscribe();
-//        peopleTable.getItems().add(person)
+                .subscribe(trafficItem -> briefingTable.getItems().add(trafficItem));
+        socketService.getPeople()
+                .subscribe(person -> peopleTable.getItems().add(person));
+        socketService.getItemsType()
+                .subscribe(type -> {
+                    if(type.getId()==1)
+                        month = type.getDefaultDurationInMonth();
+                    types.add(type);
+                });
     }
 }

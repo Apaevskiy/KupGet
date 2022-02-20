@@ -22,11 +22,12 @@ public class TrafficTeam {
     private String number;
     private String workingMode;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.PERSIST})
-    @JoinColumn(name = "traffic_person_id")
+    @OneToOne(mappedBy = "team")
+    private TrafficVehicle vehicle;
+
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "team")
     private Set<TrafficPerson> trafficPeople;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "traffic_item_id")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "team")
     private Set<TrafficItem> trafficItems;
 }

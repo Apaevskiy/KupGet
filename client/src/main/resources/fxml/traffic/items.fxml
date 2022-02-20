@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import kup.get.config.MyTable?>
+
+<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+    <GridPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+        <columnConstraints>
+         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+         <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+        </columnConstraints>
+        <rowConstraints>
+            <RowConstraints minHeight="10.0" percentHeight="8.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        </rowConstraints>
+        <MyTable fx:id="ownerTable" editable="true" prefHeight="200.0" prefWidth="200.0" tableMenuButtonVisible="true" visible="false" GridPane.columnSpan="2" GridPane.rowIndex="1">
+            <GridPane.margin>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </GridPane.margin>
+            <columnResizePolicy>
+                <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
+            </columnResizePolicy>
+        </MyTable>
+        <ComboBox fx:id="ownerComboBox" prefHeight="0.0" prefWidth="206.0" promptText="Транспортное средство" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+         <padding>
+             <Insets bottom="2.0" left="3.0" right="3.0" top="2.0" />
+         </padding>
+        </ComboBox>
+        <Button fx:id="excelButton" disable="true" mnemonicParsing="false" styleClass="clickButton" text="Excel" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+        <DatePicker fx:id="startDatePricker" promptText="Начало периода" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+        <DatePicker fx:id="finishDatePicker" promptText="Конец периода" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER" />
+        <MyTable fx:id="itemTable" editable="true" prefHeight="200.0" prefWidth="200.0" tableMenuButtonVisible="true" GridPane.columnSpan="4" GridPane.rowIndex="1">
+            <columnResizePolicy>
+                <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
+            </columnResizePolicy>
+            <GridPane.margin>
+                <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+            </GridPane.margin>
+        </MyTable>
+    </GridPane>
+</fx:root>

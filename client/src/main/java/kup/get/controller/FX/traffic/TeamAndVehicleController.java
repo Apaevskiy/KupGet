@@ -81,25 +81,22 @@ public class TeamAndVehicleController extends MyAnchorPane {
                         Optional<Person> optional = people.stream().filter(person -> person.getId().equals(p.getPersonnelNumber())).findFirst();
                         return optional.isPresent() ? optional.get().getMiddleName() : "";
                     } else return "";
-                })
-                .build();
+                });
 
         teamTable
                 .headerColumn("Экипажи")
                 .invisibleColumn("id экипажа", TrafficTeam::getId)
-                .column("№ экипажа", TrafficTeam::getNumber, (tt, value) -> saveTrafficTeam(tt, TrafficTeam::setNumber, value), TextFieldTableCell.forTableColumn())
-                .column("Режим работы", TrafficTeam::getWorkingMode, (tt, value) -> saveTrafficTeam(tt, TrafficTeam::setWorkingMode, value), TextFieldTableCell.forTableColumn())
-                .build();
+                .editableColumn("№ экипажа", TrafficTeam::getNumber, (tt, value) -> saveTrafficTeam(tt, TrafficTeam::setNumber, value), TextFieldTableCell.forTableColumn())
+                .editableColumn("Режим работы", TrafficTeam::getWorkingMode, (tt, value) -> saveTrafficTeam(tt, TrafficTeam::setWorkingMode, value), TextFieldTableCell.forTableColumn());
 
         vehicleTable
                 .headerColumn("Транспортные стредства")
                 .invisibleColumn("id ТС", TrafficVehicle::getId)
-                .column("№ трол-са", TrafficVehicle::getNumber, (tv, value) -> saveTrafficVehicle(tv, TrafficVehicle::setNumber, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                .column("Марка трол-са", TrafficVehicle::getModel, (tv, value) -> saveTrafficVehicle(tv, TrafficVehicle::setModel, value), TextFieldTableCell.forTableColumn())
+                .editableColumn("№ трол-са", TrafficVehicle::getNumber, (tv, value) -> saveTrafficVehicle(tv, TrafficVehicle::setNumber, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
+                .editableColumn("Марка трол-са", TrafficVehicle::getModel, (tv, value) -> saveTrafficVehicle(tv, TrafficVehicle::setModel, value), TextFieldTableCell.forTableColumn())
                 .invisibleColumn("id экипажа", tv -> tv.getTeam() != null ? tv.getTeam().getId() : null)
                 .column("№ экипажа", tv -> tv.getTeam() != null ? tv.getTeam().getNumber() : null)
-                .column("Режим работы", tv -> tv.getTeam() != null ? tv.getTeam().getWorkingMode() : null)
-                .build();
+                .column("Режим работы", tv -> tv.getTeam() != null ? tv.getTeam().getWorkingMode() : null);
 
 
         peopleTable
@@ -110,8 +107,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
                 .column("Имя", Person::getFirstName)
                 .column("Отчество", Person::getMiddleName)
                 .invisibleColumn("Подразделение", person -> person.getDepartment().getName())
-                .invisibleColumn("Должность", person -> person.getPosition().getName())
-                .build();
+                .invisibleColumn("Должность", person -> person.getPosition().getName());
 
 
         vehicleTable.addEventHandler(MOUSE_CLICKED, event -> {
@@ -289,14 +285,6 @@ public class TeamAndVehicleController extends MyAnchorPane {
     private <t> Mono<t> error() {
         Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\nПри необходимости обратитесь к администратору"));
         return Mono.empty();
-    }
-
-    @PostConstruct
-    public void test() {
-        socketService.authorize("sanya", "1101")
-                .onErrorResume(throwable -> Mono.just(throwable.getMessage()))      //  LOG
-                .subscribe(System.out::println);
-        socketService.getPeople().subscribe(people::add);
     }
 
     public void fillInTheTables() {

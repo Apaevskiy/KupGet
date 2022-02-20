@@ -2,6 +2,7 @@ package kup.get.config;
 
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.transport.netty.client.TcpClientTransport;
+import kup.get.model.alfa.Person;
 import org.springframework.boot.rsocket.messaging.RSocketStrategiesCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,6 +14,7 @@ import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Mono;
 
 import java.net.ConnectException;
+import java.util.List;
 
 @Configuration
 public class RSocketClientConfig {
@@ -28,7 +30,6 @@ public class RSocketClientConfig {
                         MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString()))
                 .tcp("localhost", 9091);
     }
-
     /*public String createRequester() {
         TcpClientTransport transport = TcpClientTransport.create("localhost", 9091);
         return transport.connect()

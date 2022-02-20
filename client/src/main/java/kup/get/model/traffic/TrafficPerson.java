@@ -9,7 +9,7 @@ import java.util.List;
 public class TrafficPerson {
     private Long id;
     private Long personnelNumber;
-//    private TrafficTeam team;
+    private TrafficTeam team;
     private List<TrafficItem> items;
 
     public void setPerson(TrafficPerson person){

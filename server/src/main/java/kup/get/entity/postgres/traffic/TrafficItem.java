@@ -18,12 +18,22 @@ public class TrafficItem {
     private String name;
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "traffic_item_type_id")
-    private TrafficItemType type;
-
     @DateTimeFormat(pattern="yyyy-MM-dd")
     private LocalDate dateStart;
     @DateTimeFormat(pattern="yyyy-MM-dd")
     private LocalDate dateFinish;
+
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "item_type_id")
+    private TrafficItemType type;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "team_id")
+    private TrafficTeam team;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "person_id")
+    private TrafficPerson person;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "vehicle_id")
+    private TrafficVehicle vehicle;
 }

@@ -1,8 +1,6 @@
 package kup.get.controller.FX.traffic;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -10,14 +8,10 @@ import javafx.scene.input.MouseButton;
 import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.*;
 import kup.get.controller.socket.SocketService;
-import kup.get.model.traffic.TrafficItem;
 import kup.get.model.traffic.TrafficItemType;
-import kup.get.model.traffic.TrafficVehicle;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
@@ -43,9 +37,8 @@ public class TrafficItemTypeController extends MyAnchorPane {
                     checkBox.selectedProperty().addListener((ov, old_val, new_val) -> saveTrafficType(type, TrafficItemType::setStatus, new_val));
                     return new SimpleObjectProperty<>(checkBox);
                 })*/
-                .column("Наименование", TrafficItemType::getName, (type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn())
-                .column("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth, (type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                .build();
+                .editableColumn("Наименование", TrafficItemType::getName, (type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn())
+                .editableColumn("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth, (type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
 
 
         itemTypeTable.addEventHandler(MOUSE_CLICKED, event -> {

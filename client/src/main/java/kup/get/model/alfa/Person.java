@@ -14,4 +14,9 @@ public class Person {
     private String lastName;
     private String firstName;
     private String middleName;
+
+    @Override
+    public String toString() {
+        return personnelNumber + ' ' + lastName + ' ' + firstName + ' ' + middleName;
+    }
 }

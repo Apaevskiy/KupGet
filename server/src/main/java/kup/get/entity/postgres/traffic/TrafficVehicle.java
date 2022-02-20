@@ -21,11 +21,10 @@ public class TrafficVehicle {
     private int number;
     private String model;
 
-    @OneToMany(fetch = FetchType.EAGER)
-    @JoinColumn(name = "traffic_item_id")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "vehicle")
     private List<TrafficItem> items;
 
     @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "traffic_team_id")
+    @JoinColumn(name = "traffic_team_id", unique = true)
     private TrafficTeam team;
 }

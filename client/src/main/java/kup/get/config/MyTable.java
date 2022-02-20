@@ -3,7 +3,6 @@ package kup.get.config;
 
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -36,8 +35,8 @@ public class MyTable<S> extends TableView<S> {
         column.getColumns().add(col);
         return this;
     }
-    public <t> MyTable<S> column(String title, Function<S, t> property, BiConsumer<S, t> consumer,
-                                              Callback<TableColumn<S,t>, TableCell<S,t>> columnCallback) {
+    public <t> MyTable<S> editableColumn(String title, Function<S, t> property, BiConsumer<S, t> consumer,
+                                         Callback<TableColumn<S,t>, TableCell<S,t>> columnCallback) {
         TableColumn<S, t> col = new TableColumn<>(title);
         col.setCellValueFactory(cellData -> new SimpleObjectProperty<>(property.apply(cellData.getValue())));
         col.setCellFactory(columnCallback);
@@ -48,10 +47,8 @@ public class MyTable<S> extends TableView<S> {
 
     public MyTable<S> headerColumn(String header){
         column.setText(header);
-        return this;
-    }
-    public void build(){
         this.getColumns().add(column);
+        return this;
     }
     public <t> void onEditCommit(TableColumn<S, t> column, BiConsumer<S, t> consumer) {
         column.setOnEditCommit(e ->

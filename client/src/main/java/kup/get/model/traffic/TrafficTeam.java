@@ -14,6 +14,7 @@ public class TrafficTeam {
     private String number;
     private String workingMode;
 
+    private TrafficVehicle vehicle;
     private Set<TrafficPerson> trafficPeople = new HashSet<>();
     private Set<TrafficItem> trafficItems = new HashSet<>();
 
@@ -22,6 +23,7 @@ public class TrafficTeam {
        this.number = tt.getNumber();
        this.workingMode = tt.getWorkingMode();
        this.trafficPeople = tt.getTrafficPeople();
+       this.vehicle = tt.getVehicle();
        this.trafficItems = tt.getTrafficItems();
     }
 }

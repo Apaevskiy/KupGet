@@ -14,13 +14,14 @@ public class TrafficItem {
     private String name;
     private String description;
 
-    private TrafficItemType type;
-
     @DateTimeFormat(pattern="yyyy-MM-dd")
     private LocalDate dateStart;
     @DateTimeFormat(pattern="yyyy-MM-dd")
     private LocalDate dateFinish;
 
-    private Person person;
+    private TrafficItemType type;
 
+    private TrafficTeam team;
+    private TrafficPerson person;
+    private TrafficVehicle vehicle;
 }

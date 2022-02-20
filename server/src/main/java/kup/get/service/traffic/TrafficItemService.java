@@ -1,9 +1,6 @@
 package kup.get.service.traffic;
 
-import kup.get.entity.postgres.traffic.TrafficItemType;
-import kup.get.entity.postgres.traffic.TrafficPerson;
-import kup.get.entity.postgres.traffic.TrafficTeam;
-import kup.get.entity.postgres.traffic.TrafficVehicle;
+import kup.get.entity.postgres.traffic.*;
 import kup.get.repository.postgres.traffic.*;
 import lombok.AllArgsConstructor;
 import lombok.Synchronized;
@@ -26,7 +23,6 @@ public class TrafficItemService {
         return personRepository.findAllByItemsTypeIdAndItemsDateFinishAfter(1L, date);
     }
 
-    @Synchronized
     public void saveType(List<TrafficItemType> type) {
         System.out.println(type);
         typeRepository.saveAll(type);
@@ -60,5 +56,13 @@ public class TrafficItemService {
 
     public TrafficPerson saveTrafficPerson(TrafficPerson trafficPerson) {
         return personRepository.save(trafficPerson);
+    }
+
+    public List<TrafficPerson> getTrafficPeople() {
+        return personRepository.findAll();
+    }
+
+    public List<TrafficItem> getTrafficItems() {
+        return itemRepository.findAll();
     }
 }

@@ -1,10 +1,7 @@
 package kup.get.controller;
 
 import kup.get.entity.alfa.Person;
-import kup.get.entity.postgres.traffic.TrafficItemType;
-import kup.get.entity.postgres.traffic.TrafficPerson;
-import kup.get.entity.postgres.traffic.TrafficTeam;
-import kup.get.entity.postgres.traffic.TrafficVehicle;
+import kup.get.entity.postgres.traffic.*;
 import kup.get.service.alfa.AlfaService;
 import kup.get.service.traffic.TrafficItemService;
 import lombok.AllArgsConstructor;
@@ -25,17 +22,6 @@ public class TrafficController {
     private final TrafficItemService trafficItemService;
     private final AlfaService alfaService;
 
-    @MessageMapping("briefing")
-    Flux<TrafficPerson> getBriefing(Mono<LocalDate> dateMono) {
-        return dateMono
-                .flatMapMany(date -> Flux.fromIterable(trafficItemService.getBriefingOfPeople(date)));
-    }
-
-    @MessageMapping("drivers")
-    Flux<Person> getDrivers() {
-        return Flux.fromIterable(alfaService.getDrivers());
-    }
-
     @MessageMapping("greetings")
     Flux<String> greet(@AuthenticationPrincipal Mono<UserDetails> user) {
         return user
@@ -44,13 +30,24 @@ public class TrafficController {
                                 .stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList())));
     }
 
+    @MessageMapping("traffic.briefing")
+    Flux<TrafficPerson> getBriefing(Mono<LocalDate> dateMono) {
+        return dateMono
+                .flatMapMany(date -> Flux.fromIterable(trafficItemService.getBriefingOfPeople(date)));
+    }
+
+    @MessageMapping("traffic.drivers")
+    Flux<Person> getDrivers() {
+        return Flux.fromIterable(alfaService.getDrivers());
+    }
+
     @MessageMapping("traffic.trafficItemType")
     Flux<TrafficItemType> getTrafficItemType() {
         System.out.println("HI");
         return Flux.fromIterable(trafficItemService.getAllItemTypes());
     }
 
-    @MessageMapping("saveItemsTypes")
+    @MessageMapping("traffic.saveItemsTypes")
     Mono<Boolean> saveItemsTypes(Flux<TrafficItemType> flux) {
         return flux
                 .collect(Collectors.toList())
@@ -63,7 +60,10 @@ public class TrafficController {
         return person
                 .map(trafficItemService::saveTrafficPerson);
     }
-
+    @MessageMapping("traffic.getTrafficPeople")
+    Flux<TrafficPerson> getTrafficPeople() {
+        return Flux.fromIterable(trafficItemService.getTrafficPeople());
+    }
     @MessageMapping("traffic.saveTrafficTeam")
     Mono<TrafficTeam> saveTrafficTeam(Mono<TrafficTeam> trafficTeam) {
         return trafficTeam
@@ -93,5 +93,9 @@ public class TrafficController {
         return trafficVehicle
                 .doOnNext(trafficItemService::deleteTrafficVehicle)
                 .then(Mono.empty());
+    }
+    @MessageMapping("traffic.getTrafficItems")
+    Flux<TrafficItem> getTrafficItems() {
+        return Flux.fromIterable(trafficItemService.getTrafficItems());
     }
 }

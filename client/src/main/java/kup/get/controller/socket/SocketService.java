@@ -37,13 +37,13 @@ public class SocketService {
     }
 
     public Flux<TrafficItem> getBriefing(LocalDate date) {
-        return route("briefing")
+        return route("traffic.briefing")
                 .data(date)
                 .retrieveFlux(TrafficItem.class);
     }
 
     public Flux<Person> getPeople() {
-        return route("drivers")
+        return route("traffic.drivers")
                 .retrieveFlux(Person.class);
     }
 
@@ -53,7 +53,7 @@ public class SocketService {
     }
 
     public Mono<TrafficItemType> saveItemsType(TrafficItemType type) {
-        return route("saveItemsTypes")
+        return route("traffic.saveItemsTypes")
                 .data(type)
                 .retrieveMono(TrafficItemType.class);
     }
@@ -96,5 +96,15 @@ public class SocketService {
         return route("traffic.saveTrafficPerson")
                 .data(person)
                 .retrieveMono(TrafficPerson.class);
+    }
+
+    public Flux<TrafficPerson> getTrafficPeople() {
+        return route("traffic.getTrafficPeople")
+                .retrieveFlux(TrafficPerson.class);
+    }
+
+    public Flux<TrafficItem> getTrafficItem() {
+        return route("traffic.getTrafficItems")
+                .retrieveFlux(TrafficItem.class);
     }
 }

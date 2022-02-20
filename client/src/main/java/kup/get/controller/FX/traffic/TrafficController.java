@@ -20,30 +20,36 @@ public class TrafficController extends MyAnchorPane {
 
     public TrafficController(TrafficItemTypeController typeController,
                              BriefingController briefingController,
-                             TeamAndVehicleController teamAndVehicleController) {
-        workPlace.getChildren().addAll(typeController, briefingController, teamAndVehicleController);
+                             TeamAndVehicleController teamAndVehicleController,
+                             ItemController itemController) {
+        workPlace.getChildren().addAll(
+                typeController,
+                briefingController,
+                teamAndVehicleController,
+                itemController
+        );
 
         this.setVisible(true);
         this.setOpacity(1);
 
 
         Menu referenceMenu = new Menu("Справочники");
-        MenuItem referenceBriefingMI = new MenuItem("Иснструктажи по ОТ");
         MenuItem referenceItemTypeMI = new MenuItem("Тип");
         MenuItem referenceTeamAndVehicleMI = new MenuItem("Экипажи и ТС");
-        MenuItem referenceVehicleMI = new MenuItem("x Транспортные средства");
-        referenceMenu.getItems().addAll(referenceBriefingMI, referenceItemTypeMI, referenceTeamAndVehicleMI);
+        referenceMenu.getItems().addAll(referenceItemTypeMI, referenceTeamAndVehicleMI);
 
         Menu reportMenu = new Menu("Отчёты");
-        MenuItem reportPeopleMI = new MenuItem("x По водителям");
+        MenuItem referenceBriefingMI = new MenuItem("Иснструктажи по ОТ");
+        MenuItem reportPeopleMI = new MenuItem("Остальное");
         MenuItem reportTeamMI = new MenuItem("x По экипажам");
         MenuItem reportVehicleMI = new MenuItem("x По ТС");
         MenuItem reportAllMI = new MenuItem("x По всем");
-        reportMenu.getItems().addAll(reportPeopleMI,reportTeamMI, reportVehicleMI, reportAllMI);
+        reportMenu.getItems().addAll(referenceBriefingMI,reportPeopleMI,reportTeamMI, reportVehicleMI, reportAllMI);
 
         menuBar.getMenus().addAll(reportMenu, referenceMenu);
 
         referenceBriefingMI.setOnAction(event -> {
+            briefingController.fillInTheTables();
             createTransition(actualPane, briefingController).play();
             actualPane = briefingController;
         });
@@ -55,6 +61,11 @@ public class TrafficController extends MyAnchorPane {
             teamAndVehicleController.fillInTheTables();
             createTransition(actualPane, teamAndVehicleController).play();
             actualPane = teamAndVehicleController;
+        });
+        reportPeopleMI.setOnAction(event -> {
+            itemController.fillInTheTables();
+            createTransition(actualPane, itemController).play();
+            actualPane = itemController;
         });
     }
 }
