@@ -8,16 +8,11 @@ import kup.get.config.MyTable;
 import kup.get.controller.socket.SocketService;
 import kup.get.model.alfa.Person;
 import kup.get.model.traffic.TrafficItem;
-import kup.get.model.traffic.TrafficPerson;
-import kup.get.model.traffic.TrafficTeam;
-import kup.get.model.traffic.TrafficVehicle;
-import lombok.Data;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @FxmlLoader(path = "/fxml/traffic/items.fxml")
 public class ItemController extends MyAnchorPane {
@@ -38,11 +33,27 @@ public class ItemController extends MyAnchorPane {
     private DatePicker startDatePricker;
 
     private final SocketService socketService;
-    private final List<Person> people = new ArrayList<>();
 
     public ItemController(SocketService socketService) {
         this.socketService = socketService;
         ownerComboBox.getItems().addAll("Все","ТС","Экипажи","Водители");
+
+        ownerTable
+                .headerColumn("items")
+//                .invisibleColumn("id", TrafficItem::getId)
+                .column("Наименование", ti -> ti.getType()!=null?ti.getType().getName():null)
+                .column("Описание", TrafficItem::getDescription)
+                .column("Начало периода", TrafficItem::getDateStart)
+                .column("Конец периода", TrafficItem::getDateFinish);
+        TableColumn<TrafficItem, String> personnelNumberColumn = new TableColumn<>("Таб. №");
+        TableColumn<TrafficItem, String> lastNameColumn = new TableColumn<>("Фамилия");
+        TableColumn<TrafficItem, String> firstNameColumn = new TableColumn<>("Имя");
+        TableColumn<TrafficItem, String> middleNameColumn = new TableColumn<>("Отчество");
+        TableColumn<TrafficItem, String> numberTeamColumn = new TableColumn<>("Номер экипажа");
+        TableColumn<TrafficItem, String> workingModeTeamColumn = new TableColumn<>("Режим работы");
+        TableColumn<TrafficItem, String> numberVehicleColumn = new TableColumn<>("Номер ТС");
+        TableColumn<TrafficItem, String> modelVehicleColumn = new TableColumn<>("Модель ТС");
+
     }
 
     public void fillInTheTables() {
@@ -59,7 +70,7 @@ public class ItemController extends MyAnchorPane {
     public void test() {
         socketService.authorize("sanya", "1101")
                 .onErrorResume(s -> Mono.just(s.getMessage()))      //  LOG
+                .doOnComplete(socketService::updatePeople)
                 .subscribe(System.out::println);
-        socketService.getPeople().subscribe(people::add);
     }
 }

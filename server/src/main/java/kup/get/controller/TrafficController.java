@@ -43,17 +43,13 @@ public class TrafficController {
 
     @MessageMapping("traffic.trafficItemType")
     Flux<TrafficItemType> getTrafficItemType() {
-        System.out.println("HI");
         return Flux.fromIterable(trafficItemService.getAllItemTypes());
     }
 
-    @MessageMapping("traffic.saveItemsTypes")
-    Mono<Boolean> saveItemsTypes(Flux<TrafficItemType> flux) {
-        return flux
-                .collect(Collectors.toList())
-                .doOnNext(trafficItemService::saveType)
-                .map(e -> true)
-                .onErrorReturn(false);
+    @MessageMapping("traffic.saveItemType")
+    Mono<TrafficItemType> saveItemsTypes(Mono<TrafficItemType> itemType) {
+        return itemType
+                .map(trafficItemService::saveType);
     }
     @MessageMapping("traffic.saveTrafficPerson")
     Mono<TrafficPerson> saveTrafficPerson(Mono<TrafficPerson> person) {

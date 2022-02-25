@@ -291,8 +291,12 @@ public class TeamAndVehicleController extends MyAnchorPane {
         trafficPeopleTable.getItems().clear();
         teamTable.getItems().clear();
         vehicleTable.getItems().clear();
+        people.clear();
 
+        people.addAll(socketService.getPeople());
+        peopleTable.setItems(FXCollections.observableArrayList(socketService.getPeople()));
         socketService.getTrafficVehicle().subscribe(vehicleTable.getItems()::add);
         socketService.getTrafficTeam().subscribe(teamTable.getItems()::add);
+
     }
 }

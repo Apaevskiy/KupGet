@@ -23,9 +23,9 @@ public class TrafficItemService {
         return personRepository.findAllByItemsTypeIdAndItemsDateFinishAfter(1L, date);
     }
 
-    public void saveType(List<TrafficItemType> type) {
+    public TrafficItemType saveType(TrafficItemType type) {
         System.out.println(type);
-        typeRepository.saveAll(type);
+        return typeRepository.save(type);
     }
 
     public List<TrafficItemType> getAllItemTypes() {

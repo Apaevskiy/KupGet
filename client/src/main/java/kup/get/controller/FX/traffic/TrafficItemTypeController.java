@@ -1,6 +1,7 @@
 package kup.get.controller.FX.traffic;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -28,16 +29,33 @@ public class TrafficItemTypeController extends MyAnchorPane {
     public TrafficItemTypeController(SocketService socketService) {
         this.socketService = socketService;
 
+        /*
+        statusColumn.setCellValueFactory(cell -> {
+            TrafficItemType type = cell.getValue();
+            CheckBox checkBox = new CheckBox();
+            checkBox.selectedProperty().setValue(type.isStatus());
+            checkBox.selectedProperty().addListener((ov, old_val, new_val) -> {
+                type.setStatus(new_val);
+                type.setChanged(true);
+            });
+            return new SimpleObjectProperty<>(checkBox);
+        });
+        */
         itemTypeTable
                 .headerColumn("Перечень пунктов для ОТ")
                 .invisibleColumn("id", TrafficItemType::getId)
-                /*.column("Статус", type -> {
+                .column("Статус", type -> {
                     CheckBox checkBox = new CheckBox();
                     checkBox.selectedProperty().setValue(type.isStatus());
-                    checkBox.selectedProperty().addListener((ov, old_val, new_val) -> saveTrafficType(type, TrafficItemType::setStatus, new_val));
-                    return new SimpleObjectProperty<>(checkBox);
-                })*/
-                .editableColumn("Наименование", TrafficItemType::getName, (type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn())
+                    checkBox.selectedProperty().addListener(
+                            (ov, old_val, new_val) ->
+                                    saveTrafficType(type, TrafficItemType::setStatus, new_val));
+                    return checkBox;
+                })
+                .editableColumn("Наименование",
+                        TrafficItemType::getName,
+                        (type, value) -> saveTrafficType(type, TrafficItemType::setName, value),
+                        TextFieldTableCell.forTableColumn())
                 .editableColumn("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth, (type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
 
 
@@ -51,7 +69,7 @@ public class TrafficItemTypeController extends MyAnchorPane {
     private <t> void saveTrafficType(TrafficItemType it, BiConsumer<TrafficItemType, t> consumer, t value) {
         consumer.accept(it, value);
         socketService
-                .saveItemsType(it)
+                .saveItemType(it)
                 .onErrorResume(e -> {
                     Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\nПри необходимости обратитесь к администратору"));
                     return Mono.empty();
@@ -72,7 +90,7 @@ public class TrafficItemTypeController extends MyAnchorPane {
                 });
     }
 
-    public void updateTable() {
+    public void fillInTheTables() {
 //        saveButton.setDisable(true);
         itemTypeTable.getItems().clear();
         socketService.getItemsType()

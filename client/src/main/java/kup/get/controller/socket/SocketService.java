@@ -8,11 +8,11 @@ import org.springframework.security.rsocket.metadata.UsernamePasswordMetadata;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
-import reactor.core.CorePublisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Controller
@@ -20,20 +20,23 @@ public class SocketService {
     private UsernamePasswordMetadata metadata;
     private final MimeType mimetype = MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
     private final RSocketRequester requester;
+    private final List<Person> people = new ArrayList<>();
 
     public SocketService(RSocketRequester requester) {
         this.requester = requester;
     }
-    public Flux<String> authorize(String username, String password){
+
+    public Flux<String> authorize(String username, String password) {
         metadata = new UsernamePasswordMetadata(username, password);
         return requester
                 .route("greetings")
-                .metadata(this.metadata,this.mimetype)
+                .metadata(this.metadata, this.mimetype)
                 .data(Mono.empty())
                 .retrieveFlux(String.class);
     }
+
     private RSocketRequester.RequestSpec route(String s) {
-        return requester.route(s).metadata(this.metadata,this.mimetype);
+        return requester.route(s).metadata(this.metadata, this.mimetype);
     }
 
     public Flux<TrafficItem> getBriefing(LocalDate date) {
@@ -42,9 +45,13 @@ public class SocketService {
                 .retrieveFlux(TrafficItem.class);
     }
 
-    public Flux<Person> getPeople() {
-        return route("traffic.drivers")
-                .retrieveFlux(Person.class);
+    public void updatePeople() {
+        route("traffic.drivers")
+                .retrieveFlux(Person.class)
+                .subscribe(people::add);
+    }
+    public List<Person> getPeople(){
+        return people;
     }
 
     public Flux<TrafficItemType> getItemsType() {
@@ -52,8 +59,8 @@ public class SocketService {
                 .retrieveFlux(TrafficItemType.class);
     }
 
-    public Mono<TrafficItemType> saveItemsType(TrafficItemType type) {
-        return route("traffic.saveItemsTypes")
+    public Mono<TrafficItemType> saveItemType(TrafficItemType type) {
+        return route("traffic.saveItemType")
                 .data(type)
                 .retrieveMono(TrafficItemType.class);
     }

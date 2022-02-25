@@ -1,6 +1,7 @@
 package kup.get.controller.FX.traffic;
 
 import javafx.animation.*;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
@@ -112,9 +113,9 @@ public class BriefingController extends MyAnchorPane {
     public void fillInTheTables() {
         socketService.getBriefing(LocalDate.now())
                 .subscribe(trafficItem -> briefingTable.getItems().add(trafficItem));
-        socketService.getPeople()
-                .subscribe(person -> peopleTable.getItems().add(person));
-        socketService.getItemsType()
+        peopleTable.setItems(FXCollections.observableArrayList(socketService.getPeople()));
+        socketService
+                .getItemsType()
                 .subscribe(type -> {
                     if(type.getId()==1)
                         month = type.getDefaultDurationInMonth();

@@ -54,6 +54,7 @@ public class TrafficController extends MyAnchorPane {
             actualPane = briefingController;
         });
         referenceItemTypeMI.setOnAction(event -> {
+            typeController.fillInTheTables();
             createTransition(actualPane, typeController).play();
             actualPane = typeController;
         });

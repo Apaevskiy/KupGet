@@ -24,7 +24,7 @@ public class TrafficVehicle {
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "vehicle")
     private List<TrafficItem> items;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "traffic_team_id", unique = true)
+    @OneToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "traffic_team_id")
     private TrafficTeam team;
 }

@@ -26,7 +26,7 @@ public class TrafficItemType {
     }
 
     public void setItemType(TrafficItemType type) {
-        this.id = type.getId();
+        this.id = type.id;
         this.defaultDurationInMonth = type.getDefaultDurationInMonth();
         this.status = type.isStatus();
         this.name = type.getName();
