@@ -2,6 +2,7 @@ package kup.get.config;
 
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.transport.netty.client.TcpClientTransport;
+import javafx.animation.SequentialTransition;
 import kup.get.model.alfa.Person;
 import org.springframework.boot.rsocket.messaging.RSocketStrategiesCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.ConnectException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Configuration
 public class RSocketClientConfig {
@@ -29,6 +31,10 @@ public class RSocketClientConfig {
                 .setupMetadata(new UsernamePasswordMetadata("test", "test"),
                         MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString()))
                 .tcp("localhost", 9091);
+    }
+    @Bean
+    AtomicReference<SequentialTransition> getTransition(){
+        return new AtomicReference<>(new SequentialTransition());
     }
     /*public String createRequester() {
         TcpClientTransport transport = TcpClientTransport.create("localhost", 9091);

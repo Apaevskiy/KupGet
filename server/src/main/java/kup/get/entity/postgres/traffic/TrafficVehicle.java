@@ -9,7 +9,7 @@ import javax.persistence.*;
 import java.util.List;
 
 @Entity
-@Table(name="traffic_vehicle")
+@Table(name = "traffic_vehicle", catalog = "traffic")
 @Getter
 @Setter
 @ToString
@@ -18,13 +18,13 @@ public class TrafficVehicle {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private int number;
+    private String number;
     private String model;
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "vehicle")
     private List<TrafficItem> items;
 
-    @OneToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "traffic_team_id")
+    @OneToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.DETACH}, optional = false)
+    @JoinColumn(name = "traffic_team_id", nullable = false)
     private TrafficTeam team;
 }

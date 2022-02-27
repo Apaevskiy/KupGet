@@ -22,11 +22,8 @@ public class TrafficTeam {
     private String number;
     private String workingMode;
 
-    @OneToOne(mappedBy = "team", optional = false)
-    private TrafficVehicle vehicle;
-
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "team")
-    private Set<TrafficPerson> trafficPeople;
+    /*@OneToOne(mappedBy = "team", optional = false)
+    private TrafficVehicle vehicle;*/
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "team")
     private Set<TrafficItem> trafficItems;

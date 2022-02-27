@@ -15,7 +15,6 @@ public class TrafficItem {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String name;
     private String description;
 
     @DateTimeFormat(pattern="yyyy-MM-dd")

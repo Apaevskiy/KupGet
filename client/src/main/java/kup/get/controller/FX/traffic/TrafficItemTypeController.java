@@ -1,7 +1,6 @@
 package kup.get.controller.FX.traffic;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -43,21 +42,19 @@ public class TrafficItemTypeController extends MyAnchorPane {
         */
         itemTypeTable
                 .headerColumn("Перечень пунктов для ОТ")
-                .invisibleColumn("id", TrafficItemType::getId)
-                .column("Статус", type -> {
-                    CheckBox checkBox = new CheckBox();
-                    checkBox.selectedProperty().setValue(type.isStatus());
-                    checkBox.selectedProperty().addListener(
-                            (ov, old_val, new_val) ->
-                                    saveTrafficType(type, TrafficItemType::setStatus, new_val));
-                    return checkBox;
-                })
-                .editableColumn("Наименование",
-                        TrafficItemType::getName,
-                        (type, value) -> saveTrafficType(type, TrafficItemType::setName, value),
-                        TextFieldTableCell.forTableColumn())
-                .editableColumn("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth, (type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
-
+                    .column("id", TrafficItemType::getId).setInvisible().build()
+                    .column("Статус", type -> {
+                            CheckBox checkBox = new CheckBox();
+                            checkBox.selectedProperty().setValue(type.isStatus());
+                            checkBox.selectedProperty().addListener(
+                                    (ov, old_val, new_val) ->
+                                            saveTrafficType(type, TrafficItemType::setStatus, new_val));
+                            return checkBox;
+                        }).build()
+                    .column("Наименование", TrafficItemType::getName)
+                        .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn()).build()
+                    .column("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth)
+                        .setEditable( (type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter())).build();
 
         itemTypeTable.addEventHandler(MOUSE_CLICKED, event -> {
             if (event.getButton() == MouseButton.SECONDARY) {

@@ -1,6 +1,7 @@
 package kup.get.controller.socket;
 
 import io.rsocket.metadata.WellKnownMimeType;
+import javafx.collections.ObservableList;
 import kup.get.model.traffic.*;
 import kup.get.model.alfa.Person;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -50,7 +51,8 @@ public class SocketService {
                 .retrieveFlux(Person.class)
                 .subscribe(people::add);
     }
-    public List<Person> getPeople(){
+
+    public List<Person> getPeople() {
         return people;
     }
 
@@ -113,5 +115,11 @@ public class SocketService {
     public Flux<TrafficItem> getTrafficItem() {
         return route("traffic.getTrafficItems")
                 .retrieveFlux(TrafficItem.class);
+    }
+
+    public Flux<TrafficPerson> getPeopleByTeam(TrafficTeam team) {
+        return route("traffic.getPeopleByTeam")
+                .data(team.getId())
+                .retrieveFlux(TrafficPerson.class);
     }
 }

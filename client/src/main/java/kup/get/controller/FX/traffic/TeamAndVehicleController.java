@@ -23,9 +23,6 @@ import kup.get.model.traffic.TrafficTeam;
 import kup.get.model.traffic.TrafficVehicle;
 import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
-import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
@@ -55,59 +52,52 @@ public class TeamAndVehicleController extends MyAnchorPane {
     public TeamAndVehicleController(SocketService socketService) {
         this.socketService = socketService;
         peopleTable.setItems(people);
-        Function<Long, Optional<Person>> function = p -> people.stream().filter(person -> person.getId().equals(p)).findFirst();
         trafficPeopleTable
                 .headerColumn("Водители экипажа")
-                .column("Таб.№", p -> {
-                    if (p != null) {
-                        Optional<Person> optional = function.apply(p.getPersonnelNumber());
-                        return optional.isPresent() ? optional.get().getPersonnelNumber() : "";
-                    } else return "";
-                })
-                .column("Фамилия", p -> {
-                    if (p != null) {
-                        Optional<Person> optional = people.stream().filter(person -> person.getId().equals(p.getPersonnelNumber())).findFirst();
-                        return optional.isPresent() ? optional.get().getLastName() : "";
-                    } else return "";
-                })
-                .column("Имя", p -> {
-                    if (p != null) {
-                        Optional<Person> optional = people.stream().filter(person -> person.getId().equals(p.getPersonnelNumber())).findFirst();
-                        return optional.isPresent() ? optional.get().getFirstName() : "";
-                    } else return "";
-                })
-                .column("Отчество", p -> {
-                    if (p != null) {
-                        Optional<Person> optional = people.stream().filter(person -> person.getId().equals(p.getPersonnelNumber())).findFirst();
-                        return optional.isPresent() ? optional.get().getMiddleName() : "";
-                    } else return "";
-                });
-
+                    .column("Таб.№", p -> parsePerson(Person::getPersonnelNumber, p)).build()
+                    .column("Фамилия", p -> parsePerson(Person::getLastName, p)).build()
+                    .column("Имя", p -> parsePerson(Person::getFirstName, p)).build()
+                    .column("Отчество", p -> parsePerson(Person::getMiddleName, p)).build();
         teamTable
                 .headerColumn("Экипажи")
-                .invisibleColumn("id экипажа", TrafficTeam::getId)
-                .editableColumn("№ экипажа", TrafficTeam::getNumber, (tt, value) -> saveTrafficTeam(tt, TrafficTeam::setNumber, value), TextFieldTableCell.forTableColumn())
-                .editableColumn("Режим работы", TrafficTeam::getWorkingMode, (tt, value) -> saveTrafficTeam(tt, TrafficTeam::setWorkingMode, value), TextFieldTableCell.forTableColumn());
+                    .column("id экипажа", TrafficTeam::getId).setInvisible().build()
+                    .column("№ экипажа", TrafficTeam::getNumber).setEditable((tt, value) -> {
+                        tt.setNumber(value);
+                        saveTrafficTeam(tt);
+                        }, TextFieldTableCell.forTableColumn()).build()
+                    .column("Режим работы", TrafficTeam::getWorkingMode).setEditable( (tt, value) -> {
+                        tt.setWorkingMode(value);
+                        saveTrafficTeam(tt);
+                        }, TextFieldTableCell.forTableColumn()).build();
 
         vehicleTable
                 .headerColumn("Транспортные стредства")
-                .invisibleColumn("id ТС", TrafficVehicle::getId)
-                .editableColumn("№ трол-са", TrafficVehicle::getNumber, (tv, value) -> saveTrafficVehicle(tv, TrafficVehicle::setNumber, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                .editableColumn("Марка трол-са", TrafficVehicle::getModel, (tv, value) -> saveTrafficVehicle(tv, TrafficVehicle::setModel, value), TextFieldTableCell.forTableColumn())
-                .invisibleColumn("id экипажа", tv -> tv.getTeam() != null ? tv.getTeam().getId() : null)
-                .column("№ экипажа", tv -> tv.getTeam() != null ? tv.getTeam().getNumber() : null)
-                .column("Режим работы", tv -> tv.getTeam() != null ? tv.getTeam().getWorkingMode() : null);
-
+                    .column("Имя", TrafficVehicle::getId).setInvisible().build()
+                    .column("№ ТС", TrafficVehicle::getNumber)
+                        .setEditable((tv, value) -> {
+                            tv.setNumber(value);
+                            saveTrafficVehicle(tv);
+                        }, TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
+                        .build()
+                    .column("Модель ТС", TrafficVehicle::getModel)
+                        .setEditable((tv, value) -> {
+                            tv.setModel(value);
+                            saveTrafficVehicle(tv);
+                        }, TextFieldTableCell.forTableColumn())
+                        .build()
+                    .column("id экипажа", tv -> tv.getTeam().getId()).setInvisible().build()
+                    .column("№ экипажа", tv -> tv.getTeam().getNumber()).build()
+                    .column("Режим работы", tv -> tv.getTeam().getWorkingMode()).build();
 
         peopleTable
                 .headerColumn("Сотрудники")
-                .invisibleColumn("id", Person::getId)
-                .column("Таб.№", Person::getPersonnelNumber)
-                .column("Фамилия", Person::getLastName)
-                .column("Имя", Person::getFirstName)
-                .column("Отчество", Person::getMiddleName)
-                .invisibleColumn("Подразделение", person -> person.getDepartment().getName())
-                .invisibleColumn("Должность", person -> person.getPosition().getName());
+                    .column("id", Person::getId).setInvisible().build()
+                    .column("Таб.№", Person::getPersonnelNumber).build()
+                    .column("Фамилия", Person::getLastName).build()
+                    .column("Имя", Person::getFirstName).build()
+                    .column("Отчество", Person::getMiddleName).build()
+                    .column("Подразделение", p -> p.getDepartment().getName()).setInvisible().build()
+                    .column("Должность", p -> p.getPosition().getName()).setInvisible().build();
 
 
         vehicleTable.addEventHandler(MOUSE_CLICKED, event -> {
@@ -138,8 +128,10 @@ public class TeamAndVehicleController extends MyAnchorPane {
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 1 && (!row.isEmpty())) {
                     if (row.getItem().getTeam() != null && row.getItem().getTeam().getTrafficPeople() != null) {
-                        trafficPeopleTable.setItems(FXCollections.observableArrayList(row.getItem().getTeam().getTrafficPeople()));
-                        trafficPeopleTable.refresh();
+                        trafficPeopleTable.getItems().clear();
+                        socketService.getPeopleByTeam(row.getItem().getTeam())
+                                .doOnCancel(() -> trafficPeopleTable.refresh())
+                                .subscribe(trafficPeopleTable.getItems()::add);
                     } else trafficPeopleTable.getItems().clear();
                 }
             });
@@ -150,8 +142,10 @@ public class TeamAndVehicleController extends MyAnchorPane {
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 1 && (!row.isEmpty())) {
                     if (row.getItem().getTrafficPeople() != null) {
-                        trafficPeopleTable.setItems(FXCollections.observableArrayList(row.getItem().getTrafficPeople()));
-                        trafficPeopleTable.refresh();
+                        trafficPeopleTable.getItems().clear();
+                        socketService.getPeopleByTeam(row.getItem())
+                                .doOnCancel(() -> trafficPeopleTable.refresh())
+                                .subscribe(trafficPeopleTable.getItems()::add);
                     } else trafficPeopleTable.getItems().clear();
                 }
             });
@@ -159,8 +153,19 @@ public class TeamAndVehicleController extends MyAnchorPane {
         });
     }
 
-    private <t> void saveTrafficTeam(TrafficTeam tt, BiConsumer<TrafficTeam, t> consumer, t value) {
-        consumer.accept(tt, value);
+    private String parsePerson(Function<Person, String> function, TrafficPerson p) {
+        try {
+            return people.stream()
+                    .filter(person -> person.getId().equals(p.getPersonnelNumber()))
+                    .findFirst()
+                    .map(function)
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private void saveTrafficTeam(TrafficTeam tt) {
         socketService
                 .saveTrafficTeam(tt)
                 .onErrorResume(e -> error())
@@ -168,25 +173,13 @@ public class TeamAndVehicleController extends MyAnchorPane {
                 .subscribe();
     }
 
-    private <t> void saveTrafficVehicle(TrafficVehicle tv, BiConsumer<TrafficVehicle, t> consumer, t value) {
-        consumer.accept(tv, value);
+    private void saveTrafficVehicle(TrafficVehicle tv) {
         socketService
                 .saveTrafficVehicle(tv)
                 .onErrorResume(e -> error())
                 .doOnSuccess(p -> vehicleTable.refresh())
                 .subscribe(tv::setVehicle);
     }
-
-    /*private void saveTrafficPerson(TrafficPerson person) {
-        socketService.saveTrafficPerson(person)
-                .onErrorResume(e -> error())
-                .doOnSuccess(p -> {
-                    person.getTeam().getTrafficPeople().add(p);
-                    trafficPeopleTable.setItems(FXCollections.observableArrayList(person.getTeam().getTrafficPeople()));
-                    trafficPeopleTable.refresh();
-                })
-                .subscribe(person::setPerson);
-    }*/
 
     private ContextMenu vehicleCM() {
         return MyContextMenu.builder()
@@ -206,7 +199,8 @@ public class TeamAndVehicleController extends MyAnchorPane {
                 .item("Открепить экипаж", event -> {
                     SelectionModel<TrafficVehicle> model = vehicleTable.getSelectionModel();
                     if (model != null && model.getSelectedItem() != null) {
-                        saveTrafficVehicle(model.getSelectedItem(), TrafficVehicle::setTeam, null);
+                        model.getSelectedItem().setTeam(null);
+                        saveTrafficVehicle(model.getSelectedItem());
                     }
                 });
     }
@@ -221,13 +215,12 @@ public class TeamAndVehicleController extends MyAnchorPane {
                         if (personModel != null && personModel.getSelectedItem() != null) {
                             TrafficPerson person = new TrafficPerson();
                             person.setPersonnelNumber(personModel.getSelectedItem().getId());
-                            teamModel.getSelectedItem().getTrafficPeople().add(person);
+                            person.setTeam(teamModel.getSelectedItem());
                             socketService
-                                    .saveTrafficTeam(teamModel.getSelectedItem())
+                                    .saveTrafficPerson(person)
                                     .onErrorResume(e -> error())
                                     .doOnSuccess(tt -> {
-                                        teamModel.getSelectedItem().setTeam(tt);
-                                        trafficPeopleTable.setItems(FXCollections.observableArrayList(tt.getTrafficPeople()));
+                                        trafficPeopleTable.getItems().add(tt);
                                         trafficPeopleTable.refresh();
                                     })
                                     .subscribe();
@@ -235,24 +228,25 @@ public class TeamAndVehicleController extends MyAnchorPane {
                     }
                 });
     }
+
     private ContextMenu trafficPeopleCM() {
         return MyContextMenu
                 .builder()
                 .item("Открепить сотрудника", event -> {
-                        SelectionModel<TrafficPerson> personModel = trafficPeopleTable.getSelectionModel();
-                        if (personModel != null && personModel.getSelectedItem() != null) {
-                            TrafficTeam team = teamTable.getSelectionModel().getSelectedItem();
-                            team.getTrafficPeople().remove(personModel.getSelectedItem());
-                            socketService
-                                    .saveTrafficTeam(team)
-                                    .onErrorResume(e -> error())
-                                    .doOnSuccess(tt -> {
-                                        team.setTeam(tt);
-                                        trafficPeopleTable.setItems(FXCollections.observableArrayList(tt.getTrafficPeople()));
-                                        trafficPeopleTable.refresh();
-                                    })
-                                    .subscribe();
-                        }
+                    SelectionModel<TrafficPerson> personModel = trafficPeopleTable.getSelectionModel();
+                    if (personModel != null && personModel.getSelectedItem() != null) {
+                        TrafficTeam team = teamTable.getSelectionModel().getSelectedItem();
+                        team.getTrafficPeople().remove(personModel.getSelectedItem());
+                        socketService
+                                .saveTrafficTeam(team)
+                                .onErrorResume(e -> error())
+                                .doOnSuccess(tt -> {
+                                    team.setTeam(tt);
+                                    trafficPeopleTable.setItems(FXCollections.observableArrayList(tt.getTrafficPeople()));
+                                    trafficPeopleTable.refresh();
+                                })
+                                .subscribe();
+                    }
                 });
     }
 
@@ -276,7 +270,8 @@ public class TeamAndVehicleController extends MyAnchorPane {
                     if (teamModel != null && teamModel.getSelectedItem() != null) {
                         SelectionModel<TrafficVehicle> vehicleModel = vehicleTable.getSelectionModel();
                         if (vehicleModel != null && vehicleModel.getSelectedItem() != null) {
-                            saveTrafficVehicle(vehicleModel.getSelectedItem(), TrafficVehicle::setTeam, teamModel.getSelectedItem());
+                            vehicleModel.getSelectedItem().setTeam(teamModel.getSelectedItem());
+                            saveTrafficVehicle(vehicleModel.getSelectedItem());
                         }
                     }
                 });

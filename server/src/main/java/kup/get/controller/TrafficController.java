@@ -35,10 +35,14 @@ public class TrafficController {
         return dateMono
                 .flatMapMany(date -> Flux.fromIterable(trafficItemService.getBriefingOfPeople(date)));
     }
-
     @MessageMapping("traffic.drivers")
     Flux<Person> getDrivers() {
         return Flux.fromIterable(alfaService.getDrivers());
+    }
+
+    @MessageMapping("traffic.getPeopleByTeam")
+    Flux<TrafficPerson> getPeopleByTeam(Mono<Long> id) {
+        return id.flatMapMany(l -> Flux.fromIterable(trafficItemService.getTrafficPeopleByTeam(l)));
     }
 
     @MessageMapping("traffic.trafficItemType")

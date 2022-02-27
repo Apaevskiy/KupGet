@@ -65,4 +65,8 @@ public class TrafficItemService {
     public List<TrafficItem> getTrafficItems() {
         return itemRepository.findAll();
     }
+
+    public List<TrafficPerson> getTrafficPeopleByTeam(Long id) {
+        return personRepository.findAllByTeamId(id);
+    }
 }

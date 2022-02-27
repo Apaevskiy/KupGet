@@ -13,45 +13,75 @@ import java.util.function.Function;
 
 
 public class MyTable<S> extends TableView<S> {
-    TableColumn<S, Void> column = new TableColumn<>();
-
     public MyTable() {
         super(FXCollections.observableArrayList());
-        column.setSortable(false);
-        column.setResizable(false);
     }
 
-    public <t> MyTable<S> column(String title, Function<S, t> property) {
-        TableColumn<S, t> col = new TableColumn<>(title);
-        col.setCellValueFactory(cellData -> new SimpleObjectProperty<>(property.apply(cellData.getValue())));
-        column.getColumns().add(col);
-        return this;
+    public <T> MyTableColumn<T> headerColumn(String title) {
+        MyTableColumn<T> myTableColumn = new MyTableColumn<T>(title);
+        this.getColumns().add(myTableColumn);
+        return myTableColumn;
     }
 
-    public <t> MyTable<S> invisibleColumn(String title, Function<S, t> property) {
-        TableColumn<S, t> col = new TableColumn<>(title);
-        col.setCellValueFactory(cellData -> new SimpleObjectProperty<>(property.apply(cellData.getValue())));
-        col.setVisible(false);
-        column.getColumns().add(col);
-        return this;
-    }
-    public <t> MyTable<S> editableColumn(String title, Function<S, t> property, BiConsumer<S, t> consumer,
-                                         Callback<TableColumn<S,t>, TableCell<S,t>> columnCallback) {
-        TableColumn<S, t> col = new TableColumn<>(title);
-        col.setCellValueFactory(cellData -> new SimpleObjectProperty<>(property.apply(cellData.getValue())));
-        col.setCellFactory(columnCallback);
-        onEditCommit(col, consumer);
-        column.getColumns().add(col);
+    private MyTable<S> getMyTable() {
         return this;
     }
 
-    public MyTable<S> headerColumn(String header){
-        column.setText(header);
-        this.getColumns().add(column);
-        return this;
-    }
-    public <t> void onEditCommit(TableColumn<S, t> column, BiConsumer<S, t> consumer) {
-        column.setOnEditCommit(e ->
-                consumer.accept(e.getTableView().getItems().get(e.getTablePosition().getRow()), e.getNewValue()));
+    public class MyTableColumn<T> extends TableColumn<S, T> {
+        private MyTableColumn<?> parentColumn;
+
+        public MyTableColumn(String text) {
+            super(text);
+            /*this.setSortable(false);
+            this.setResizable(false);*/
+        }
+
+        public <t> MyTableColumn(String text, MyTableColumn<t> parentColumn) {
+            super(text);
+            this.parentColumn = parentColumn;
+        }
+
+        public <t> MyTableColumn<t> column(String title) {
+            MyTableColumn<t> myTableColumn = new MyTableColumn<>(title, this);
+            this.getColumns().add(myTableColumn);
+            return myTableColumn;
+        }
+        public <t> MyTableColumn<t> column(String title, Function<S, t> property) {
+            MyTableColumn<t> myTableColumn = new MyTableColumn<>(title, this);
+            myTableColumn.setFactory(property);
+            this.getColumns().add(myTableColumn);
+            return myTableColumn;
+        }
+
+
+        public MyTableColumn<T> setFactory(Function<S, T> property) {
+            this.setCellValueFactory(cellData -> {
+                try {
+                    return new SimpleObjectProperty<>(property.apply(cellData.getValue()));
+                } catch (Exception e) {
+                    return null;
+                }
+            });
+            return this;
+        }
+
+        public MyTableColumn<T> setEditable(BiConsumer<S, T> consumer, Callback<TableColumn<S, T>, TableCell<S, T>> columnCallback) {
+            this.setCellFactory(columnCallback);
+            this.setOnEditCommit(e -> consumer.accept(e.getTableView().getItems().get(e.getTablePosition().getRow()), e.getNewValue()));
+            return this;
+        }
+
+        public MyTableColumn<T> setInvisible() {
+            this.setVisible(false);
+            return this;
+        }
+
+        public MyTableColumn<?> build() {
+            return parentColumn;
+        }
+
+        public MyTable<S> and() {
+            return getMyTable();
+        }
     }
 }

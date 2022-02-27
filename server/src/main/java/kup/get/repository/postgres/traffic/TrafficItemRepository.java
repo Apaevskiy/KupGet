@@ -8,6 +8,5 @@ import java.util.List;
 
 
 public interface TrafficItemRepository extends JpaRepository<TrafficItem, Long>{
-    List<TrafficItem> findAllByName(String name);
     List<TrafficItem> findAllByDateFinishAfter(LocalDate date);
 }

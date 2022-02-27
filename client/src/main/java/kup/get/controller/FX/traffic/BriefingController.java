@@ -59,31 +59,30 @@ public class BriefingController extends MyAnchorPane {
 
         briefingTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        briefingTable
+        /*briefingTable
                 .headerColumn("Инструктажи по охране труда")
-                .column("Таб.№", trafficItem -> trafficItem.getPerson().getPersonnelNumber())
+                .addColumn("Таб.№", trafficItem -> trafficItem.getPerson().getPersonnelNumber())
 //                .column("Фамилия", trafficItem -> trafficItem.getPerson().getLastName())
 //                .column("Имя", trafficItem -> trafficItem.getPerson().getFirstName())
 //                .column("Отчество", trafficItem -> trafficItem.getPerson().getMiddleName())
-                .column("Комментарий", TrafficItem::getDescription)
-                .editableColumn("Дата последнего\nинструктажа", TrafficItem::getDateStart, TrafficItem::setDateStart, p ->  new DateEditingCell<>())
-                .editableColumn("Дата необходимого\nинструктажа", TrafficItem::getDateFinish, TrafficItem::setDateFinish, p ->  new DateEditingCell<>());
+                .addColumn("Комментарий", TrafficItem::getDescription)
+                .addEditableColumn("Дата последнего\nинструктажа", TrafficItem::getDateStart, TrafficItem::setDateStart, p ->  new DateEditingCell<>())
+                .addEditableColumn("Дата необходимого\nинструктажа", TrafficItem::getDateFinish, TrafficItem::setDateFinish, p ->  new DateEditingCell<>());
 
 
         peopleTable
                 .headerColumn("Сотрудники")
-                .invisibleColumn("id", Person::getId)
-                .column("Таб.№", Person::getPersonnelNumber)
-                .column("Фамилия", Person::getLastName)
-                .column("Имя", Person::getFirstName)
-                .column("Отчество", Person::getMiddleName)
-                .invisibleColumn("Подразделение", person -> person.getDepartment().getName())
-                .invisibleColumn("Должность", person -> person.getPosition().getName());
-                ContextMenu cm = createContextMenu();
+                .addInvisibleColumn("id", Person::getId)
+                .addColumn("Таб.№", Person::getPersonnelNumber)
+                .addColumn("Фамилия", Person::getLastName)
+                .addColumn("Имя", Person::getFirstName)
+                .addColumn("Отчество", Person::getMiddleName)
+                .addInvisibleColumn("Подразделение", person -> person.getDepartment().getName())
+                .addInvisibleColumn("Должность", person -> person.getPosition().getName());*/
 
         briefingTable.addEventHandler(MOUSE_CLICKED, event -> {
             if (event.getButton() == MouseButton.SECONDARY) {
-                briefingTable.setContextMenu(cm);
+                briefingTable.setContextMenu(createContextMenu());
             }
         });
 

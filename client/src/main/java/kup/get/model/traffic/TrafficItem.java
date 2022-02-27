@@ -11,7 +11,6 @@ import java.time.LocalDate;
 @Builder
 public class TrafficItem {
     private Long id;
-    private String name;
     private String description;
 
     @DateTimeFormat(pattern="yyyy-MM-dd")
