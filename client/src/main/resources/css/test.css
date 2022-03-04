@@ -12,6 +12,14 @@
     visibility: false;
 }
 
+.split-pane > .split-pane-divider{
+    /*visibility: hidden;*/
+}
+#qwe {
+    -fx-text-fill: red;
+    -fx-graphic: url("log-out.png");
+    -fx-background-color: blue;
+}
 .arrowButton {
     -fx-focus-color: transparent;
     -fx-background-insets: -1.4, 0, 1, 2;

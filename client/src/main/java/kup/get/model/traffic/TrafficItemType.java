@@ -18,11 +18,7 @@ public class TrafficItemType {
 
     @Override
     public String toString() {
-        return "{" +
-                "id=" + id +
-                ", status=" + status +
-                ", changed=" + changed +
-                '}';
+        return name;
     }
 
     public void setItemType(TrafficItemType type) {

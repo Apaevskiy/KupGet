@@ -7,6 +7,7 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
@@ -14,16 +15,15 @@ import kup.get.config.MyContextMenu;
 import kup.get.config.MyTable;
 import kup.get.controller.socket.SocketService;
 import kup.get.model.alfa.Person;
-import kup.get.model.traffic.TrafficItem;
-import kup.get.model.traffic.TrafficPerson;
+import kup.get.model.traffic.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
@@ -42,9 +42,18 @@ public class ItemController extends MyAnchorPane {
     private DatePicker finishDatePicker;
     @FXML
     private DatePicker startDatePricker;
+    @FXML
+    private ComboBox<TrafficItemType> filterItemTypeComboBox;
+
+    @FXML
+    private GridPane addItemPane;
+    @FXML
+    private GridPane itemsPane;
 
     @FXML
     private TextArea commentField;
+    @FXML
+    private ComboBox<TrafficItemType> itemTypeComboBox;
     @FXML
     private DatePicker dateStartField;
     @FXML
@@ -57,9 +66,13 @@ public class ItemController extends MyAnchorPane {
     private TextField searchPerson;
     @FXML
     private MyTable<Person> peopleTable;
+    @FXML
+    private MyTable<TrafficTeam> teamTable;
+    @FXML
+    private MyTable<TrafficVehicle> vehicleTable;
 
     private final SocketService socketService;
-    private final ObservableList<Person> people = FXCollections.observableArrayList();
+    private ObservableList<Person> people = FXCollections.observableArrayList();
     private final AtomicReference<SequentialTransition> transition;
     private final String nameItemColumn = "Предметы";
 
@@ -101,19 +114,60 @@ public class ItemController extends MyAnchorPane {
             if (owner.equals(Owner.All)) {
                 itemTable.getColumns().forEach(column -> column.setVisible(true));
             } else {
-                itemTable.getColumns().forEach(column -> column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
+                itemTable.getColumns().forEach(column -> {
+                    System.out.println("text: "+column.getText() + " check:" + (column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
+                    column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn));
+                });
             }
         });
+        canselButton.setOnAction(event -> switchPane(addItemPane, itemsPane));
+        peopleTable
+                .headerColumn(Owner.PERSON.title)
+                .column("Таб. №", Person::getPersonnelNumber).build()
+                .column("Фамилия", Person::getLastName).build()
+                .column("Имя", Person::getFirstName).build()
+                .column("Отчество", Person::getMiddleName).build();
+        teamTable.headerColumn(Owner.TEAM.title)
+                .column("Номер экипажа", TrafficTeam::getNumber).build()
+                .column("Режим работы", TrafficTeam::getWorkingMode).build()
+                .column("Номер ТС", tt -> tt.getVehicle().getNumber()).build()
+                .column("Модель ТС", tt -> tt.getVehicle().getModel()).build();
+        vehicleTable
+                .headerColumn(Owner.VEHICLE.title)
+                .column("Номер ТС", TrafficVehicle::getNumber).build()
+                .column("Модель ТС", TrafficVehicle::getModel).build()
+                .column("Номер экипажа", tv -> tv.getTeam().getNumber()).build()
+                .column("Режим работы", tv -> tv.getTeam().getWorkingMode()).build();
     }
 
     private ContextMenu itemTableContextMenu() {
         return MyContextMenu.builder()
                 .menu("Добавить")
                 .menuItem("По водителю", event -> {
+                    peopleTable.setVisible(true);
+                    teamTable.setVisible(false);
+                    vehicleTable.setVisible(false);
+                    switchPane(itemsPane, addItemPane);
                 })
                 .menuItem("По экипажу", event -> {
+                    peopleTable.setVisible(false);
+                    teamTable.setVisible(true);
+                    vehicleTable.setVisible(false);
+                    teamTable.getItems().clear();
+                    socketService.getTrafficTeam()
+                            .doOnComplete(() -> teamTable.refresh())
+                            .subscribe(teamTable.getItems()::add);
+                    switchPane(itemsPane, addItemPane);
                 })
                 .menuItem("По ТС", event -> {
+                    peopleTable.setVisible(false);
+                    teamTable.setVisible(false);
+                    vehicleTable.setVisible(true);
+                    vehicleTable.getItems().clear();
+                    socketService.getTrafficVehicle()
+                            .doOnComplete(() -> vehicleTable.refresh())
+                            .subscribe(vehicleTable.getItems()::add);
+                    switchPane(itemsPane, addItemPane);
                 })
                 .build()
                 .item("", event -> {
@@ -156,7 +210,17 @@ public class ItemController extends MyAnchorPane {
 
     public void fillInTheTables() {
         itemTable.getItems().clear();
+        itemTypeComboBox.getItems().clear();
+        filterItemTypeComboBox.getItems().clear();
+
         socketService.getTrafficItem().subscribe(itemTable.getItems()::add);
+        socketService.getItemsType().subscribe(type -> {
+            itemTypeComboBox.getItems().add(type);
+            filterItemTypeComboBox.getItems().add(type);
+        });
+
+        people = FXCollections.observableArrayList(socketService.getPeople());
+        peopleTable.setItems(people);
     }
 
     @PostConstruct

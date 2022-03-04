@@ -39,7 +39,9 @@ public class MainController extends MyAnchorPane {
         mainPane.getChildren().addAll(trafficController);
         this.setVisible(true);
         this.setOpacity(1);
-        hiddenPages(trafficController);
+//        hiddenPages(trafficController);
+
+
         /*service.authorize("sanya", "1101")
                 .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText(throwable.getMessage())))
                 .onErrorResume(throwable -> Mono.just(throwable.getMessage()))      //  LOG

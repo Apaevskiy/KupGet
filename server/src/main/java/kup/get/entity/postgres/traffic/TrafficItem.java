@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Setter
 public class TrafficItem {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String description;
 
