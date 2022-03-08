@@ -18,12 +18,14 @@ public class TrafficTeam {
     private Set<TrafficPerson> trafficPeople = new HashSet<>();
     private Set<TrafficItem> trafficItems = new HashSet<>();
 
-    public void setTeam(TrafficTeam tt){
-        this.id = tt.getId();
-       this.number = tt.getNumber();
-       this.workingMode = tt.getWorkingMode();
-       this.trafficPeople = tt.getTrafficPeople();
-       this.vehicle = tt.getVehicle();
-       this.trafficItems = tt.getTrafficItems();
+    public void setTeam(TrafficTeam tt) {
+        if(tt!=null){
+            this.id = tt.getId();
+            this.number = tt.getNumber();
+            this.workingMode = tt.getWorkingMode();
+            this.trafficPeople = tt.getTrafficPeople();
+            this.vehicle = tt.getVehicle();
+            this.trafficItems = tt.getTrafficItems();
+        }
     }
 }

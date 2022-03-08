@@ -1,7 +1,9 @@
 package kup.get.service.alfa;
 
 import kup.get.entity.alfa.Person;
+import kup.get.entity.alfa.Photo;
 import kup.get.repository.alfa.PersonRepository;
+import kup.get.repository.alfa.PhotoRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +14,15 @@ import java.util.List;
 @AllArgsConstructor
 public class AlfaService {
     private final PersonRepository personRepository;
+    private final PhotoRepository photoRepository;
 
-    public List<Person> getDrivers(){
-        return personRepository.findAllDriversByDepartmentNumber(String.valueOf(LocalDate.now()), 18L);
+    public List<Person> getPeople() {
+        return personRepository.findAllWorkPeople(String.valueOf(LocalDate.now()));
+    }
+
+    public byte[] getPhotoByPerson(long id) {
+        Photo photo = photoRepository.findFirstByPersonId(id);
+        System.out.println(photo);
+        return photo != null ? photo.getPhoto() : null;
     }
 }

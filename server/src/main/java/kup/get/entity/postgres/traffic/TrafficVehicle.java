@@ -1,5 +1,7 @@
 package kup.get.entity.postgres.traffic;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,9 +22,6 @@ public class TrafficVehicle {
 
     private String number;
     private String model;
-
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "vehicle")
-    private List<TrafficItem> items;
 
     @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "traffic_team_id")

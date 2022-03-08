@@ -1,7 +1,7 @@
 package kup.get.controller.FX.traffic;
 
-import javafx.animation.Animation;
 import javafx.animation.SequentialTransition;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -9,21 +9,19 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import kup.get.config.FxmlLoader;
-import kup.get.config.MyAnchorPane;
-import kup.get.config.MyContextMenu;
+import kup.get.config.FX.FxmlLoader;
+import kup.get.config.FX.MyAnchorPane;
+import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
 import kup.get.controller.socket.SocketService;
 import kup.get.model.alfa.Person;
 import kup.get.model.traffic.*;
 import lombok.AllArgsConstructor;
-import reactor.core.publisher.Mono;
 
-import javax.annotation.PostConstruct;
-
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
@@ -59,6 +57,8 @@ public class ItemController extends MyAnchorPane {
     @FXML
     private DatePicker dateFinishField;
     @FXML
+    private Label infoLabel;
+    @FXML
     private Button addButton;
     @FXML
     private Button canselButton;
@@ -72,36 +72,38 @@ public class ItemController extends MyAnchorPane {
     private MyTable<TrafficVehicle> vehicleTable;
 
     private final SocketService socketService;
-    private ObservableList<Person> people = FXCollections.observableArrayList();
+    private final ObservableList<Person> people = FXCollections.observableArrayList();
     private final AtomicReference<SequentialTransition> transition;
     private final String nameItemColumn = "Предметы";
+    private Class<?> aClass;
 
     public ItemController(SocketService socketService, AtomicReference<SequentialTransition> sequentialTransition) {
         this.socketService = socketService;
         this.transition = sequentialTransition;
         ownerComboBox.setItems(FXCollections.observableArrayList(Owner.values()));
+        peopleTable.setItems(people);
 
         itemTable
                 .headerColumn(nameItemColumn)
-                    .column("id", TrafficItem::getId).setInvisible().build()
-                    .column("Наименование", ti -> ti.getType().getName()).build()
-                    .column("Описание", TrafficItem::getDescription).build()
-                    .column("Начало периода", TrafficItem::getDateStart).build()
-                    .column("Конец периода", TrafficItem::getDateFinish).build()
+                .column("id", TrafficItem::getId).setInvisible().build()
+                .column("Наименование", ti -> ti.getType().getName()).build()
+                .column("Описание", TrafficItem::getDescription).build()
+                .column("Начало периода", TrafficItem::getDateStart).build()
+                .column("Конец периода", TrafficItem::getDateFinish).build()
                 .and()
                 .headerColumn(Owner.PERSON.title).setInvisible()
-                    .column("Таб. №", ti -> parsePerson(Person::getPersonnelNumber, ti.getPerson())).setInvisible().build()
-                    .column("Фамилия", ti -> parsePerson(Person::getLastName, ti.getPerson())).setInvisible().build()
-                    .column("Имя", ti -> parsePerson(Person::getFirstName, ti.getPerson())).setInvisible().build()
-                    .column("Отчество", ti -> parsePerson(Person::getMiddleName, ti.getPerson())).setInvisible().build()
+                .column("Таб. №", ti -> parsePerson(Person::getPersonnelNumber, ti.getPerson())).setInvisible().build()
+                .column("Фамилия", ti -> parsePerson(Person::getLastName, ti.getPerson())).setInvisible().build()
+                .column("Имя", ti -> parsePerson(Person::getFirstName, ti.getPerson())).setInvisible().build()
+                .column("Отчество", ti -> parsePerson(Person::getMiddleName, ti.getPerson())).setInvisible().build()
                 .and()
                 .headerColumn(Owner.TEAM.title).setInvisible()
-                    .column("Номер экипажа", ti -> ti.getTeam().getNumber()).setInvisible().build()
-                    .column("Режим работы", ti -> ti.getTeam().getWorkingMode()).setInvisible().build()
+                .column("Номер экипажа", ti -> ti.getTeam().getNumber()).setInvisible().build()
+                .column("Режим работы", ti -> ti.getTeam().getWorkingMode()).setInvisible().build()
                 .and()
                 .headerColumn(Owner.VEHICLE.title).setInvisible()
-                    .column("Номер ТС", ti -> ti.getVehicle().getNumber()).setInvisible().build()
-                    .column("Модель ТС", ti -> ti.getVehicle().getModel()).setInvisible().build();
+                .column("Номер ТС", ti -> ti.getVehicle().getNumber()).setInvisible().build()
+                .column("Модель ТС", ti -> ti.getVehicle().getModel()).setInvisible().build();
 
         itemTable.addEventHandler(MOUSE_CLICKED, event -> {
             if (event.getButton() == MouseButton.SECONDARY) {
@@ -115,12 +117,20 @@ public class ItemController extends MyAnchorPane {
                 itemTable.getColumns().forEach(column -> column.setVisible(true));
             } else {
                 itemTable.getColumns().forEach(column -> {
-                    System.out.println("text: "+column.getText() + " check:" + (column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
                     column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn));
                 });
             }
         });
+
         canselButton.setOnAction(event -> switchPane(addItemPane, itemsPane));
+
+        dateStartField.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+            if(itemTypeComboBox.getValue()!=null){
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(itemTypeComboBox.getValue().getDefaultDurationInMonth()));
+            }
+        });
+
         peopleTable
                 .headerColumn(Owner.PERSON.title)
                 .column("Таб. №", Person::getPersonnelNumber).build()
@@ -129,15 +139,57 @@ public class ItemController extends MyAnchorPane {
                 .column("Отчество", Person::getMiddleName).build();
         teamTable.headerColumn(Owner.TEAM.title)
                 .column("Номер экипажа", TrafficTeam::getNumber).build()
-                .column("Режим работы", TrafficTeam::getWorkingMode).build()
-                .column("Номер ТС", tt -> tt.getVehicle().getNumber()).build()
-                .column("Модель ТС", tt -> tt.getVehicle().getModel()).build();
+                .column("Режим работы", TrafficTeam::getWorkingMode).build();
         vehicleTable
                 .headerColumn(Owner.VEHICLE.title)
                 .column("Номер ТС", TrafficVehicle::getNumber).build()
                 .column("Модель ТС", TrafficVehicle::getModel).build()
                 .column("Номер экипажа", tv -> tv.getTeam().getNumber()).build()
                 .column("Режим работы", tv -> tv.getTeam().getWorkingMode()).build();
+        addButton.setOnAction(event -> {
+            SelectionModel<?> model = null;
+            infoLabel.setStyle("-fx-text-fill: red");
+            TrafficItem item = TrafficItem.builder().build();
+            if (aClass.equals(Person.class)) {
+                model = peopleTable.getSelectionModel();
+                item.setPerson(new TrafficPerson((Person) model.getSelectedItem()));
+            } else if (aClass.equals(TrafficTeam.class)) {
+                model = teamTable.getSelectionModel();
+                item.setTeam((TrafficTeam) model.getSelectedItem());
+            } else if (aClass.equals(TrafficVehicle.class)) {
+                model = vehicleTable.getSelectionModel();
+                item.setVehicle((TrafficVehicle) model.getSelectedItem());
+            }
+            if (model != null && model.getSelectedItem() != null) {
+                if (!itemTypeComboBox.getSelectionModel().isEmpty()) {
+                    if (!commentField.getText().isEmpty()) {
+                        if (dateStartField.getValue() != null && dateFinishField.getValue() != null) {
+                            if (dateFinishField.getValue().isAfter(dateStartField.getValue())) {
+                                item.setType(itemTypeComboBox.getValue());
+                                item.setDescription(commentField.getText());
+                                item.setDateStart(dateStartField.getValue());
+                                item.setDateFinish(dateFinishField.getValue());
+                                socketService.saveTrafficItem(item)
+                                        .doOnSuccess(tt -> {
+                                            item.setId(tt.getId());
+                                            itemTable.getItems().add(item);
+                                            Platform.runLater(() -> {
+                                                infoLabel.setStyle("-fx-text-fill: green");
+                                                infoLabel.setText("Успешно");
+                                                commentField.clear();
+                                                dateStartField.setValue(null);
+                                                dateFinishField.setValue(null);
+                                                itemTypeComboBox.getSelectionModel().clearSelection();
+                                            });
+                                        })
+                                        .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText("Ошибка " + throwable.getMessage())))
+                                        .subscribe();
+                            } else infoLabel.setText("Дата корректность введённых данных");
+                        } else infoLabel.setText("Выберите даты");
+                    } else infoLabel.setText("Введите комментарий");
+                } else infoLabel.setText("Выберите пункт выпадающего списка");
+            } else infoLabel.setText("Выберите элемент из таблицы");
+        });
     }
 
     private ContextMenu itemTableContextMenu() {
@@ -148,6 +200,7 @@ public class ItemController extends MyAnchorPane {
                     teamTable.setVisible(false);
                     vehicleTable.setVisible(false);
                     switchPane(itemsPane, addItemPane);
+                    aClass = Person.class;
                 })
                 .menuItem("По экипажу", event -> {
                     peopleTable.setVisible(false);
@@ -156,8 +209,12 @@ public class ItemController extends MyAnchorPane {
                     teamTable.getItems().clear();
                     socketService.getTrafficTeam()
                             .doOnComplete(() -> teamTable.refresh())
-                            .subscribe(teamTable.getItems()::add);
+                            .subscribe(tt -> {
+                                System.out.println(tt);
+                                teamTable.getItems().add(tt);
+                            });
                     switchPane(itemsPane, addItemPane);
+                    aClass = TrafficTeam.class;
                 })
                 .menuItem("По ТС", event -> {
                     peopleTable.setVisible(false);
@@ -168,6 +225,7 @@ public class ItemController extends MyAnchorPane {
                             .doOnComplete(() -> vehicleTable.refresh())
                             .subscribe(vehicleTable.getItems()::add);
                     switchPane(itemsPane, addItemPane);
+                    aClass = TrafficVehicle.class;
                 })
                 .build()
                 .item("", event -> {
@@ -190,10 +248,8 @@ public class ItemController extends MyAnchorPane {
     }
 
     private void switchPane(Pane disappearancePane, Pane appearancePane) {
-        if (transition.get() == null || transition.get().getStatus().equals(Animation.Status.STOPPED)) {
-            transition.set(createTransition(disappearancePane, appearancePane));
-            transition.get().play();
-        }
+        transition.set(switchPaneTransition(disappearancePane, appearancePane));
+        transition.get().play();
     }
 
     private String parsePerson(Function<Person, String> function, TrafficPerson p) {
@@ -208,25 +264,21 @@ public class ItemController extends MyAnchorPane {
         }
     }
 
-    public void fillInTheTables() {
+    @Override
+    public void clearData() {
         itemTable.getItems().clear();
         itemTypeComboBox.getItems().clear();
         filterItemTypeComboBox.getItems().clear();
+        people.clear();
+    }
 
+    @Override
+    public void fillData() {
         socketService.getTrafficItem().subscribe(itemTable.getItems()::add);
         socketService.getItemsType().subscribe(type -> {
             itemTypeComboBox.getItems().add(type);
             filterItemTypeComboBox.getItems().add(type);
         });
-
-        people = FXCollections.observableArrayList(socketService.getPeople());
-        peopleTable.setItems(people);
-    }
-
-    @PostConstruct
-    public void test() {
-        socketService.authorize("sanya", "1101")
-                .onErrorResume(s -> Mono.just(s.getMessage()))      //  LOG
-                .doOnComplete(socketService::updatePeople).subscribe(System.out::println);
+        people.addAll(socketService.getDriver());
     }
 }

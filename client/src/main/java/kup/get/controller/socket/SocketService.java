@@ -1,7 +1,6 @@
 package kup.get.controller.socket;
 
 import io.rsocket.metadata.WellKnownMimeType;
-import javafx.collections.ObservableList;
 import kup.get.model.traffic.*;
 import kup.get.model.alfa.Person;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -15,6 +14,7 @@ import reactor.core.publisher.Mono;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 public class SocketService {
@@ -22,7 +22,7 @@ public class SocketService {
     private final MimeType mimetype = MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
     private final RSocketRequester requester;
     private final List<Person> people = new ArrayList<>();
-
+    private final List<Person> drivers = new ArrayList<>();
     public SocketService(RSocketRequester requester) {
         this.requester = requester;
     }
@@ -49,9 +49,16 @@ public class SocketService {
     public void updatePeople() {
         route("traffic.drivers")
                 .retrieveFlux(Person.class)
-                .subscribe(people::add);
+                .subscribe(p -> {
+                    people.add(p);
+                    if(p.getPosition()!=null && p.getPosition().getId()==8347)
+                        drivers.add(p);
+                });
     }
 
+    public List<Person> getDriver() {
+        return drivers;
+    }
     public List<Person> getPeople() {
         return people;
     }
@@ -121,5 +128,24 @@ public class SocketService {
         return route("traffic.getPeopleByTeam")
                 .data(team.getId())
                 .retrieveFlux(TrafficPerson.class);
+    }
+
+    public Mono<TrafficItem> saveTrafficItem(TrafficItem item) {
+        return route("traffic.saveTrafficItem")
+                .data(item)
+                .retrieveMono(TrafficItem.class);
+    }
+
+    public Mono<Person> savePerson(Person person) {
+        return route("asu.savePerson")
+                .data(person)
+                .retrieveMono(Person.class);
+    }
+
+    public byte[] getPhotoByPerson(Long id) {
+        return route("getPhotoByPerson")
+                .data(id)
+                .retrieveMono(byte[].class)
+                .block();
     }
 }

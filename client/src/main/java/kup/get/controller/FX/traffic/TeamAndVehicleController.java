@@ -12,9 +12,9 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.converter.IntegerStringConverter;
-import kup.get.config.FxmlLoader;
-import kup.get.config.MyAnchorPane;
-import kup.get.config.MyContextMenu;
+import kup.get.config.FX.FxmlLoader;
+import kup.get.config.FX.MyAnchorPane;
+import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
 import kup.get.controller.socket.SocketService;
 import kup.get.model.alfa.Person;
@@ -282,16 +282,18 @@ public class TeamAndVehicleController extends MyAnchorPane {
         return Mono.empty();
     }
 
-    public void fillInTheTables() {
+    @Override
+    public void clearData(){
         trafficPeopleTable.getItems().clear();
         teamTable.getItems().clear();
         vehicleTable.getItems().clear();
         people.clear();
-
-        people.addAll(socketService.getPeople());
-        peopleTable.setItems(FXCollections.observableArrayList(socketService.getPeople()));
+    }
+    @Override
+    public void fillData() {
+        people.addAll(socketService.getDriver());
+        peopleTable.setItems(FXCollections.observableArrayList(socketService.getDriver()));
         socketService.getTrafficVehicle().subscribe(vehicleTable.getItems()::add);
         socketService.getTrafficTeam().subscribe(teamTable.getItems()::add);
-
     }
 }

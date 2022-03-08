@@ -1,4 +1,4 @@
-package kup.get.config;
+package kup.get.config.FX;
 
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableCell;

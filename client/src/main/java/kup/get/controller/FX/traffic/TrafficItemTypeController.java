@@ -6,7 +6,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.MouseButton;
 import javafx.util.converter.IntegerStringConverter;
-import kup.get.config.*;
+import kup.get.config.FX.FxmlLoader;
+import kup.get.config.FX.MyAnchorPane;
+import kup.get.config.FX.MyContextMenu;
+import kup.get.config.MyTable;
 import kup.get.controller.socket.SocketService;
 import kup.get.model.traffic.TrafficItemType;
 import reactor.core.publisher.Mono;
@@ -27,34 +30,21 @@ public class TrafficItemTypeController extends MyAnchorPane {
 
     public TrafficItemTypeController(SocketService socketService) {
         this.socketService = socketService;
-
-        /*
-        statusColumn.setCellValueFactory(cell -> {
-            TrafficItemType type = cell.getValue();
-            CheckBox checkBox = new CheckBox();
-            checkBox.selectedProperty().setValue(type.isStatus());
-            checkBox.selectedProperty().addListener((ov, old_val, new_val) -> {
-                type.setStatus(new_val);
-                type.setChanged(true);
-            });
-            return new SimpleObjectProperty<>(checkBox);
-        });
-        */
         itemTypeTable
                 .headerColumn("Перечень пунктов для ОТ")
-                    .column("id", TrafficItemType::getId).setInvisible().build()
-                    .column("Статус", type -> {
-                            CheckBox checkBox = new CheckBox();
-                            checkBox.selectedProperty().setValue(type.isStatus());
-                            checkBox.selectedProperty().addListener(
-                                    (ov, old_val, new_val) ->
-                                            saveTrafficType(type, TrafficItemType::setStatus, new_val));
-                            return checkBox;
-                        }).build()
-                    .column("Наименование", TrafficItemType::getName)
-                        .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn()).build()
-                    .column("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth)
-                        .setEditable( (type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter())).build();
+                .column("id", TrafficItemType::getId).setInvisible().build()
+                .column("Статус", type -> {
+                    CheckBox checkBox = new CheckBox();
+                    checkBox.selectedProperty().setValue(type.isStatus());
+                    checkBox.selectedProperty().addListener(
+                            (ov, old_val, new_val) ->
+                                    saveTrafficType(type, TrafficItemType::setStatus, new_val));
+                    return checkBox;
+                }).build()
+                .column("Наименование", TrafficItemType::getName)
+                .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn()).build()
+                .column("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth)
+                .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter())).build();
 
         itemTypeTable.addEventHandler(MOUSE_CLICKED, event -> {
             if (event.getButton() == MouseButton.SECONDARY) {
@@ -87,17 +77,17 @@ public class TrafficItemTypeController extends MyAnchorPane {
                 });
     }
 
-    public void fillInTheTables() {
-//        saveButton.setDisable(true);
+    @Override
+    public void clearData() {
         itemTypeTable.getItems().clear();
+
+    }
+
+    @Override
+    public void fillData() {
         socketService.getItemsType()
-                .doOnNext(item -> {
-                    itemTypeTable.getItems().add(item);
-                })
-                .doOnComplete(() -> {
-//                    saveButton.setDisable(false);
-                    itemTypeTable.refresh();
-                })
+                .doOnNext(item -> itemTypeTable.getItems().add(item))
+                .doOnComplete(() -> itemTypeTable.refresh())
                 .subscribe();
     }
 }

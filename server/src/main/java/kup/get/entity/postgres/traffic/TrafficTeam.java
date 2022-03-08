@@ -1,8 +1,11 @@
 package kup.get.entity.postgres.traffic;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -21,10 +24,4 @@ public class TrafficTeam {
 
     private String number;
     private String workingMode;
-
-    /*@OneToOne(mappedBy = "team", optional = false)
-    private TrafficVehicle vehicle;*/
-
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "team")
-    private Set<TrafficItem> trafficItems;
 }

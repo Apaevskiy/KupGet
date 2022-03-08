@@ -17,7 +17,9 @@ public class StageInitializer implements ApplicationListener<JavaFxApplication.S
 
     public StageInitializer(MainController mainController) {
         this.scene=new Scene(mainController);
-        scene.addEventFilter(KeyEvent.KEY_PRESSED, mainController::switchPane);
+        mainController.setPrefWidth(1300);
+        mainController.setPrefHeight(800);
+//        scene.addEventFilter(KeyEvent.KEY_PRESSED, mainController::switchPane);
     }
 
     @Override

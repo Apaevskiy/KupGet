@@ -1,4 +1,4 @@
-package kup.get.config;
+package kup.get.config.FX;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

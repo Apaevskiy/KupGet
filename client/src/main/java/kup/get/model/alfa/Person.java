@@ -15,6 +15,8 @@ public class Person {
     private String firstName;
     private String middleName;
 
+    private transient boolean check;
+
     @Override
     public String toString() {
         return personnelNumber + ' ' + lastName + ' ' + firstName + ' ' + middleName;

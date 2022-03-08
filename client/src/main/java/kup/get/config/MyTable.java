@@ -18,7 +18,17 @@ public class MyTable<S> extends TableView<S> {
     }
 
     public <T> MyTableColumn<T> headerColumn(String title) {
-        MyTableColumn<T> myTableColumn = new MyTableColumn<T>(title);
+        MyTableColumn<T> myTableColumn = new MyTableColumn<>(title);
+        this.getColumns().add(myTableColumn);
+        return myTableColumn;
+    }
+    public <t> MyTable<S> addColumn(String title, Function<S, t> property){
+        column(title, property);
+        return this;
+    }
+    public <t> MyTableColumn<t> column(String title, Function<S, t> property) {
+        MyTableColumn<t> myTableColumn = new MyTableColumn<>(title);
+        myTableColumn.setFactory(property);
         this.getColumns().add(myTableColumn);
         return myTableColumn;
     }
@@ -32,10 +42,13 @@ public class MyTable<S> extends TableView<S> {
 
         public MyTableColumn(String text) {
             super(text);
-            /*this.setSortable(false);
-            this.setResizable(false);*/
         }
-
+        public MyTableColumn<T> setMaxWidthColumn(double width){
+            this.setMaxWidth(width);
+            this.setPrefWidth(width);
+            this.setResizable(false);
+            return this;
+        }
         public <t> MyTableColumn(String text, MyTableColumn<t> parentColumn) {
             super(text);
             this.parentColumn = parentColumn;
@@ -54,7 +67,7 @@ public class MyTable<S> extends TableView<S> {
         }
 
 
-        public MyTableColumn<T> setFactory(Function<S, T> property) {
+        public void setFactory(Function<S, T> property) {
             this.setCellValueFactory(cellData -> {
                 try {
                     return new SimpleObjectProperty<>(property.apply(cellData.getValue()));
@@ -62,7 +75,6 @@ public class MyTable<S> extends TableView<S> {
                     return null;
                 }
             });
-            return this;
         }
 
         public MyTableColumn<T> setEditable(BiConsumer<S, T> consumer, Callback<TableColumn<S, T>, TableCell<S, T>> columnCallback) {

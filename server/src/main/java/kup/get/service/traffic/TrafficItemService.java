@@ -20,7 +20,8 @@ public class TrafficItemService {
 
     public List<TrafficPerson> getBriefingOfPeople(LocalDate date) {
 //        Long id = typeRepository.findFirstByName("Инструктажи по охране труда").getId();
-        return personRepository.findAllByItemsTypeIdAndItemsDateFinishAfter(1L, date);
+//        return personRepository.findAllByItemsTypeIdAndItemsDateFinishAfter(1L, date);
+        return null;
     }
 
     public TrafficItemType saveType(TrafficItemType type) {
@@ -68,5 +69,16 @@ public class TrafficItemService {
 
     public List<TrafficPerson> getTrafficPeopleByTeam(Long id) {
         return personRepository.findAllByTeamId(id);
+    }
+
+    public TrafficItem saveTrafficItem(TrafficItem trafficItem) {
+        if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonnelNumber()!=null){
+            TrafficPerson person = personRepository.findFirstByPersonnelNumber(trafficItem.getPerson().getPersonnelNumber());
+            if(person==null){
+                personRepository.save(trafficItem.getPerson());
+            }
+            trafficItem.setPerson(person);
+        }
+        return itemRepository.save(trafficItem);
     }
 }

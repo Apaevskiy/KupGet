@@ -22,11 +22,11 @@ public class Person {
     private String personnelNumber;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "k_podr", nullable = false)
+    @JoinColumn(name = "k_podr")
     private Department department;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "k_doljn", nullable = false)
+    @JoinColumn(name = "k_doljn")
     private Position position;
 
     @Column(name = "FAM")

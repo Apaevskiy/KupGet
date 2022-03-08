@@ -23,7 +23,4 @@ public class TrafficItemType {
     private boolean status;
     @Column(unique = true)
     private String name;
-
-    @OneToOne(mappedBy = "type")
-    private TrafficItem item;
 }

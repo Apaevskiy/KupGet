@@ -1,64 +1,91 @@
-.accordion .button {
+.root {
+    -text-color: white;
+    -background-color: #11101D;
+}
+
+.clickButton {
     -fx-pref-height: 30;
     -fx-pref-width: 150;
-    -fx-background-color: #1E90FF;
-    -fx-text-fill: white;
-    -fx-font-size: 16px;
-    -fx-row-valignment: center;
-    -fx-column-halignment: center;
+    -fx-background-color: -background-color;
+    -fx-text-fill: -text-color;
+}
+.clickButton:hover, .testButton:hover {
+    -fx-effect: dropshadow(three-pass-box, rgb(17, 16, 29), 50, 0.3, 0, 15);
 }
 
-.hidden {
-    visibility: false;
+.testButton {
+    -fx-padding: 8 20;
+    -fx-background-color: -background-color;
+    -fx-text-fill: -text-color;
 }
 
-.split-pane > .split-pane-divider{
-    /*visibility: hidden;*/
+.date-picker, .text-area, .text-field, .combo-box {
+    -fx-border-color: -background-color;
+    -fx-border-radius: 4 4 4 4;
 }
-#qwe {
-    -fx-text-fill: red;
-    -fx-graphic: url("log-out.png");
-    -fx-background-color: blue;
+
+.text-area:focused, .text-field:focused, .combo-box:focused {
+    -fx-border-width: 0;
 }
-.arrowButton {
-    -fx-focus-color: transparent;
-    -fx-background-insets: -1.4, 0, 1, 2;
-    -fx-focus-traversable: false;
+
+.date-picker:focused, .date-picker:focused .text-field {
+    -fx-border-width: 0;
+}
+
+.date-picker .text-field {
+    -fx-border-color: -background-color;
+    -fx-border-radius: 4 0 0 4;
+}
+
+.workplace {
+    -fx-background-color: -background-color;
+}
+
+#mainPane {
+    -fx-background-color: #f4f4f4;
+}
+
+.vbox .label, Text {
+    -fx-font-size: 18;
+    -fx-text-fill: -text-color;
+}
+
+.menuPane .button {
     -fx-background-color: transparent;
 }
-.clickButton{
-    -fx-pref-height: 30;
-    -fx-pref-width: 150;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.51), 25, 0, 0, 0);
+
+.menuPane .glyph-icon {
+    -fx-fill: -text-color;
 }
 
-.informationLabel {
-    -fx-border-color: rgba(0, 0, 0, 0.51);
-    -fx-border-width: 3 0 0 0;
+.menuPane FontAwesomeIconView, OctIconView {
+    /*-fx-fill: -text-color;*/
+    -glyph-size: 20;
 }
 
-.updateInformationPane {
-    /*-fx-border-width: 3;*/
-    /*-fx-border-color: gray;*/
-    /*-fx-border-radius: 5;*/
-    -fx-background-color: #fff;
-    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.51), 25, 0, 0, 0);
-    /*-fx-focus-color: transparent;*/
-    /*-fx-background-insets: -1.4, 0, 1, 2;*/
-    /*-fx-border-width: 20 20 20 20;
-    -fx-background-color: transparent;
-    -fx-border-color: lightgray;
-    -fx-stroke-line-cap: butt;
-    -fx-stroke-dash-offset: 6;*/
+.vbox GridPane {
+    -fx-padding: 7 0 7 0;
 }
 
-.progress-bar > .bar {
-    -fx-background-color: linear-gradient(
-            from 0px .75em to .75em 0px,
-            repeat,
-            -fx-accent 0%,
-            -fx-accent 49%,
-            derive(-fx-accent, 30%) 60%,
-            derive(-fx-accent, 30%) 99%
-    );
+.vbox GridPane:hover {
+    -fx-background-color: -text-color;
+    /*-fx-background-color: rgba(255, 0, 0, 0.35);*/
+    -fx-background-radius: 15;
+}
+
+.vbox > GridPane > .label {
+    -fx-text-fill: -text-color;
+}
+
+.vbox > GridPane > .glyph-icon {
+    -fx-fill: -text-color;
+    -glyph-size: 20;
+}
+
+.vbox GridPane:hover .label {
+    -fx-text-fill: -background-color;
+}
+
+.vbox GridPane:hover .glyph-icon {
+    -fx-fill: -background-color;
 }

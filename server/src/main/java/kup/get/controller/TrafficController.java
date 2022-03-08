@@ -37,7 +37,11 @@ public class TrafficController {
     }
     @MessageMapping("traffic.drivers")
     Flux<Person> getDrivers() {
-        return Flux.fromIterable(alfaService.getDrivers());
+        return Flux.fromIterable(alfaService.getPeople());
+    }
+    @MessageMapping("getPhotoByPerson")
+    Mono<byte[]> getPhotoByPerson(Mono<Long> idMono) {
+        return idMono.map(alfaService::getPhotoByPerson);
     }
 
     @MessageMapping("traffic.getPeopleByTeam")
@@ -97,5 +101,9 @@ public class TrafficController {
     @MessageMapping("traffic.getTrafficItems")
     Flux<TrafficItem> getTrafficItems() {
         return Flux.fromIterable(trafficItemService.getTrafficItems());
+    }
+    @MessageMapping("traffic.saveTrafficItem")
+    Mono<TrafficItem> saveTrafficItem(Mono<TrafficItem> itemMono){
+        return itemMono.map(trafficItemService::saveTrafficItem);
     }
 }

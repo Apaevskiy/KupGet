@@ -1,27 +1,17 @@
-package kup.get.config;
+package kup.get.config.FX;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.util.Callback;
 import javafx.util.Duration;
-import kup.get.model.traffic.TrafficVehicle;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 public abstract class MyAnchorPane extends AnchorPane {
 
@@ -53,13 +43,21 @@ public abstract class MyAnchorPane extends AnchorPane {
         alert.showAndWait();
     }
 
+    public abstract void fillData();
+    public abstract void clearData();
 
-
-    protected SequentialTransition createTransition(Pane disappearancePane, Pane appearancePane) {
-        return createTransition(disappearancePane, appearancePane, 1300);
+    protected SequentialTransition switchPaneTransition(Pane disappearancePane, Pane appearancePane) {
+        return switchPaneTransition(disappearancePane, appearancePane, 800);
     }
-
-    protected SequentialTransition createTransition(Pane disappearancePane, Pane appearancePane, long time) {
+    protected SequentialTransition appearancePaneTransition(Pane appearancePane) {
+        return new SequentialTransition(
+                new Timeline(
+                        new KeyFrame(Duration.millis(1),
+                                new KeyValue(appearancePane.visibleProperty(), true))),
+                new Timeline(new KeyFrame(Duration.millis(500),
+                        new KeyValue(appearancePane.opacityProperty(), 1))));
+    }
+    protected SequentialTransition switchPaneTransition(Pane disappearancePane, Pane appearancePane, long time) {
         return new SequentialTransition(
                 new Timeline(
                         new KeyFrame(Duration.millis(time*0.4),
