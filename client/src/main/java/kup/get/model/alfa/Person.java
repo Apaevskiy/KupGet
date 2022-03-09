@@ -14,8 +14,7 @@ public class Person {
     private String lastName;
     private String firstName;
     private String middleName;
-
-    private transient boolean check;
+    private Integer rank;
 
     @Override
     public String toString() {

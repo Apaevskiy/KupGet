@@ -1,4 +1,4 @@
-package kup.get.controller.FX.traffic;
+package kup.get.controller.FX.asu.traffic;
 
 import javafx.animation.SequentialTransition;
 import javafx.application.Platform;

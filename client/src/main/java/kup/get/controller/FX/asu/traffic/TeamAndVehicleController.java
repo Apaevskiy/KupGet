@@ -1,4 +1,4 @@
-package kup.get.controller.FX.traffic;
+package kup.get.controller.FX.asu.traffic;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;

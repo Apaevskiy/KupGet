@@ -19,7 +19,9 @@ import kup.get.config.CustomMenuItem;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.controller.FX.asu.BadgeController;
-import kup.get.controller.FX.traffic.*;
+import kup.get.controller.FX.asu.traffic.ItemController;
+import kup.get.controller.FX.asu.traffic.TeamAndVehicleController;
+import kup.get.controller.FX.asu.traffic.TrafficItemTypeController;
 import kup.get.controller.socket.SocketService;
 import reactor.core.publisher.Mono;
 
