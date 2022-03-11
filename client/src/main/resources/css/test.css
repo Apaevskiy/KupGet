@@ -12,7 +12,14 @@
 .clickButton:hover, .testButton:hover {
     -fx-effect: dropshadow(three-pass-box, rgb(17, 16, 29), 50, 0.3, 0, 15);
 }
-
+.notExist{
+    -fx-text-fill: red;
+    -fx-font-size: 16;
+}
+.exist{
+    -fx-text-fill: limegreen;
+    -fx-font-size: 16;
+}
 .testButton {
     -fx-padding: 8 20;
     -fx-background-color: -background-color;
@@ -89,3 +96,15 @@
 .vbox GridPane:hover .glyph-icon {
     -fx-fill: -background-color;
 }
+.tab-pane  .glyph-icon {
+    -fx-fill: -background-color;
+    -glyph-size: 18;
+}
+.tab-pane  .tab {
+    -glyph-size: 18;
+    -fx-font-size: 15;
+}
+.tab-pane{
+    /*-fx-background-color: red;*/
+}
+

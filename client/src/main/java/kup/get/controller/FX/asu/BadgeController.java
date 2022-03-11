@@ -1,13 +1,19 @@
 package kup.get.controller.FX.asu;
 
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
+import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.scene.paint.Color;
+import javafx.util.Callback;
 import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
@@ -30,9 +36,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -57,7 +61,7 @@ public class BadgeController extends MyAnchorPane {
             this.logo = Files.readAllBytes(logoFile.toPath());
         } catch (IOException e) {
             this.logo = null;
-            createAlert("КУДА ДЕЛИ ЛОГОТИП?", "Верните логотип предприятия сюда:\n" + logoFile.getAbsolutePath());
+            Platform.runLater(() -> createAlert("КУДА ДЕЛИ ЛОГОТИП?", "Верните логотип предприятия сюда:\n" + logoFile.getAbsolutePath()));
             e.printStackTrace();
         }
 
@@ -66,9 +70,15 @@ public class BadgeController extends MyAnchorPane {
                     CheckBox checkBox = new CheckBox();
                     checkBox.selectedProperty().setValue(badge.isActive());
                     checkBox.selectedProperty().addListener(
-                            (ov, old_val, new_val) -> badge.setActive(new_val));
+                            (ov, old_val, new_val) -> {
+                                badge.setActive(new_val);
+                                if (badge.getPhoto() == null)
+                                    badge.setPhoto(socketService.getPhotoByPerson(badge.getPerson().getId()));
+                                peopleTable.refresh();
+                            });
                     return checkBox;
-                }).setMaxWidthColumn(30)
+                })
+                .setMaxWidthColumn(25)
                 .and()
                 .column("Раз\nряд", badge -> {
                     CheckBox checkBox = new CheckBox();
@@ -78,9 +88,23 @@ public class BadgeController extends MyAnchorPane {
                     return checkBox;
                 }).setMaxWidthColumn(50)
                 .and()
-                .column("Количество", Badge::getAmount)
+                .column("Фото", badge -> {
+                    MaterialDesignIconView photoIcon = null;
+                    if (badge.getPhoto() == null && badge.isActive()) {
+                        photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CLOSE_CIRCLE_OUTLINE);
+                        photoIcon.setFill(Color.RED);
+                        photoIcon.setSize("18");
+                    } else if (badge.getPhoto() != null && badge.isActive()) {
+                        photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CHECKBOX_MARKED_CIRCLE_OUTLINE);
+                        photoIcon.setFill(Color.GREEN);
+                        photoIcon.setSize("18");
+                    }
+                    return photoIcon;
+                }).setMaxWidthColumn(50)
+                .and()
+                .column("Коли\nчество", Badge::getAmount)
                 .setEditable(Badge::setAmount, TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                .setMaxWidthColumn(100)
+                .setMaxWidthColumn(50)
                 .and()
                 .column("Вид", Badge::getType).setEditable(Badge::setType, b -> new ComboBoxTableCell<>(Type.values()))
                 .and()
@@ -92,7 +116,6 @@ public class BadgeController extends MyAnchorPane {
                 .addColumn("Подразделение", badge -> badge.getPerson().getDepartment().getName());
 
         generateExcelButton.setOnAction(event -> {
-            System.out.println(peopleTable.getItems().stream().filter(Badge::isActive).collect(Collectors.toList()));
             HSSFWorkbook workbook = new HSSFWorkbook();
             Sheet bigBadgesSheet = createSheet(workbook, "Большие бейджи");
             bigBadgesSheet.setColumnWidth(0, 4171);
@@ -103,7 +126,7 @@ public class BadgeController extends MyAnchorPane {
             Sheet smallBadges = createSheet(workbook, "Узкие бейджи");
             smallBadges.setColumnWidth(0, 7762);
             smallBadges.setColumnWidth(1, 4265);
-            smallBadges.setColumnWidth(2, 1100);
+            smallBadges.setColumnWidth(2, 500);
             smallBadges.setColumnWidth(3, 7762);
             smallBadges.setColumnWidth(4, 4265);
 
@@ -111,29 +134,37 @@ public class BadgeController extends MyAnchorPane {
             for (Badge badge : peopleTable.getItems().stream()
                     .filter(badge -> badge.isActive() && !badge.getType().equals(Type.SMALL))
                     .collect(Collectors.toList())) {
-                addBigBadge(bigBadgesSheet, badge, row, column % 2 != 0 ? 0 : 3);
-//                addPhoto(bigBadgesSheet, badge, row, column % 2 != 0 ? 0 : 3);
-                addLogo(bigBadgesSheet, row, column % 2 != 0 ? 1 : 4);
-                if (column % 2 == 0) {
-                    row += 5;
-                    getRow(bigBadgesSheet, row++, 500);
+                for (int i = 0; i < badge.getAmount(); i++) {
+                    addBigBadge(bigBadgesSheet, badge, row, column % 2 != 0 ? 0 : 3);
+                    addPhoto(bigBadgesSheet, badge, Type.BIG, row, column % 2 != 0 ? 0 : 3);
+                    addLogo(bigBadgesSheet, row, column % 2 != 0 ? 1 : 4);
+                    if (column % 2 == 0) {
+                        System.out.println(row);
+                        row += 5;
+                        getRow(bigBadgesSheet, row++, 500);
+                    }
+                    column++;
                 }
-                column++;
             }
             row = 0;
             column = 1;
             for (Badge badge : peopleTable.getItems().stream()
                     .filter(badge -> badge.isActive() && !badge.getType().equals(Type.BIG))
                     .collect(Collectors.toList())) {
-                addSmallBadge(smallBadges, badge, row, column % 2 != 0 ? 0 : 3);
-                addPhoto(smallBadges, badge, row, column % 2 != 0 ? 1 : 4);
-                addLogo(smallBadges, row, column % 2 != 0 ? 0 : 3);
-                column++;
-                row += 4;
+                for (int i = 0; i < badge.getAmount(); i++) {
+                    addSmallBadge(smallBadges, badge, row, column % 2 != 0 ? 0 : 3);
+                    addPhoto(smallBadges, badge, Type.SMALL, row, column % 2 != 0 ? 1 : 4);
+                    addLogo(smallBadges, row, column % 2 != 0 ? 0 : 3);
+                    if (column % 2 == 0) {
+                        row += 4;
+                        getRow(bigBadgesSheet, row++, 500);
+                    }
+                    column++;
+                }
             }
             try {
                 SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
-                File file = new File("Бэйджи "+ ft.format(new Date()) + ".xls");
+                File file = new File("Бэйджи " + ft.format(new Date()) + ".xls");
                 FileOutputStream outFile = new FileOutputStream(file);
                 workbook.write(outFile);
                 outFile.close();
@@ -146,8 +177,8 @@ public class BadgeController extends MyAnchorPane {
 
     private Sheet createSheet(Workbook workbook, String name) {
         Sheet sheet = workbook.createSheet(name);
-        sheet.setMargin(Sheet.LeftMargin, 0.5);
-        sheet.setMargin(Sheet.RightMargin, 0.5);
+        sheet.setMargin(Sheet.LeftMargin, 0.3);
+        sheet.setMargin(Sheet.RightMargin, 0.3);
         sheet.setMargin(Sheet.TopMargin, 0.5);
         sheet.setMargin(Sheet.BottomMargin, 0.5);
         return sheet;
@@ -187,18 +218,18 @@ public class BadgeController extends MyAnchorPane {
     }
 
     private void addSmallBadge(Sheet sheet, Badge badge, int rowNum, int colNum) {
+        getRow(sheet, rowNum++, 25 * 20);
+
         Row row = getRow(sheet, rowNum++, 25 * 20);
         generateCell(row, colNum, badge.getPerson().getLastName(), HSSFColor.HSSFColorPredefined.BLUE, 16)
                 .getCellStyle().setVerticalAlignment(VerticalAlignment.BOTTOM);
 
-        row = getRow(sheet, rowNum++, 25 * 20);
+        row = getRow(sheet, rowNum++, 25 * 25);
         generateCell(row, colNum, badge.getPerson().getFirstName(), HSSFColor.HSSFColorPredefined.BLUE, 16);
 
-        row = getRow(sheet, rowNum++, 25 * 25);
+        row= getRow(sheet, rowNum++, 43 * 20);
         generateCell(row, colNum, badge.getPerson().getMiddleName(), HSSFColor.HSSFColorPredefined.BLUE, 16)
                 .getCellStyle().setVerticalAlignment(VerticalAlignment.TOP);
-
-        getRow(sheet, rowNum++, 43 * 20);
         CellRangeAddress smallRangeAddress = new CellRangeAddress(rowNum - 4, rowNum - 1, colNum, colNum + 1);
 
         RegionUtil.setBorderBottom(BorderStyle.THIN, smallRangeAddress, sheet);
@@ -215,36 +246,33 @@ public class BadgeController extends MyAnchorPane {
         return row;
     }
 
-    private void addPhoto(Sheet sheet, Badge badge, int rowNum, int colNum) {
-        int photoIdx = sheet.getWorkbook().addPicture(socketService.getPhotoByPerson(badge.getPerson().getId()), Workbook.PICTURE_TYPE_PNG);
+    private void addPhoto(Sheet sheet, Badge badge, Type type, int rowNum, int colNum) {
+        byte[] photoPerson = badge.getPhoto() != null ? badge.getPhoto() : socketService.getPhotoByPerson(badge.getPerson().getId());
+        badge.setPhoto(photoPerson);
 
-        CreationHelper helper = sheet.getWorkbook().getCreationHelper();
-        Drawing<?> drawing = sheet.createDrawingPatriarch();
-
-        ClientAnchor photo = helper.createClientAnchor();
-        photo.setCol1(colNum);
-        photo.setRow1(rowNum);
-        photo.setCol2(colNum + 1);
-        photo.setRow2(badge.getType().getRowCount());
-        photo.setDx1(badge.getType().getDx());
-        photo.setDy1(badge.getType().getDy());
-//        drawing.createPicture(photo, photoIdx).resize(badge.getType().getPercentHeight(), badge.getType().getPercentWidth());
+        drawing(sheet, photoPerson, colNum, rowNum, colNum + 1,
+                rowNum + type.getRowCount(), type.getDx(), type.getDy(),
+                type.getPercentHeight(), type.getPercentWidth());
     }
 
     private void addLogo(Sheet sheet, int rowNum, int colNum) {
-        int logoIdx = sheet.getWorkbook().addPicture(logo, Workbook.PICTURE_TYPE_PNG);
+        drawing(sheet, logo, colNum, rowNum, colNum + 1, rowNum + 1, 175, 20, 0.80, 0.90);
+    }
+
+    private void drawing(Sheet sheet, byte[] image, int colNum, int rowNum, int col2, int row2, int Dx1, int Dy1, double resizeX, double resizeY) {
+        int logoIdx = sheet.getWorkbook().addPicture(image, Workbook.PICTURE_TYPE_PNG);
         CreationHelper helper = sheet.getWorkbook().getCreationHelper();
         Drawing<?> drawing = sheet.createDrawingPatriarch();
 
         ClientAnchor logoAnchor = helper.createClientAnchor();
         logoAnchor.setCol1(colNum);
         logoAnchor.setRow1(rowNum);
-        logoAnchor.setCol2(colNum + 1);
-        logoAnchor.setRow2(rowNum + 1);
-        logoAnchor.setDx1(175);
-        logoAnchor.setDy1(20);
+        logoAnchor.setCol2(col2);
+        logoAnchor.setRow2(row2);
+        logoAnchor.setDx1(Dx1);
+        logoAnchor.setDy1(Dy1);
         drawing.createPicture(logoAnchor, logoIdx)
-                .resize(0.80, 0.90);
+                .resize(resizeX, resizeY);
     }
 
     private org.apache.poi.ss.usermodel.Cell generateCell(Row row, int columnIndex, String value, HSSFColor.HSSFColorPredefined color, int size) {
@@ -271,6 +299,7 @@ public class BadgeController extends MyAnchorPane {
         private boolean rank;
         private Integer amount = 1;
         private Type type = Type.BIG;
+        private byte[] photo;
 
         public Badge(Person person) {
             this.person = person;
@@ -281,8 +310,8 @@ public class BadgeController extends MyAnchorPane {
     @Getter
     private enum Type {
         All("Б + М", 0, 0, 0, 0, 0),
-        BIG("Большой", 0.98, 0.89, 35, 130, 5), // 5 * -1 + 5 0
-        SMALL("Маленький", 0.98, 0.99, 0, 30, 4); // 4 * -1 +5 1
+        BIG("Большой", 0.98, 0.89, 35, 130, 5),
+        SMALL("Маленький", 0.98, 0.99, 0, 30, 4);
         private final String name;
         private final double percentHeight;
         private final double percentWidth;

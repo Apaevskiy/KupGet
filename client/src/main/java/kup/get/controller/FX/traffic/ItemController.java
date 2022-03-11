@@ -1,4 +1,4 @@
-package kup.get.controller.FX.asu.traffic;
+package kup.get.controller.FX.traffic;
 
 import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
@@ -65,6 +65,8 @@ public class ItemController extends MyAnchorPane {
     @FXML
     private TextField searchPerson;
     @FXML
+    private TabPane tabPane;
+    @FXML
     private MyTable<Person> peopleTable;
     @FXML
     private MyTable<TrafficTeam> teamTable;
@@ -72,16 +74,13 @@ public class ItemController extends MyAnchorPane {
     private MyTable<TrafficVehicle> vehicleTable;
 
     private final SocketService socketService;
-    private final ObservableList<Person> people = FXCollections.observableArrayList();
     private final AtomicReference<SequentialTransition> transition;
     private final String nameItemColumn = "Предметы";
-    private Class<?> aClass;
 
     public ItemController(SocketService socketService, AtomicReference<SequentialTransition> sequentialTransition) {
         this.socketService = socketService;
         this.transition = sequentialTransition;
         ownerComboBox.setItems(FXCollections.observableArrayList(Owner.values()));
-        peopleTable.setItems(people);
 
         itemTable
                 .headerColumn(nameItemColumn)
@@ -116,16 +115,14 @@ public class ItemController extends MyAnchorPane {
             if (owner.equals(Owner.All)) {
                 itemTable.getColumns().forEach(column -> column.setVisible(true));
             } else {
-                itemTable.getColumns().forEach(column -> {
-                    column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn));
-                });
+                itemTable.getColumns().forEach(column -> column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
             }
         });
 
         canselButton.setOnAction(event -> switchPane(addItemPane, itemsPane));
 
         dateStartField.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
-            if(itemTypeComboBox.getValue()!=null){
+            if(itemTypeComboBox.getValue()!=null && !newValue.isEmpty()){
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
                 dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(itemTypeComboBox.getValue().getDefaultDurationInMonth()));
             }
@@ -150,13 +147,14 @@ public class ItemController extends MyAnchorPane {
             SelectionModel<?> model = null;
             infoLabel.setStyle("-fx-text-fill: red");
             TrafficItem item = TrafficItem.builder().build();
-            if (aClass.equals(Person.class)) {
+            System.out.println(tabPane.getSelectionModel().getSelectedItem().getText());
+            if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Водители")) {
                 model = peopleTable.getSelectionModel();
                 item.setPerson(new TrafficPerson((Person) model.getSelectedItem()));
-            } else if (aClass.equals(TrafficTeam.class)) {
+            } else if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Экипажи")) {
                 model = teamTable.getSelectionModel();
                 item.setTeam((TrafficTeam) model.getSelectedItem());
-            } else if (aClass.equals(TrafficVehicle.class)) {
+            } else if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Транспортные средства")) {
                 model = vehicleTable.getSelectionModel();
                 item.setVehicle((TrafficVehicle) model.getSelectedItem());
             }
@@ -194,40 +192,7 @@ public class ItemController extends MyAnchorPane {
 
     private ContextMenu itemTableContextMenu() {
         return MyContextMenu.builder()
-                .menu("Добавить")
-                .menuItem("По водителю", event -> {
-                    peopleTable.setVisible(true);
-                    teamTable.setVisible(false);
-                    vehicleTable.setVisible(false);
-                    switchPane(itemsPane, addItemPane);
-                    aClass = Person.class;
-                })
-                .menuItem("По экипажу", event -> {
-                    peopleTable.setVisible(false);
-                    teamTable.setVisible(true);
-                    vehicleTable.setVisible(false);
-                    teamTable.getItems().clear();
-                    socketService.getTrafficTeam()
-                            .doOnComplete(() -> teamTable.refresh())
-                            .subscribe(tt -> {
-                                System.out.println(tt);
-                                teamTable.getItems().add(tt);
-                            });
-                    switchPane(itemsPane, addItemPane);
-                    aClass = TrafficTeam.class;
-                })
-                .menuItem("По ТС", event -> {
-                    peopleTable.setVisible(false);
-                    teamTable.setVisible(false);
-                    vehicleTable.setVisible(true);
-                    vehicleTable.getItems().clear();
-                    socketService.getTrafficVehicle()
-                            .doOnComplete(() -> vehicleTable.refresh())
-                            .subscribe(vehicleTable.getItems()::add);
-                    switchPane(itemsPane, addItemPane);
-                    aClass = TrafficVehicle.class;
-                })
-                .build()
+                .item("Добавить", event -> switchPane(itemsPane, addItemPane))
                 .item("", event -> {
                 });
     }
@@ -254,7 +219,7 @@ public class ItemController extends MyAnchorPane {
 
     private String parsePerson(Function<Person, String> function, TrafficPerson p) {
         try {
-            return people.stream()
+            return peopleTable.getItems().stream()
                     .filter(person -> person.getId().equals(p.getPersonnelNumber()))
                     .findFirst()
                     .map(function)
@@ -269,7 +234,9 @@ public class ItemController extends MyAnchorPane {
         itemTable.getItems().clear();
         itemTypeComboBox.getItems().clear();
         filterItemTypeComboBox.getItems().clear();
-        people.clear();
+        peopleTable.getItems().clear();
+        teamTable.getItems().clear();
+        vehicleTable.getItems().clear();
     }
 
     @Override
@@ -279,6 +246,12 @@ public class ItemController extends MyAnchorPane {
             itemTypeComboBox.getItems().add(type);
             filterItemTypeComboBox.getItems().add(type);
         });
-        people.addAll(socketService.getDriver());
+        peopleTable.getItems().addAll(socketService.getDriver());
+        socketService.getTrafficTeam()
+                .doOnComplete(() -> teamTable.refresh())
+                .subscribe(teamTable.getItems()::add);
+        socketService.getTrafficVehicle()
+                .doOnComplete(() -> vehicleTable.refresh())
+                .subscribe(vehicleTable.getItems()::add);
     }
 }

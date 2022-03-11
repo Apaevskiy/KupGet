@@ -28,7 +28,7 @@ public class MyTable<S> extends TableView<S> {
     }
     public <t> MyTableColumn<t> column(String title, Function<S, t> property) {
         MyTableColumn<t> myTableColumn = new MyTableColumn<>(title);
-        myTableColumn.setFactory(property);
+        myTableColumn.setMyCellValueFactory(property);
         this.getColumns().add(myTableColumn);
         return myTableColumn;
     }
@@ -61,13 +61,13 @@ public class MyTable<S> extends TableView<S> {
         }
         public <t> MyTableColumn<t> column(String title, Function<S, t> property) {
             MyTableColumn<t> myTableColumn = new MyTableColumn<>(title, this);
-            myTableColumn.setFactory(property);
+            myTableColumn.setMyCellValueFactory(property);
             this.getColumns().add(myTableColumn);
             return myTableColumn;
         }
 
 
-        public void setFactory(Function<S, T> property) {
+        public void setMyCellValueFactory(Function<S, T> property) {
             this.setCellValueFactory(cellData -> {
                 try {
                     return new SimpleObjectProperty<>(property.apply(cellData.getValue()));
@@ -76,7 +76,10 @@ public class MyTable<S> extends TableView<S> {
                 }
             });
         }
-
+        public MyTableColumn<T> setMyCellFactory(Callback<TableColumn<S, T>, TableCell<S, T>> columnCallback) {
+            this.setCellFactory(columnCallback);
+            return this;
+        }
         public MyTableColumn<T> setEditable(BiConsumer<S, T> consumer, Callback<TableColumn<S, T>, TableCell<S, T>> columnCallback) {
             this.setCellFactory(columnCallback);
             this.setOnEditCommit(e -> consumer.accept(e.getTableView().getItems().get(e.getTablePosition().getRow()), e.getNewValue()));

@@ -30,7 +30,7 @@ public class RSocketClientConfig {
         return builder
                 .setupMetadata(new UsernamePasswordMetadata("test", "test"),
                         MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString()))
-                .tcp("localhost", 9091);
+                .tcp("192.168.0.246", 9091);
     }
     @Bean
     AtomicReference<SequentialTransition> getTransition(){
