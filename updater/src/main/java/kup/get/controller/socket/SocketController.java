@@ -1,8 +1,8 @@
 package kup.get.controller.socket;
 
 import kup.get.config.RSocketClientConfig;
-import kup.get.model.FileOfProgram;
-import kup.get.model.Version;
+import kup.get.entity.FileOfProgram;
+import kup.get.entity.Version;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 

@@ -1,0 +1,12 @@
+package kup.get.repository.traffic;
+
+import kup.get.entity.traffic.TrafficItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.time.LocalDate;
+import java.util.List;
+
+
+public interface TrafficItemRepository extends JpaRepository<TrafficItem, Long>{
+    List<TrafficItem> findAllByDateFinishAfter(LocalDate date);
+}

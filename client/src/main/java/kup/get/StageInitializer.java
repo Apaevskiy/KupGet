@@ -2,12 +2,9 @@ package kup.get;
 
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import kup.get.controller.FX.MainController;
-import org.springframework.beans.factory.annotation.Value;
+import kup.get.controller.MainController;
 import org.springframework.context.ApplicationListener;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
 @Component

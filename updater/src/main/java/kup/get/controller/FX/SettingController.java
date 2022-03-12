@@ -5,7 +5,7 @@ import javafx.scene.control.*;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
 import kup.get.config.RSocketClientConfig;
-import kup.get.model.Version;
+import kup.get.entity.Version;
 import kup.get.service.PropertyService;
 
 import java.io.File;

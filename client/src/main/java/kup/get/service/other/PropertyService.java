@@ -1,19 +1,18 @@
-package kup.get.service;
+package kup.get.service.other;
 
-import kup.get.entity.Version;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
-@Component
+@Service
 public class PropertyService {
     private final Map<String, String> properties = new HashMap<>();
     private File file;
 
-    public PropertyService() {
+    /*public PropertyService() {
         try {
             file = ResourceUtils.getFile("classpath:setting.properties");
             BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -25,7 +24,7 @@ public class PropertyService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
     public String getIpServer(){
         return properties.get("server.ip");
     }
@@ -35,18 +34,6 @@ public class PropertyService {
     public void saveServerConfig(String ip, String port){
         properties.put("server.ip", ip);
         properties.put("server.port", port);
-        writeProperties();
-    }
-    public Version getVersion() {
-        return Version
-                .builder()
-                .id(Long.parseLong(properties.get("version.id")))
-                .release(properties.get("version.release"))
-                .build();
-    }
-    public void saveVersion(Version actualVersion) {
-        properties.put("version.id", String.valueOf(actualVersion.getId()));
-        properties.put("version.release", actualVersion.getRelease());
         writeProperties();
     }
 

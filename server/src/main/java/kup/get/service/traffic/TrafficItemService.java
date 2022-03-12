@@ -25,7 +25,6 @@ public class TrafficItemService {
     }
 
     public TrafficItemType saveType(TrafficItemType type) {
-        System.out.println(type);
         return typeRepository.save(type);
     }
 

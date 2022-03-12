@@ -1,6 +1,6 @@
 package kup.get.service;
 
-import kup.get.model.FileOfProgram;
+import kup.get.entity.FileOfProgram;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.stereotype.Service;
 

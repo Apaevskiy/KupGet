@@ -35,7 +35,7 @@ public class TrafficController {
         return dateMono
                 .flatMapMany(date -> Flux.fromIterable(trafficItemService.getBriefingOfPeople(date)));
     }
-    @MessageMapping("traffic.drivers")
+    @MessageMapping("traffic.people")
     Flux<Person> getDrivers() {
         return Flux.fromIterable(alfaService.getPeople());
     }

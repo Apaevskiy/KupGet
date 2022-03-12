@@ -8,12 +8,10 @@ import javafx.scene.layout.AnchorPane;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
 import kup.get.controller.socket.SocketController;
-import kup.get.model.Version;
+import kup.get.entity.Version;
 import kup.get.service.*;
 
-import javax.annotation.PostConstruct;
 import java.io.File;
-import java.net.UnknownHostException;
 import java.util.List;
 
 @FxmlLoader(path = "/fxml/updates.fxml")

@@ -8,7 +8,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.util.Duration;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
-import kup.get.model.Version;
+import kup.get.entity.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

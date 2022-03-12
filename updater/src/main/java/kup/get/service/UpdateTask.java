@@ -2,8 +2,8 @@ package kup.get.service;
 
 import javafx.concurrent.Task;
 import kup.get.controller.socket.SocketController;
-import kup.get.model.FileOfProgram;
-import kup.get.model.Version;
+import kup.get.entity.FileOfProgram;
+import kup.get.entity.Version;
 
 import java.io.File;
 import java.io.IOException;
