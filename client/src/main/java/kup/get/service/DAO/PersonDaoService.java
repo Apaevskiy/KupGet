@@ -21,7 +21,7 @@ public class PersonDaoService implements PersonService {
     private final List<Person> people = new ArrayList<>();
     public void updatePeople() {
         people.clear();
-        people.addAll(personRepository.findAllWorkPeople(String.valueOf(LocalDate.now())));
+        people.addAll(personRepository.findAll(/*String.valueOf(LocalDate.now())*/));
     }
 
     public List<Person> getPeople() {

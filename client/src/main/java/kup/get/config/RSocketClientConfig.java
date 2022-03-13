@@ -1,4 +1,4 @@
-package kup.get.config.FX;
+package kup.get.config;
 
 import io.rsocket.DuplexConnection;
 import io.rsocket.transport.netty.client.TcpClientTransport;

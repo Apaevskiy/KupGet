@@ -4,12 +4,15 @@ import io.rsocket.metadata.WellKnownMimeType;
 import kup.get.config.RSocketClientBuilderImpl;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.security.rsocket.metadata.UsernamePasswordMetadata;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.util.MimeType;
 import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 
 import java.util.Arrays;
 
+@Service
 public class SocketService {
     private UsernamePasswordMetadata metadata;
     private final MimeType mimetype = MimeTypeUtils.parseMimeType(WellKnownMimeType.MESSAGE_RSOCKET_AUTHENTICATION.getString());
@@ -25,11 +28,11 @@ public class SocketService {
             metadata = new UsernamePasswordMetadata(username, password);
             return route("greetings").retrieveFlux(String.class);
         } else {
-            return Flux.fromIterable(Arrays.asList("ROLE_TRAFFIC"));
+            return Flux.fromIterable(Arrays.asList("AFK"));
         }
     }
 
-    protected RSocketRequester.RequestSpec route(String s) {
+    public RSocketRequester.RequestSpec route(String s) {
         return config.getRequester().route(s).metadata(this.metadata, this.mimetype);
     }
 }

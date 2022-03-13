@@ -1,6 +1,5 @@
 package kup.get.service.socket;
 
-import kup.get.config.RSocketClientBuilderImpl;
 import kup.get.entity.alfa.Person;
 import kup.get.service.PersonService;
 import org.springframework.stereotype.Service;
@@ -10,15 +9,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class PersonSocketService extends SocketService implements PersonService {
+public class PersonSocketService implements PersonService {
     private final List<Person> people = new ArrayList<>();
+    private final SocketService socketService;
 
-    public PersonSocketService( RSocketClientBuilderImpl config) {
-        super(config);
+    public PersonSocketService(SocketService socketService) {
+        this.socketService = socketService;
     }
 
     public void updatePeople() {
-            route("traffic.people")
+            socketService.route("traffic.people")
                     .retrieveFlux(Person.class)
                     .subscribe(people::add);
 
@@ -30,13 +30,13 @@ public class PersonSocketService extends SocketService implements PersonService 
     }
 
     public Mono<Person> savePerson(Person person) {     // DBA
-        return route("asu.savePerson")
+        return socketService.route("asu.savePerson")
                 .data(person)
                 .retrieveMono(Person.class);
     }
 
     public byte[] getPhotoByPerson(Long id) {
-        return route("getPhotoByPerson")
+        return socketService.route("getPhotoByPerson")
                 .data(id)
                 .retrieveMono(byte[].class)
                 .block();

@@ -2,15 +2,34 @@
     -text-color: white;
     -background-color: #11101D;
 }
-
 .clickButton {
     -fx-pref-height: 30;
     -fx-pref-width: 150;
     -fx-background-color: -background-color;
     -fx-text-fill: -text-color;
 }
+
+.switchButton {
+    -fx-background-color: -background-color;
+    /*-fx-background-radius: 15;*/
+    -fx-border-width: 2;
+}
+.switchButton > .button{
+    /*-fx-background-radius: 15;*/
+    -fx-background-color: #343340;
+    -fx-effect: dropshadow(three-pass-box, rgb(255, 255, 255), 10, 0, 0, 0);
+}
+.switchButton > .button .label{
+    -fx-effect: dropshadow(three-pass-box, rgb(255, 255, 255), 15, 0, 0, 0);
+    -fx-text-fill: white;
+    -fx-font-size: 15;
+}
 .clickButton:hover, .testButton:hover {
-    -fx-effect: dropshadow(three-pass-box, rgb(17, 16, 29), 50, 0.3, 0, 15);
+    -fx-effect: dropshadow(three-pass-box, rgb(17, 16, 29), 15, 0, 0, 0);
+}
+.shadowGridPane{
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.51), 25, 0.2, 0, 0);
+    -fx-background-color: #fff;
 }
 .notExist{
     -fx-text-fill: red;
@@ -104,7 +123,9 @@
     -glyph-size: 18;
     -fx-font-size: 15;
 }
-.tab-pane{
-    /*-fx-background-color: red;*/
+.list-view .list-cell, .indexed-cell, .cell {
+    -fx-padding: 0px;
 }
-
+.list-view .check-box {
+    -fx-padding: 3 7 3 20;
+}

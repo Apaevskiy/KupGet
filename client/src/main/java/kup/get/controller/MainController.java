@@ -18,12 +18,13 @@ import javafx.util.Duration;
 import kup.get.config.CustomMenuItem;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
-import kup.get.config.RSocketClientBuilderImpl;
 import kup.get.controller.asu.BadgeController;
+import kup.get.controller.other.ImportExportController;
 import kup.get.controller.traffic.ItemController;
 import kup.get.controller.traffic.TeamAndVehicleController;
 import kup.get.controller.traffic.TrafficItemTypeController;
 import kup.get.service.Services;
+import kup.get.service.socket.SocketService;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
@@ -61,7 +62,7 @@ public class MainController extends MyAnchorPane {
     private final AtomicReference<CustomMenuItem> actualMenuItem = new AtomicReference<>();
     private final AtomicReference<SequentialTransition> transition;
     private final Services services;
-    private final RSocketClientBuilderImpl config;
+    private final SocketService socketService;
     private boolean checkHiddenMenu = true;
     private MyAnchorPane actualPane;
 
@@ -69,14 +70,14 @@ public class MainController extends MyAnchorPane {
                           TeamAndVehicleController teamAndVehicleController,
                           ItemController itemController,
                           BadgeController badgeController,
-                          AtomicReference<SequentialTransition> transition, Services services, RSocketClientBuilderImpl config) {
+                          ImportExportController importExportController,
+                          AtomicReference<SequentialTransition> transition, Services services, SocketService socketService) {
         this.transition = transition;
         this.services = services;
-        this.config = config;
-        mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController,
-                badgeController);
+        this.socketService = socketService;
         this.setVisible(true);
         this.setOpacity(1);
+        mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController, badgeController,importExportController);
 
         CustomMenuItem trafficMenu = CustomMenuItem.builder()
                 .menuItem("Служба движения", new MaterialDesignIconView(MaterialDesignIcon.BUS))
@@ -110,13 +111,6 @@ public class MainController extends MyAnchorPane {
                                     badgeController.krsPeople();
                                     hiddenPages(badgeController);
                                 }));
-        CustomMenuItem exportAndImportMenu = CustomMenuItem.builder()
-                .menuItem("Экспорт и импорт", new MaterialIconView(MaterialIcon.VERTICAL_ALIGN_CENTER))
-                .setRoles("OFFLINE")
-                .setEventSwitchPane(event -> {
-                    badgeController.krsPeople();
-                    hiddenPages(badgeController);
-                });
         CustomMenuItem energyMenu = CustomMenuItem.builder()
                 .menuItem("Энергослужба", new WeatherIconView(WeatherIcon.OWM_210))
                 .setRoles("ROLE_ENERGY", "ROLE_SUPERADMIN")
@@ -145,9 +139,13 @@ public class MainController extends MyAnchorPane {
                                 .menuItem("Расписание", new MaterialDesignIconView(MaterialDesignIcon.CALENDAR_CLOCK))
                                 .setEventSwitchPane(event -> hiddenPages(teamAndVehicleController))
                 );
+        CustomMenuItem exportAndImportMenu = CustomMenuItem.builder()
+                .menuItem("Экспорт и импорт", new MaterialDesignIconView(MaterialDesignIcon.FILE_EXPORT))
+                .setRoles("OFFLINE")
+                .setEventSwitchPane(event -> hiddenPages(importExportController));
 
-        CustomMenuItem.addToPane(vBoxMenuItems, krsMenu, trafficMenu, energyMenu, asuMenu);
-        actualMenuItem.set(CustomMenuItem.builder().addChildren(krsMenu, trafficMenu, energyMenu, asuMenu));
+        CustomMenuItem.addToPane(vBoxMenuItems, krsMenu, trafficMenu, energyMenu, asuMenu,exportAndImportMenu);
+        actualMenuItem.set(CustomMenuItem.builder().addChildren(krsMenu, trafficMenu, energyMenu, asuMenu,exportAndImportMenu));
 
         returnButton.setOnMouseClicked(event -> {
             if (actualMenuItem.get() != null) {
@@ -180,12 +178,55 @@ public class MainController extends MyAnchorPane {
 
     @PostConstruct
     public void test() {
-        config.createRequester()
-                .doOnError(throwable -> System.out.println(throwable.getMessage()))
+        services.createRequester()
+                .onErrorResume(throwable -> {
+                    System.out.println(throwable.getMessage());
+                    return Mono.empty();
+                })
+                .doOnSuccess(dc -> {
+                    socketService.authorize("sanya", "1101")
+                            .onErrorResume(s -> Mono.just(s.getMessage()))      //  LOG
+                            .doOnComplete(services.getPersonService()::updatePeople).subscribe(System.out::println);
+
+                })
                 .subscribe();
-        /*services.authorize("sanya", "1101")
-                .onErrorResume(s -> Mono.just(s.getMessage()))      //  LOG
-                .doOnComplete(services.getPersonService()::updatePeople).subscribe(System.out::println);*/
+        /*try (FileOutputStream fos = new FileOutputStream("data/test.txt");
+             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
+
+            // create a new user object
+            List<TrafficItemType> types = new ArrayList<>();
+            types.add(new TrafficItemType(1L, 3, "type1"));
+            types.add(new TrafficItemType(2L, 4, "type2"));
+            types.add(new TrafficItemType(3L, 5, "type3"));
+
+            List<TrafficPerson> people = new ArrayList<>();
+            people.add(new TrafficPerson(1L,1L));
+            people.add(new TrafficPerson(2L,2L));
+            people.add(new TrafficPerson(3L,3L));
+            people.add(new TrafficPerson(4L,4L));
+            // write object to file
+            oos.writeObject(types);
+            oos.writeObject(people);
+
+            FileInputStream fi = new FileInputStream("data/test.txt");
+            ObjectInputStream oi = new ObjectInputStream(fi);
+
+            // Read objects
+            List<TrafficItemType> pr1 = (List<TrafficItemType>) oi.readObject();
+            List<TrafficPerson> pr2 = (List<TrafficPerson>) oi.readObject();
+            List<TrafficItem> pr3 = (List<TrafficItem>) oi.readObject();
+
+            System.out.println(pr1.toString());
+            System.out.println(pr2.toString());
+            System.out.println(pr3.toString());
+
+            oi.close();
+            fi.close();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }*/
     }
 
     private void hiddenPages(MyAnchorPane appearancePane) {
