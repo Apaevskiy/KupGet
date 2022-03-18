@@ -1,6 +1,7 @@
 package kup.get.controller;
 
 import kup.get.entity.alfa.Person;
+import kup.get.entity.alfa.Photo;
 import kup.get.entity.postgres.traffic.*;
 import kup.get.service.alfa.AlfaService;
 import kup.get.service.traffic.TrafficItemService;
@@ -35,14 +36,7 @@ public class TrafficController {
         return dateMono
                 .flatMapMany(date -> Flux.fromIterable(trafficItemService.getBriefingOfPeople(date)));
     }
-    @MessageMapping("traffic.people")
-    Flux<Person> getDrivers() {
-        return Flux.fromIterable(alfaService.getPeople());
-    }
-    @MessageMapping("getPhotoByPerson")
-    Mono<byte[]> getPhotoByPerson(Mono<Long> idMono) {
-        return idMono.map(alfaService::getPhotoByPerson);
-    }
+
 
     @MessageMapping("traffic.getPeopleByTeam")
     Flux<TrafficPerson> getPeopleByTeam(Mono<Long> id) {
@@ -59,51 +53,75 @@ public class TrafficController {
         return itemType
                 .map(trafficItemService::saveType);
     }
+
     @MessageMapping("traffic.saveTrafficPerson")
     Mono<TrafficPerson> saveTrafficPerson(Mono<TrafficPerson> person) {
         return person
                 .map(trafficItemService::saveTrafficPerson);
     }
+
     @MessageMapping("traffic.getTrafficPeople")
     Flux<TrafficPerson> getTrafficPeople() {
         return Flux.fromIterable(trafficItemService.getTrafficPeople());
     }
+
     @MessageMapping("traffic.saveTrafficTeam")
     Mono<TrafficTeam> saveTrafficTeam(Mono<TrafficTeam> trafficTeam) {
-        return trafficTeam
-                .map(trafficItemService::saveTrafficTeam);
+        return trafficTeam.map(trafficItemService::saveTrafficTeam);
     }
+
     @MessageMapping("traffic.getTrafficTeam")
     Flux<TrafficTeam> getTrafficTeam() {
         return Flux.fromIterable(trafficItemService.getAllTrafficTeam());
     }
+
     @MessageMapping("traffic.deleteTrafficTeam")
     Mono<Void> deleteTrafficTeam(Mono<TrafficTeam> trafficVehicle) {
         return trafficVehicle
                 .doOnNext(trafficItemService::deleteTrafficTeam)
                 .then(Mono.empty());
     }
+
     @MessageMapping("traffic.getTrafficVehicle")
     Flux<TrafficVehicle> getTrafficVehicle() {
         return Flux.fromIterable(trafficItemService.getTrafficVehicle());
     }
+
     @MessageMapping("traffic.saveTrafficVehicle")
     Mono<TrafficVehicle> saveTrafficVehicle(Mono<TrafficVehicle> trafficVehicle) {
         return trafficVehicle
                 .map(trafficItemService::saveTrafficVehicle);
     }
+
     @MessageMapping("traffic.deleteTrafficVehicle")
     Mono<Void> deleteTrafficVehicle(Mono<TrafficVehicle> trafficVehicle) {
         return trafficVehicle
                 .doOnNext(trafficItemService::deleteTrafficVehicle)
                 .then(Mono.empty());
     }
+
     @MessageMapping("traffic.getTrafficItems")
     Flux<TrafficItem> getTrafficItems() {
         return Flux.fromIterable(trafficItemService.getTrafficItems());
     }
+
     @MessageMapping("traffic.saveTrafficItem")
-    Mono<TrafficItem> saveTrafficItem(Mono<TrafficItem> itemMono){
+    Mono<TrafficItem> saveTrafficItem(Mono<TrafficItem> itemMono) {
         return itemMono.map(trafficItemService::saveTrafficItem);
+    }
+
+    @MessageMapping("traffic.saveTrafficTeams")
+    Flux<TrafficTeam> saveTrafficTeams(Flux<TrafficTeam> teamFlux) {
+        return teamFlux.map(trafficItemService::saveTrafficTeam);
+    }
+
+    @MessageMapping("traffic.saveTrafficVehicles")
+    Flux<TrafficVehicle> saveTrafficVehicles(Flux<TrafficVehicle> vehicleFlux) {
+        return vehicleFlux.map(trafficItemService::saveTrafficVehicle);
+    }
+
+    @MessageMapping("traffic.saveItemTypes")
+    Flux<TrafficItemType> saveItemTypes(Flux<TrafficItemType> typeFlux) {
+        return typeFlux.map(trafficItemService::saveType);
     }
 }

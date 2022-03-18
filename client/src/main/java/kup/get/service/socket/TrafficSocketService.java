@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Service
 @AllArgsConstructor
 public class TrafficSocketService implements MyTrafficService {
@@ -83,5 +85,23 @@ public class TrafficSocketService implements MyTrafficService {
         return socketService.route("traffic.saveTrafficItem")
                 .data(item)
                 .retrieveMono(TrafficItem.class);
+    }
+
+    public Flux<TrafficTeam> saveTrafficTeams(List<TrafficTeam> teams) {
+        return socketService.route("traffic.saveTrafficTeams")
+                .data(Flux.fromIterable(teams))
+                .retrieveFlux(TrafficTeam.class);
+    }
+
+    public Flux<TrafficVehicle> saveTrafficVehicles(List<TrafficVehicle> vehicles) {
+        return socketService.route("traffic.saveTrafficVehicles")
+                .data(Flux.fromIterable(vehicles))
+                .retrieveFlux(TrafficVehicle.class);
+    }
+
+    public Flux<TrafficItemType> saveItemTypes(List<TrafficItemType> types) {
+        return socketService.route("traffic.saveItemTypes")
+                .data(Flux.fromIterable(types))
+                .retrieveFlux(TrafficItemType.class);
     }
 }

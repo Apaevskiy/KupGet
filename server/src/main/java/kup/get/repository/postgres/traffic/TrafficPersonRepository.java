@@ -11,5 +11,5 @@ import java.util.List;
 public interface TrafficPersonRepository extends JpaRepository<TrafficPerson, Long> {
 //    List<TrafficPerson> findAllByItemsTypeIdAndItemsDateFinishAfter(Long id, LocalDate date);
     List<TrafficPerson> findAllByTeamId(Long id);
-    TrafficPerson findFirstByPersonnelNumber(Long personnelNumber);
+    TrafficPerson findFirstByPersonId(Long personnelNumber);
 }

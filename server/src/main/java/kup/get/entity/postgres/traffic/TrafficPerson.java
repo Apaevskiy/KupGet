@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.List;
 
 @Entity
 @Table(name = "traffic_person")
@@ -15,7 +14,7 @@ public class TrafficPerson {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long personnelNumber;
+    private Long personId;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "traffic_team_id")

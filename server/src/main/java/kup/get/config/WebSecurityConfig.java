@@ -81,7 +81,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                         authorize
                                 .setup().hasRole("SETUP")
                                 .route("traffic.*").hasRole("SUPERADMIN")
-                                .route("getPhotoByPerson").hasAnyRole("TRAFFIC")
+                                .route("asu.*").hasRole("SUPERADMIN")
+
                                 .anyRequest().authenticated()
                 )
                 .simpleAuthentication(Customizer.withDefaults())

@@ -22,7 +22,13 @@ public class AlfaService {
 
     public byte[] getPhotoByPerson(long id) {
         Photo photo = photoRepository.findFirstByPersonId(id);
-        System.out.println(photo);
         return photo != null ? photo.getPhoto() : null;
+    }
+    public List<Photo> getPhotoByPeople() {
+        return photoRepository.findAllByIdIn(String.valueOf(LocalDate.now()));
+    }
+
+    public Person savePerson(Person p) {
+        return personRepository.save(p);
     }
 }

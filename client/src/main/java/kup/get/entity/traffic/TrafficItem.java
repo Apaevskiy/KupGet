@@ -16,6 +16,8 @@ import java.time.LocalDate;
 public class TrafficItem {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long localId;
+
     private Long id;
     private String description;
 

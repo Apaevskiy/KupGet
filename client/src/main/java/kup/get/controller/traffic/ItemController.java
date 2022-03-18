@@ -219,7 +219,7 @@ public class ItemController extends MyAnchorPane {
     private String parsePerson(Function<Person, String> function, TrafficPerson p) {
         try {
             return peopleTable.getItems().stream()
-                    .filter(person -> person.getId().equals(p.getPersonnelNumber()))
+                    .filter(person -> person.getId().equals(p.getPersonId()))
                     .findFirst()
                     .map(function)
                     .orElse(null);

@@ -153,7 +153,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
     private String parsePerson(Function<Person, String> function, TrafficPerson p) {
         try {
             return peopleTable.getItems().stream()
-                    .filter(person -> person.getId().equals(p.getPersonnelNumber()))
+                    .filter(person -> person.getId().equals(p.getPersonId()))
                     .findFirst()
                     .map(function)
                     .orElse(null);
@@ -211,7 +211,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
                         SelectionModel<Person> personModel = peopleTable.getSelectionModel();
                         if (personModel != null && personModel.getSelectedItem() != null) {
                             TrafficPerson person = new TrafficPerson();
-                            person.setPersonnelNumber(personModel.getSelectedItem().getId());
+                            person.setPersonId(personModel.getSelectedItem().getId());
                             person.setTeam(teamModel.getSelectedItem());
                             services.getTrafficService()
                                     .saveTrafficPerson(person)
@@ -223,6 +223,11 @@ public class TeamAndVehicleController extends MyAnchorPane {
                                     .subscribe();
                         }
                     }
+                })
+                .item("Обновить таблицу", event -> {
+                    services.getPersonService().updatePeople();
+//                    peopleTable.getItems().clear();
+//                    peopleTable.setItems(FXCollections.observableArrayList(services.getPersonService().getPeople()));
                 });
     }
 

@@ -1,37 +1,29 @@
 package kup.get.entity.traffic;
 
-import com.sun.xml.internal.ws.developer.Serialization;
 import kup.get.entity.alfa.Person;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.util.List;
 
 @Entity
 @Table(name = "traffic_person")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class TrafficPerson implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-    private Long personnelNumber;
+    private Long localId;
 
+    private Long id;
+    private Long personId;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "traffic_team_id")
     private TrafficTeam team;
 
-    public TrafficPerson(Long id, Long personnelNumber) {
-        this.id = id;
-        this.personnelNumber = personnelNumber;
-    }
-
     public TrafficPerson(Person person) {
-        personnelNumber = person.getId();
+        personId = person.getId();
     }
 }

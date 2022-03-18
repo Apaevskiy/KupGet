@@ -70,13 +70,15 @@ public class BadgeController extends MyAnchorPane {
                     checkBox.selectedProperty().addListener(
                             (ov, old_val, new_val) -> {
                                 badge.setActive(new_val);
-                                if (badge.getPhoto() == null)
-                                    badge.setPhoto(services.getPersonService().getPhotoByPerson(badge.getPerson().getId()));
+                                if (badge.getPerson().getPhoto() == null)
+                                    services.getPersonService().getPhotoByPerson(badge.getPerson().getId())
+                                            .doOnSuccess(badge.getPerson()::setPhoto)
+                                            .subscribe();
                                 peopleTable.refresh();
                             });
                     return checkBox;
                 })
-                    .setMaxWidthColumn(25)
+                .setMaxWidthColumn(25)
                 .and()
                 .column("Раз\nряд", badge -> {
                     CheckBox checkBox = new CheckBox();
@@ -88,11 +90,11 @@ public class BadgeController extends MyAnchorPane {
                 .and()
                 .column("Фото", badge -> {
                     MaterialDesignIconView photoIcon = null;
-                    if (badge.getPhoto() == null && badge.isActive()) {
+                    if (badge.getPerson().getPhoto() == null && badge.isActive()) {
                         photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CLOSE_CIRCLE_OUTLINE);
                         photoIcon.setFill(Color.RED);
                         photoIcon.setSize("18");
-                    } else if (badge.getPhoto() != null && badge.isActive()) {
+                    } else if (badge.getPerson().getPhoto() != null && badge.isActive()) {
                         photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CHECKBOX_MARKED_CIRCLE_OUTLINE);
                         photoIcon.setFill(Color.GREEN);
                         photoIcon.setSize("18");
@@ -101,8 +103,8 @@ public class BadgeController extends MyAnchorPane {
                 }).setMaxWidthColumn(50)
                 .and()
                 .column("Коли\nчество", Badge::getAmount)
-                    .setEditable(Badge::setAmount, TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                    .setMaxWidthColumn(50)
+                .setEditable(Badge::setAmount, TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
+                .setMaxWidthColumn(50)
                 .and()
                 .column("Вид", Badge::getType).setEditable(Badge::setType, b -> new ComboBoxTableCell<>(Type.values()))
                 .and()
@@ -225,7 +227,7 @@ public class BadgeController extends MyAnchorPane {
         row = getRow(sheet, rowNum++, 25 * 25);
         generateCell(row, colNum, badge.getPerson().getFirstName(), HSSFColor.HSSFColorPredefined.BLUE, 16);
 
-        row= getRow(sheet, rowNum++, 43 * 20);
+        row = getRow(sheet, rowNum++, 43 * 20);
         generateCell(row, colNum, badge.getPerson().getMiddleName(), HSSFColor.HSSFColorPredefined.BLUE, 16)
                 .getCellStyle().setVerticalAlignment(VerticalAlignment.TOP);
         CellRangeAddress smallRangeAddress = new CellRangeAddress(rowNum - 4, rowNum - 1, colNum, colNum + 1);
@@ -245,10 +247,17 @@ public class BadgeController extends MyAnchorPane {
     }
 
     private void addPhoto(Sheet sheet, Badge badge, Type type, int rowNum, int colNum) {
-        byte[] photoPerson = badge.getPhoto() != null ? badge.getPhoto() : services.getPersonService().getPhotoByPerson(badge.getPerson().getId());
-        badge.setPhoto(photoPerson);
-
-        drawing(sheet, photoPerson, colNum, rowNum, colNum + 1,
+        if(badge.getPerson().getPhoto() == null)
+            services.getPersonService().getPhotoByPerson(badge.getPerson().getId())
+                    .doOnSuccess(photo -> {
+                        badge.getPerson().setPhoto(photo);
+                        drawing(sheet, photo, colNum, rowNum, colNum + 1,
+                                rowNum + type.getRowCount(), type.getDx(), type.getDy(),
+                                type.getPercentHeight(), type.getPercentWidth());
+                    })
+                    .subscribe();
+        else
+        drawing(sheet, badge.getPerson().getPhoto(), colNum, rowNum, colNum + 1,
                 rowNum + type.getRowCount(), type.getDx(), type.getDy(),
                 type.getPercentHeight(), type.getPercentWidth());
     }
@@ -297,7 +306,6 @@ public class BadgeController extends MyAnchorPane {
         private boolean rank;
         private Integer amount = 1;
         private Type type = Type.BIG;
-        private byte[] photo;
 
         public Badge(Person person) {
             this.person = person;

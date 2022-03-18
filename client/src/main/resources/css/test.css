@@ -50,7 +50,7 @@
     -fx-border-radius: 4 4 4 4;
 }
 
-.text-area:focused, .text-field:focused, .combo-box:focused {
+.text-area:focused, .combo-box:focused {
     -fx-border-width: 0;
 }
 
@@ -122,10 +122,4 @@
 .tab-pane  .tab {
     -glyph-size: 18;
     -fx-font-size: 15;
-}
-.list-view .list-cell, .indexed-cell, .cell {
-    -fx-padding: 0px;
-}
-.list-view .check-box {
-    -fx-padding: 3 7 3 20;
 }

@@ -3,16 +3,20 @@ package kup.get.entity.alfa;
 import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
 
 @Entity
 @Table(name = "person_department")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Department {
-    private long id;
+@AllArgsConstructor
+@ToString
+public class Department  implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private long number;
+    private Long localId;
+
+    private long id;
     private String name;
 }

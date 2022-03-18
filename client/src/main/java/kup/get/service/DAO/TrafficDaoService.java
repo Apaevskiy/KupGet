@@ -8,6 +8,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 @Service
 @AllArgsConstructor
 public class TrafficDaoService implements MyTrafficService {
@@ -68,13 +72,26 @@ public class TrafficDaoService implements MyTrafficService {
     }
 
     public Mono<TrafficItem> saveTrafficItem(TrafficItem trafficItem) {
-        if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonnelNumber()!=null){
-            TrafficPerson person = personRepository.findFirstByPersonnelNumber(trafficItem.getPerson().getPersonnelNumber());
+        if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonId()!=null){
+            TrafficPerson person = personRepository.findFirstByPersonId(trafficItem.getPerson().getPersonId());
             if(person==null){
                 personRepository.save(trafficItem.getPerson());
             }
             trafficItem.setPerson(person);
         }
         return Mono.just(itemRepository.save(trafficItem));
+    }
+
+    public Flux<TrafficTeam> saveTrafficTeams(List<TrafficTeam> teams) {
+        return Flux.fromIterable(teamRepository.saveAll(teams));
+    }
+
+    public Flux<TrafficVehicle> saveTrafficVehicles(List<TrafficVehicle> vehicles) {
+        teamRepository.saveAll(vehicles.stream().map(TrafficVehicle::getTeam).filter(Objects::nonNull).collect(Collectors.toList()));
+        return Flux.fromIterable(vehicleRepository.saveAll(vehicles));
+    }
+
+    public Flux<TrafficItemType> saveItemTypes(List<TrafficItemType> types) {
+        return Flux.fromIterable(typeRepository.saveAll(types));
     }
 }

@@ -11,9 +11,12 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class TrafficItemType implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long localId;
+
     private Long id;
     private int defaultDurationInMonth;
     private boolean status;

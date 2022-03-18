@@ -4,6 +4,8 @@ import kup.get.entity.traffic.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 public interface MyTrafficService {
     Flux<TrafficItemType> getItemsType();
 
@@ -30,4 +32,10 @@ public interface MyTrafficService {
     Flux<TrafficPerson> getPeopleByTeam(TrafficTeam team);
 
     Mono<TrafficItem> saveTrafficItem(TrafficItem item);
+
+    Flux<TrafficTeam> saveTrafficTeams(List<TrafficTeam> teams);
+
+    Flux<TrafficVehicle> saveTrafficVehicles(List<TrafficVehicle> vehicles);
+
+    Flux<TrafficItemType> saveItemTypes(List<TrafficItemType> types);
 }

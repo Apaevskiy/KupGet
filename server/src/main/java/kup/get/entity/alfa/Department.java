@@ -13,11 +13,9 @@ import javax.persistence.Table;
 @Setter
 @NoArgsConstructor
 public class Department {
-    @Column(name = "KU")
-    private long id;
     @Id
     @Column(name = "KOD")
-    private long number;
+    private long id;
     @Column(name = "NAIM")
     private String name;
 }

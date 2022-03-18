@@ -3,6 +3,7 @@ package kup.get.entity.traffic;
 import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
@@ -10,11 +11,14 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
-public class TrafficVehicle {
+@AllArgsConstructor
+@NoArgsConstructor
+public class TrafficVehicle  implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private Long localId;
 
+    private Long id;
     private int number;
     private String model;
 

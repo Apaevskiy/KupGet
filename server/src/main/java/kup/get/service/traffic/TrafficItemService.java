@@ -3,7 +3,6 @@ package kup.get.service.traffic;
 import kup.get.entity.postgres.traffic.*;
 import kup.get.repository.postgres.traffic.*;
 import lombok.AllArgsConstructor;
-import lombok.Synchronized;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -71,8 +70,8 @@ public class TrafficItemService {
     }
 
     public TrafficItem saveTrafficItem(TrafficItem trafficItem) {
-        if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonnelNumber()!=null){
-            TrafficPerson person = personRepository.findFirstByPersonnelNumber(trafficItem.getPerson().getPersonnelNumber());
+        if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonId()!=null){
+            TrafficPerson person = personRepository.findFirstByPersonId(trafficItem.getPerson().getPersonId());
             if(person==null){
                 personRepository.save(trafficItem.getPerson());
             }

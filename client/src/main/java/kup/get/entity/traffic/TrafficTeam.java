@@ -1,10 +1,9 @@
 package kup.get.entity.traffic;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,9 +11,13 @@ import java.util.Set;
 @Table(name="traffic_team")
 @Getter
 @Setter
-public class TrafficTeam {
+@AllArgsConstructor
+@NoArgsConstructor
+public class TrafficTeam  implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long localId;
+
     private Long id;
     private String number;
     private String workingMode;
