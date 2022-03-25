@@ -32,7 +32,7 @@
                     <td th:text="${user.getUsername()}"></td>
                     <td th:text="${user.getTabNum()}"></td>
                     <td th:text="${user.getFIO()}"></td>
-                    <td th:text="${user.getRole()}"></td>
+                    <td th:text="${user.getRoles()}"></td>
                     <td id="editButton">
                         <a th:href="@{/admin/users/{id}(id=${user.getId()})}">
                             <img th:src="@{/dataTable/edit.png}" alt="Редактировать пользователя">

@@ -2,6 +2,7 @@ package kup.get.service.socket;
 
 import io.rsocket.metadata.WellKnownMimeType;
 import kup.get.config.RSocketClientBuilderImpl;
+import org.springframework.http.MediaType;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.security.rsocket.metadata.UsernamePasswordMetadata;
 import org.springframework.stereotype.Component;
@@ -11,6 +12,7 @@ import org.springframework.util.MimeTypeUtils;
 import reactor.core.publisher.Flux;
 
 import java.util.Arrays;
+import java.util.Map;
 
 @Service
 public class SocketService {
@@ -34,5 +36,12 @@ public class SocketService {
 
     public RSocketRequester.RequestSpec route(String s) {
         return config.getRequester().route(s).metadata(this.metadata, this.mimetype);
+    }
+    public RSocketRequester.RequestSpec route(String s, Map<String, Object> map) {
+        return config.getRequester().route(s).metadata(metadataSpec -> {
+            metadataSpec.metadata(this.metadata, this.mimetype);
+            for (String key : map.keySet())
+                metadataSpec.metadata(map.get(key), new MediaType(key));
+        });
     }
 }

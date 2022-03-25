@@ -65,26 +65,36 @@ public class UserService implements UserDetailsService, ReactiveUserDetailsServi
         return roleRepository.findAll();
     }
 
-    public boolean saveUser(User user) {
-        user.setPassword(
-                bCryptPasswordEncoder.encode(
-                        user.getPassword() != null &&
-                                !user.getPassword().isEmpty()
-                                ? user.getPassword()
-                                : "123"));
-        userRepository.save(user);
-        logService.addLog("Добавление пользователя " + user.getUsername() + " с табельным " + user.getTabNum());
-        return true;
+    public User saveUser(User user) {
+        if (user.getId() == null) {
+            user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+        } else {
+            User u = userRepository.findFirstById(user.getId());
+            if (u == null) {
+                return null;
+            } else if (!u.getPassword().equals(user.getPassword())) {
+                user.setPassword(bCryptPasswordEncoder.encode(user.getPassword()));
+            }
+        }
+
+//        logService.addLog("Добавление пользователя " + user.getUsername() + " с табельным " + user.getTabNum());
+        return userRepository.save(user);
     }
 
     public boolean deleteUser(Long userId) {
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
             userRepository.deleteById(userId);
-            logService.addLog("Удаление пользователя " + user.get().getUsername());
+//            logService.addLog("Удаление пользователя " + user.get().getUsername());
             return true;
         }
         return false;
+    }
+
+    public boolean deleteUser(User user) {
+//        logService.addLog("Удаление пользователя " + user.getUsername());
+        userRepository.delete(user);
+        return true;
     }
 
     @Bean

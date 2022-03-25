@@ -194,7 +194,7 @@ public class BadgeController extends MyAnchorPane {
         row = getRow(sheet, rowNum++, 25 * 20);
         generateCell(row, colNum + 1,
                 badge.isRank()
-                        ? badge.getPerson().getPosition().getName() + "\n" + RomanNumber.toRoman(badge.getPerson().getRank()) + " класса"
+                        ? badge.getPerson().getPosition().getName() + "\n" + /*RomanNumber.toRoman(badge.getPerson().getRank()) +*/ "I класса"
                         : badge.getPerson().getPosition().getName(),
                 HSSFColor.HSSFColorPredefined.RED, 10);
 

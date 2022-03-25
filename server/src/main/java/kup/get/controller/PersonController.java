@@ -21,10 +21,9 @@ public class PersonController {
         return Flux.fromIterable(alfaService.getPeople());
     }
 
-    @MessageMapping("asu.savePeople")
-    Flux<Person> getDrivers(Flux<Person> people) {
-        return people.map(alfaService::savePerson);
-    }
+
+
+
 
     @MessageMapping("traffic.getPhotoByPerson")
     Mono<byte[]> getPhotoByPerson(Mono<Long> idMono) {

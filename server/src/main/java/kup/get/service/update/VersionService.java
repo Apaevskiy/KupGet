@@ -1,12 +1,25 @@
 package kup.get.service.update;
 
 import kup.get.config.ZipConfig;
+import kup.get.entity.postgres.security.User;
 import kup.get.entity.postgres.update.FileOfProgram;
 import kup.get.entity.postgres.update.Version;
 import kup.get.repository.postgres.update.VersionRepository;
 import lombok.AllArgsConstructor;
+import org.aspectj.util.FileUtil;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.AsynchronousFileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -41,5 +54,12 @@ public class VersionService {
     public Version getActualVersion() {
         System.out.println("getActualVersion");
         return repository.findFirstByOrderByIdDesc();
+    }
+
+    public Flux<HttpStatus> uploadFile(Flux<DataBuffer> bufferFlux) throws IOException {
+        File file = new File("");
+        AsynchronousFileChannel channel = AsynchronousFileChannel.open(file.toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+        return DataBufferUtils.write(bufferFlux, channel)
+                .map(db -> HttpStatus.OK);
     }
 }

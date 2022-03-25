@@ -100,7 +100,7 @@ public class ImportExportController extends MyAnchorPane {
 
         chooseFileButton.setOnAction(event -> {
             final FileChooser fileChooser = new FileChooser();
-            File file = fileChooser.showOpenDialog(chooseDirectoryButton.getScene().getWindow());
+            File file = fileChooser.showOpenDialog(chooseFileButton.getScene().getWindow());
             if (file != null) {
                 pathToFileTextField.setText(file.getAbsolutePath());
             }

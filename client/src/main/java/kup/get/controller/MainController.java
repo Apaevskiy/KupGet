@@ -19,6 +19,8 @@ import kup.get.config.CustomMenuItem;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.controller.asu.BadgeController;
+import kup.get.controller.asu.UpdateController;
+import kup.get.controller.asu.UsersController;
 import kup.get.controller.other.ImportExportController;
 import kup.get.controller.traffic.ItemController;
 import kup.get.controller.traffic.TeamAndVehicleController;
@@ -71,13 +73,16 @@ public class MainController extends MyAnchorPane {
                           ItemController itemController,
                           BadgeController badgeController,
                           ImportExportController importExportController,
+                          UpdateController updateController,
+                          UsersController usersController,
                           AtomicReference<SequentialTransition> transition, Services services, SocketService socketService) {
         this.transition = transition;
         this.services = services;
         this.socketService = socketService;
         this.setVisible(true);
         this.setOpacity(1);
-        mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController, badgeController,importExportController);
+        mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController,
+                badgeController,importExportController, usersController, updateController);
 
         CustomMenuItem trafficMenu = CustomMenuItem.builder()
                 .menuItem("Служба движения", new MaterialDesignIconView(MaterialDesignIcon.BUS))
@@ -131,10 +136,10 @@ public class MainController extends MyAnchorPane {
                                 }),
                         CustomMenuItem.builder()
                                 .menuItem("Пользователи", new FontAwesomeIconView(FontAwesomeIcon.USER))
-                                .setEventSwitchPane(event -> hiddenPages(typeController)),
+                                .setEventSwitchPane(event -> hiddenPages(usersController)),
                         CustomMenuItem.builder()
                                 .menuItem("Обновления", new FontAwesomeIconView(FontAwesomeIcon.CLOUD_UPLOAD))
-                                .setEventSwitchPane(event -> hiddenPages(typeController)),
+                                .setEventSwitchPane(event -> hiddenPages(updateController)),
                         CustomMenuItem.builder()
                                 .menuItem("Расписание", new MaterialDesignIconView(MaterialDesignIcon.CALENDAR_CLOCK))
                                 .setEventSwitchPane(event -> hiddenPages(teamAndVehicleController))
@@ -190,43 +195,6 @@ public class MainController extends MyAnchorPane {
 
                 })
                 .subscribe();
-        /*try (FileOutputStream fos = new FileOutputStream("data/test.txt");
-             ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-
-            // create a new user object
-            List<TrafficItemType> types = new ArrayList<>();
-            types.add(new TrafficItemType(1L, 3, "type1"));
-            types.add(new TrafficItemType(2L, 4, "type2"));
-            types.add(new TrafficItemType(3L, 5, "type3"));
-
-            List<TrafficPerson> people = new ArrayList<>();
-            people.add(new TrafficPerson(1L,1L));
-            people.add(new TrafficPerson(2L,2L));
-            people.add(new TrafficPerson(3L,3L));
-            people.add(new TrafficPerson(4L,4L));
-            // write object to file
-            oos.writeObject(types);
-            oos.writeObject(people);
-
-            FileInputStream fi = new FileInputStream("data/test.txt");
-            ObjectInputStream oi = new ObjectInputStream(fi);
-
-            // Read objects
-            List<TrafficItemType> pr1 = (List<TrafficItemType>) oi.readObject();
-            List<TrafficPerson> pr2 = (List<TrafficPerson>) oi.readObject();
-            List<TrafficItem> pr3 = (List<TrafficItem>) oi.readObject();
-
-            System.out.println(pr1.toString());
-            System.out.println(pr2.toString());
-            System.out.println(pr3.toString());
-
-            oi.close();
-            fi.close();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }*/
     }
 
     private void hiddenPages(MyAnchorPane appearancePane) {

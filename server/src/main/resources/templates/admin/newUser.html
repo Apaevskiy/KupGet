@@ -13,7 +13,7 @@
         <form th:method="PUT" th:action="@{/admin/users/new}" class="menu" th:object="${user}"  method="post" >
             <input type="text" placeholder="Login" th:field="*{username}" id="username" required>
             <input type="password" placeholder="Password" th:field="*{password}" id="password" required>
-            <select size="1" th:field="*{role}" id="role" required>
+            <select size="1" th:field="*{getRoles}" id="role" required>
                 <option th:each="oneRole : ${roles}" th:value="${oneRole.getId()}" th:text="${oneRole.getFullName()}"></option>
             </select>
             <input type="number" min="1" placeholder="Табельный номер" th:field="*{tabNum}" id="tabNum" required>

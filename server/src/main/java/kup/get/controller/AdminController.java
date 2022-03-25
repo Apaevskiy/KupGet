@@ -49,7 +49,7 @@ public class AdminController {
 
     @PutMapping("/users/new")
     public RedirectView addUser(@ModelAttribute(value = "user") User user, RedirectAttributes redirectAttributes) {
-        if (services.getUserService().saveUser(user)) {
+        if (services.getUserService().saveUser(user)!=null) {
             redirectAttributes.addFlashAttribute("message", "Пользователь успешно создан");
         } else {
             redirectAttributes.addFlashAttribute("error", "Что-то пошло не так");
@@ -60,7 +60,7 @@ public class AdminController {
     @PatchMapping("/users/{id}")
     public RedirectView updateUser(@ModelAttribute(value = "user") @Valid User user,
                                    RedirectAttributes redirectAttributes) {
-        if (services.getUserService().saveUser(user)) {
+        if (services.getUserService().saveUser(user)!=null) {
             redirectAttributes.addFlashAttribute("message", "Пользователь успешно изменён");
         } else {
             redirectAttributes.addFlashAttribute("error", "Что-то пошло не так");

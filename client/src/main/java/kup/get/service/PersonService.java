@@ -2,6 +2,7 @@ package kup.get.service;
 
 import kup.get.entity.alfa.Person;
 import kup.get.entity.alfa.Photo;
+import kup.get.entity.security.Role;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -16,4 +17,6 @@ public interface PersonService {
     Flux<Person> savePeople(List<Person> people);
 
     Flux<Photo> addPhotoToPeople();
+
+
 }

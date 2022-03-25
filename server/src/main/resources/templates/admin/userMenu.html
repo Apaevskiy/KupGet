@@ -14,7 +14,7 @@
         <form th:method="Patch" th:action="@{/admin/users/{id}(id=${user.getId()})}" class="menu" th:object="${user}" method="post">
             <input type="text" placeholder="Login" readonly th:field="*{username}" id="username">
             <input type="password" placeholder="Password" th:field="*{password}" id="password">
-            <select size="1" th:field="*{role}" id="role">
+            <select size="1" th:field="*{getRoles}" id="role">
                 <option th:each="oneRole : ${roles}" th:value="${oneRole.getId()}" th:text="${oneRole.getFullName()}"></option>
             </select>
             <input type="number" min="1" placeholder="Табельный номер" th:field="*{tabNum}" id="tabNum">
