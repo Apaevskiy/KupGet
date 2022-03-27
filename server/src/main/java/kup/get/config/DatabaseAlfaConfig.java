@@ -45,7 +45,6 @@ public class DatabaseAlfaConfig {
 
         Map<String, String> alfaJpaProperties = new HashMap<>();
         alfaJpaProperties.put("hibernate.dialect", "org.hibernate.dialect.FirebirdDialect");
-//        alfaJpaProperties.put("hibernate.hbm2ddl.auto", "create-drop");
 
         return alfaEntityManagerFactoryBuilder
                 .dataSource(alfaDataSource)

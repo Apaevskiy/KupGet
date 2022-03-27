@@ -2,6 +2,9 @@ package kup.get.controller;
 
 import kup.get.entity.postgres.energy.Product;
 import kup.get.service.Services;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.rsocket.RSocketRequester;
+import org.springframework.messaging.rsocket.annotation.ConnectMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -35,7 +35,7 @@ public class SocketService {
     }
 
     public RSocketRequester.RequestSpec route(String s) {
-        return config.getRequester().route(s).metadata(this.metadata, this.mimetype);
+        return config.getRequester().route(s)/*.metadata(this.metadata, this.mimetype)*/;
     }
     public RSocketRequester.RequestSpec route(String s, Map<String, Object> map) {
         return config.getRequester().route(s).metadata(metadataSpec -> {

@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,10 +54,10 @@ public class AsuController {
 
     @MessageMapping("asu.update")
     Flux<HttpStatus> update(@Headers Map<String, Object> metadata, @Payload Flux<DataBuffer> content) throws IOException {
-        for (String o : metadata.keySet())
-            System.out.println("key: " + o + " value: " + metadata.get(o));
-        System.out.println(metadata.get("file-extn"));
-        return Flux.empty()/*Flux.concat(services.getVersionService().uploadFile(content), Mono.just(HttpStatus.ACCEPTED))
-                .onErrorReturn(HttpStatus.CONFLICT)*/;
+        for (String key : metadata.keySet())
+            System.out.println(key + ": " + metadata.get(key));
+        return Flux.concat(services.getVersionService().uploadFile(content, (String) metadata.get("versionInf"), (String) metadata.get("versionComment")), Mono.just(HttpStatus.OK))
+                .doOnError(Throwable::printStackTrace)
+                .onErrorReturn(HttpStatus.BAD_GATEWAY);
     }
 }

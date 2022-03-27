@@ -80,7 +80,6 @@ public class TrafficItemTypeController extends MyAnchorPane {
     @Override
     public void clearData() {
         itemTypeTable.getItems().clear();
-
     }
 
     @Override

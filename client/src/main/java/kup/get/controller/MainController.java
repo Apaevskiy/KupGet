@@ -10,15 +10,23 @@ import de.jensd.fx.glyphs.octicons.OctIcon;
 import de.jensd.fx.glyphs.octicons.OctIconView;
 import de.jensd.fx.glyphs.weathericons.WeatherIcon;
 import de.jensd.fx.glyphs.weathericons.WeatherIconView;
-import javafx.animation.*;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.SequentialTransition;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.layout.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import kup.get.config.CustomMenuItem;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.controller.asu.BadgeController;
+import kup.get.controller.asu.ScheduleController;
 import kup.get.controller.asu.UpdateController;
 import kup.get.controller.asu.UsersController;
 import kup.get.controller.other.ImportExportController;
@@ -26,17 +34,25 @@ import kup.get.controller.traffic.ItemController;
 import kup.get.controller.traffic.TeamAndVehicleController;
 import kup.get.controller.traffic.TrafficItemTypeController;
 import kup.get.service.Services;
-import kup.get.service.socket.SocketService;
-import reactor.core.publisher.Mono;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
+@Slf4j
 @FxmlLoader(path = "/fxml/main.fxml")
 public class MainController extends MyAnchorPane {
+
+    @FXML
+    private GridPane workPlace;
     @FXML
     private AnchorPane mainPane;
-
     @FXML
     private VBox vBoxMenuItems;
     @FXML
@@ -61,10 +77,10 @@ public class MainController extends MyAnchorPane {
     @FXML
     private Button loginButton;
 
-    private final AtomicReference<CustomMenuItem> actualMenuItem = new AtomicReference<>();
+    private final AtomicReference<CustomMenuItem> actualMenuItem = new AtomicReference<>(CustomMenuItem.builder());
     private final AtomicReference<SequentialTransition> transition;
+    private final List<CustomMenuItem> customMenuItemList = new ArrayList<>();
     private final Services services;
-    private final SocketService socketService;
     private boolean checkHiddenMenu = true;
     private MyAnchorPane actualPane;
 
@@ -75,82 +91,88 @@ public class MainController extends MyAnchorPane {
                           ImportExportController importExportController,
                           UpdateController updateController,
                           UsersController usersController,
-                          AtomicReference<SequentialTransition> transition, Services services, SocketService socketService) {
+                          ScheduleController scheduleController,
+                          AtomicReference<SequentialTransition> transition, Services services) {
         this.transition = transition;
         this.services = services;
-        this.socketService = socketService;
         this.setVisible(true);
         this.setOpacity(1);
+
+
         mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController,
-                badgeController,importExportController, usersController, updateController);
+                badgeController, importExportController, usersController, updateController,
+                scheduleController);
 
-        CustomMenuItem trafficMenu = CustomMenuItem.builder()
-                .menuItem("Служба движения", new MaterialDesignIconView(MaterialDesignIcon.BUS))
-                .setRoles("ROLE_TRAFFIC", "ROLE_SUPERADMIN")
-                .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
-                .addChildren(
-                        CustomMenuItem.builder()
-                                .menuItem("Отчёты", new MaterialDesignIconView(MaterialDesignIcon.CLIPBOARD_TEXT))
-                                .setEventSwitchPane(event -> hiddenPages(itemController)),
-                        CustomMenuItem.builder()
-                                .menuItem("Перечень пунктов", new MaterialIconView(MaterialIcon.WIDGETS))
-                                .setEventSwitchPane(event -> hiddenPages(typeController)),
-                        CustomMenuItem.builder()
-                                .menuItem("Экипажи и ТС", new FontAwesomeIconView(FontAwesomeIcon.USERS))
-                                .setEventSwitchPane(event -> hiddenPages(teamAndVehicleController)),
-                        CustomMenuItem.builder()
-                                .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
-                                .setEventSwitchPane(event -> {
-                                    badgeController.trafficPeople();
-                                    hiddenPages(badgeController);
-                                })
-                );
-        CustomMenuItem krsMenu = CustomMenuItem.builder()
-                .menuItem("КРС", new FontAwesomeIconView(FontAwesomeIcon.USER_SECRET))
-                .setRoles("ROLE_KRS", "ROLE_SUPERADMIN")
-                .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
-                .addChildren(
-                        CustomMenuItem.builder()
-                                .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
-                                .setEventSwitchPane(event -> {
-                                    badgeController.krsPeople();
-                                    hiddenPages(badgeController);
-                                }));
-        CustomMenuItem energyMenu = CustomMenuItem.builder()
-                .menuItem("Энергослужба", new WeatherIconView(WeatherIcon.OWM_210))
-                .setRoles("ROLE_ENERGY", "ROLE_SUPERADMIN")
-                .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton);
-        CustomMenuItem asuMenu = CustomMenuItem.builder()
-                .menuItem("АСУ", new FontAwesomeIconView(FontAwesomeIcon.PIED_PIPER_ALT))
-                .setRoles("ROLE_SUPERADMIN")
-                .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
-                .addChildren(
-                        CustomMenuItem.builder()
-                                .menuItem("Пропуска", new OctIconView(OctIcon.CREDIT_CARD))
-                                .setEventSwitchPane(event -> hiddenPages(itemController)),
-                        CustomMenuItem.builder()
-                                .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
-                                .setEventSwitchPane(event -> {
-                                    badgeController.allPeople();
-                                    hiddenPages(badgeController);
-                                }),
-                        CustomMenuItem.builder()
-                                .menuItem("Пользователи", new FontAwesomeIconView(FontAwesomeIcon.USER))
-                                .setEventSwitchPane(event -> hiddenPages(usersController)),
-                        CustomMenuItem.builder()
-                                .menuItem("Обновления", new FontAwesomeIconView(FontAwesomeIcon.CLOUD_UPLOAD))
-                                .setEventSwitchPane(event -> hiddenPages(updateController)),
-                        CustomMenuItem.builder()
-                                .menuItem("Расписание", new MaterialDesignIconView(MaterialDesignIcon.CALENDAR_CLOCK))
-                                .setEventSwitchPane(event -> hiddenPages(teamAndVehicleController))
-                );
-        CustomMenuItem exportAndImportMenu = CustomMenuItem.builder()
-                .menuItem("Экспорт и импорт", new MaterialDesignIconView(MaterialDesignIcon.FILE_EXPORT))
-                .setRoles("OFFLINE")
-                .setEventSwitchPane(event -> hiddenPages(importExportController));
-
-        CustomMenuItem.addToPane(vBoxMenuItems, krsMenu, trafficMenu, energyMenu, asuMenu,exportAndImportMenu);
-        actualMenuItem.set(CustomMenuItem.builder().addChildren(krsMenu, trafficMenu, energyMenu, asuMenu,exportAndImportMenu));
+        customMenuItemList.add(
+                CustomMenuItem.builder()
+                        .menuItem("Служба движения", new MaterialDesignIconView(MaterialDesignIcon.BUS))
+                        .setRoles("ROLE_TRAFFIC", "ROLE_SUPERADMIN", "AFK")
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
+                        .addChildren(
+                                CustomMenuItem.builder()
+                                        .menuItem("Отчёты", new MaterialDesignIconView(MaterialDesignIcon.CLIPBOARD_TEXT))
+                                        .setEventSwitchPane(event -> hiddenPages(itemController)),
+                                CustomMenuItem.builder()
+                                        .menuItem("Перечень пунктов", new MaterialIconView(MaterialIcon.WIDGETS))
+                                        .setEventSwitchPane(event -> hiddenPages(typeController)),
+                                CustomMenuItem.builder()
+                                        .menuItem("Экипажи и ТС", new FontAwesomeIconView(FontAwesomeIcon.USERS))
+                                        .setEventSwitchPane(event -> hiddenPages(teamAndVehicleController)),
+                                CustomMenuItem.builder()
+                                        .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
+                                        .setEventSwitchPane(event -> {
+                                            badgeController.trafficPeople();
+                                            hiddenPages(badgeController);
+                                        })
+                        ));
+        customMenuItemList.add(
+                CustomMenuItem.builder()
+                        .menuItem("КРС", new FontAwesomeIconView(FontAwesomeIcon.USER_SECRET))
+                        .setRoles("ROLE_KRS", "ROLE_SUPERADMIN")
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
+                        .addChildren(
+                                CustomMenuItem.builder()
+                                        .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
+                                        .setEventSwitchPane(event -> {
+                                            badgeController.krsPeople();
+                                            hiddenPages(badgeController);
+                                        }))
+        );
+        customMenuItemList.add(
+                CustomMenuItem.builder()
+                        .menuItem("Энергослужба", new WeatherIconView(WeatherIcon.OWM_210))
+                        .setRoles("ROLE_ENERGY", "ROLE_SUPERADMIN")
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton));
+        customMenuItemList.add(
+                CustomMenuItem.builder()
+                        .menuItem("АСУ", new FontAwesomeIconView(FontAwesomeIcon.PIED_PIPER_ALT))
+                        .setRoles("ROLE_SUPERADMIN")
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
+                        .addChildren(
+                                CustomMenuItem.builder()
+                                        .menuItem("Пропуска", new OctIconView(OctIcon.CREDIT_CARD))
+                                        .setEventSwitchPane(event -> hiddenPages(itemController)),
+                                CustomMenuItem.builder()
+                                        .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
+                                        .setEventSwitchPane(event -> {
+                                            badgeController.allPeople();
+                                            hiddenPages(badgeController);
+                                        }),
+                                CustomMenuItem.builder()
+                                        .menuItem("Пользователи", new FontAwesomeIconView(FontAwesomeIcon.USER))
+                                        .setEventSwitchPane(event -> hiddenPages(usersController)),
+                                CustomMenuItem.builder()
+                                        .menuItem("Обновления", new FontAwesomeIconView(FontAwesomeIcon.CLOUD_UPLOAD))
+                                        .setEventSwitchPane(event -> hiddenPages(updateController)),
+                                CustomMenuItem.builder()
+                                        .menuItem("Расписание", new MaterialDesignIconView(MaterialDesignIcon.CALENDAR_CLOCK))
+                                        .setEventSwitchPane(event -> hiddenPages(scheduleController))
+                        ));
+        customMenuItemList.add(
+                CustomMenuItem.builder()
+                        .menuItem("Экспорт и импорт", new MaterialDesignIconView(MaterialDesignIcon.FILE_EXPORT))
+                        .setRoles("ROLE_TRAFFIC", "ROLE_SUPERADMIN", "AFK")
+                        .setEventSwitchPane(event -> hiddenPages(importExportController)));
 
         returnButton.setOnMouseClicked(event -> {
             if (actualMenuItem.get() != null) {
@@ -172,39 +194,90 @@ public class MainController extends MyAnchorPane {
             checkHiddenMenu = !checkHiddenMenu;
         });
         loginButton.setOnAction(event -> {
-            System.out.println("l " + usernameField.getText() + " p " + passwordField.getText());
-           /* service.authorize(usernameField.getText(), passwordField.getText())
-                    .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText(throwable.getMessage())))
-                    .onErrorResume(throwable -> Mono.just(throwable.getMessage()))      //  LOG
-                    .subscribe(System.out::println);
-//            System.out.println(service.getItemsType().blockFirst());*/
+            vBoxMenuItems.getChildren().clear();
+            loginButton.setDisable(true);
+            auth();
+        });
+        logoutButton.setOnAction(event -> {
+            services.closeConnection();
+            vBoxMenuItems.getChildren().clear();
+            transition.set(switchPaneTransition(workPlace, loginPane));
+            transition.get().play();
+            actualPane.setOpacity(0);
+            actualPane.setVisible(false);
+            passwordField.setText("");
         });
     }
 
     @PostConstruct
-    public void test() {
-        services.createRequester()
-                .onErrorResume(throwable -> {
-                    System.out.println(throwable.getMessage());
-                    return Mono.empty();
-                })
-                .doOnSuccess(dc -> {
-                    socketService.authorize("sanya", "1101")
-                            .onErrorResume(s -> Mono.just(s.getMessage()))      //  LOG
-                            .doOnComplete(services.getPersonService()::updatePeople).subscribe(System.out::println);
-
+    void connectToServer() {
+        services.createClientTransport()
+                .doOnError(throwable -> {
+                    if (throwable.getMessage().contains("Connection refused")) {
+                        Platform.runLater(this::afk);
+                    } else {
+                        Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage()));
+                    }
                 })
                 .subscribe();
     }
 
+    void addCustomMenuItems(String role) {
+        Set<CustomMenuItem> items = customMenuItemList.stream().filter(customMenuItem -> customMenuItem.getRoles().contains(role)).collect(Collectors.toSet());
+        System.out.println(items.stream().map(CustomMenuItem::getText).collect(Collectors.toList()));
+        if (!items.isEmpty()) {
+            vBoxMenuItems.getChildren().addAll(items.stream().map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
+            actualMenuItem.get().addChildren(items);
+        }
+    }
+
+    void auth() {
+        services.createRequester(usernameField.getText(), passwordField.getText())
+                .doFinally(signalType -> Platform.runLater(() -> loginButton.setDisable(false)))
+                .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage())))
+                .doOnComplete(() -> {
+                    transition.set(switchPaneTransition(loginPane, workPlace));
+                    transition.get().play();
+                })
+                .subscribe(s -> Platform.runLater(() -> this.addCustomMenuItems(s)));
+    }
+
+    void afk() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+
+        alert.setTitle("Ошибка соединения");
+        alert.setHeaderText("Не удалось подключиться к серверу!");
+        alert.setContentText("Продолжить работу в автономном режиме?\n" +
+                "Часть функционала программы будет недоступна.");
+        ButtonType offlineButton = new ButtonType("Автономный\nрежим");
+        ButtonType reconnectButton = new ButtonType("Подключиться\nснова");
+        ButtonType exitButton = new ButtonType("Выход");
+        alert.getButtonTypes().clear();
+
+        alert.getButtonTypes().addAll(offlineButton, reconnectButton, exitButton);
+
+        Optional<ButtonType> option = alert.showAndWait();
+
+        if (option.isPresent() && option.get() == offlineButton) {
+            this.addCustomMenuItems("AFK");
+            transition.set(switchPaneTransition(loginPane, workPlace));
+            transition.get().play();
+            loginButton.setDisable(false);
+        } else if (option.isPresent() && option.get() == reconnectButton) {
+            connectToServer();
+        } else {
+            System.exit(130);
+        }
+    }
+
     private void hiddenPages(MyAnchorPane appearancePane) {
-        appearancePane.fillData();
         if (actualPane != null) {
             transition.set(switchPaneTransition(actualPane, appearancePane));
             actualPane.clearData();
         } else {
             transition.set(appearancePaneTransition(appearancePane));
         }
+        appearancePane.fillData();
         transition.get().play();
         actualPane = appearancePane;
     }

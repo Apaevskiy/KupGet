@@ -1,7 +1,9 @@
 package kup.get.entity.traffic;
 
-import com.sun.xml.internal.ws.developer.Serialization;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;

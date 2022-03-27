@@ -26,13 +26,10 @@ public class SuperAdminController {
     @PostMapping(value = "/upload")
     public RedirectView handleFileUpload(@RequestParam("name") String name,
                                          @RequestParam("info") String info,
-                                         @RequestParam("file") MultipartFile file,
-                                         RedirectAttributes redirectAttributes) {
+                                         @RequestParam("file") MultipartFile file) {
         if (!file.isEmpty()) {
             zipService.update(versionService.save(name, info), file, zipConfig.getZipEntry());
         }
         return new RedirectView("/superAdmin/upload", true);
     }
-
-
 }

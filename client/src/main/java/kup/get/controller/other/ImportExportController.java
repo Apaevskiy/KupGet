@@ -142,7 +142,10 @@ public class ImportExportController extends MyAnchorPane {
                 if (photoTreeItem.getValue().isSelected()) {
                     services.getPersonService().addPhotoToPeople()
                             .doOnComplete(() -> writeObject(oos, fos, items, count))
-                            .subscribe(items.getPhotos()::add);
+                            .subscribe(p -> {
+                                items.getPhotos().add(p);
+                                System.out.println(p.getId());
+                            });
                 }
 
                 if (itemTypeTreeItem.getValue().isSelected()) {
@@ -170,8 +173,7 @@ public class ImportExportController extends MyAnchorPane {
                 Task<Integer> task = new Task<Integer>() {
                     @Override
                     protected Integer call() {
-                        int count = items.getPeople().size() + items.getTeams().size() + items.getVehicles().size() + items.getTypes().size();
-                        System.out.println(count);
+                        int count = items.size();
                         AtomicInteger progress = new AtomicInteger(0);
                         services.getPersonService().savePeople(items.getPeople())
                                 .subscribe(p -> {
@@ -193,6 +195,11 @@ public class ImportExportController extends MyAnchorPane {
                                     this.updateProgress(progress.getAndIncrement(), count);
                                     System.out.println(progress.get() + "/" + count);
                                 });
+                        /*services.getPersonService().savePhotos(items.getPhotos())
+                                .subscribe(p -> {
+                                    this.updateProgress(progress.getAndIncrement(), count);
+                                    System.out.println(progress.get() + "/" + count);
+                                });*/
                         return null;
                     }
                 };
@@ -217,7 +224,7 @@ public class ImportExportController extends MyAnchorPane {
 
     private synchronized void writeObject(ObjectOutputStream oos, FileOutputStream fos, Items items, AtomicInteger count) {
         try {
-            if (count.incrementAndGet() == 4) {
+            if (count.incrementAndGet() == 5) {
                 oos.writeObject(items);
                 oos.close();
                 fos.close();
@@ -247,6 +254,10 @@ public class ImportExportController extends MyAnchorPane {
         List<TrafficTeam> teams = new ArrayList<>();
         List<TrafficVehicle> vehicles = new ArrayList<>();
         List<TrafficItemType> types = new ArrayList<>();
+
+        public int size() {
+            return people.size()+photos.size()+teams.size()+vehicles.size()+types.size();
+        }
     }
 
     @Override

@@ -3,6 +3,7 @@ package kup.get.controller.asu;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.FileChooser;
@@ -11,9 +12,15 @@ import kup.get.config.FX.MyAnchorPane;
 import kup.get.service.socket.AsuSocketService;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import reactor.core.publisher.Flux;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @FxmlLoader(path = "/fxml/asu/updates.fxml")
 public class UpdateController extends MyAnchorPane {
@@ -27,6 +34,8 @@ public class UpdateController extends MyAnchorPane {
     private Button chooseFileButton;
     @FXML
     private Button loadButton;
+    @FXML
+    private ProgressIndicator uploadProgress;
 
     public UpdateController(AsuSocketService service) {
         chooseFileButton.setOnAction(event -> {
@@ -38,10 +47,22 @@ public class UpdateController extends MyAnchorPane {
         });
         loadButton.setOnAction(event -> {
             try {
-                Resource resource =  new UrlResource("file:" + pathToFileTextField.getText());
-                service.uploadFile(versionField.getText(), commentField.getText(), resource)
-                        .doOnCancel(() -> Platform.runLater(() -> createAlert("1", "cansel")))
-                        .subscribe(System.out::println);
+                uploadProgress.setVisible(true);
+                Resource resource = new UrlResource("file:" + pathToFileTextField.getText());
+                Flux<DataBuffer> flux = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 4096);
+                int count = Objects.requireNonNull(flux.collectList().block()).size();
+//                flux = flux.repeat();
+
+                AtomicInteger i = new AtomicInteger(1);
+                service.uploadFile(versionField.getText(), commentField.getText(), flux)
+                        .doOnComplete(() -> Platform.runLater(() -> {
+                            createAlert("Уведомление", "Обновление упешно загружено");
+                            uploadProgress.setVisible(false);
+                        }))
+                        .subscribe(status -> {
+                            uploadProgress.setProgress(i.getAndIncrement() * 1.0 / count);
+                            System.out.println(status);
+                        });
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();

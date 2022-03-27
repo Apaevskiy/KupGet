@@ -52,10 +52,6 @@ public class ZipService {
         }
     }
 
-    public List<FileOfProgram> readInputStream(InputStream stream) {
-        return read(new ZipInputStream(stream));
-    }
-
     public List<FileOfProgram> readFile(File file) {
         try {
             return read(new ZipInputStream(new FileInputStream(file)));
@@ -64,10 +60,8 @@ public class ZipService {
             return null;
         }
     }
-
-    public void update(Version version, MultipartFile file, List<FileOfProgram> listOldFiles) {
+    private void update(List<FileOfProgram> listNewFiles, Version version, List<FileOfProgram> listOldFiles){
         try {
-            List<FileOfProgram> listNewFiles = readInputStream(file.getInputStream());
             List<FileOfProgram> listSavedFiles = new ArrayList<>(listOldFiles);
 
             listSavedFiles.retainAll(listNewFiles); // список файлов, которые не изменились
@@ -85,5 +79,15 @@ public class ZipService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public void update(Version version, MultipartFile file, List<FileOfProgram> listOldFiles) {
+        try {
+            update(read(new ZipInputStream(file.getInputStream())), version, listOldFiles);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public void update(Version version, File file, List<FileOfProgram> listOldFiles) {
+        update(readFile(file), version, listOldFiles);
     }
 }

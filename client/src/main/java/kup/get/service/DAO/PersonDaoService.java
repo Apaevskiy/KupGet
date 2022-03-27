@@ -8,10 +8,17 @@ import kup.get.repository.alfa.PhotoRepository;
 import kup.get.repository.alfa.PositionRepository;
 import kup.get.service.PersonService;
 import lombok.AllArgsConstructor;
+import org.hibernate.engine.jdbc.BinaryStream;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import javax.sql.rowset.serial.SerialBlob;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.sql.Blob;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -52,5 +59,20 @@ public class PersonDaoService implements PersonService {
 
     public Flux<Photo> addPhotoToPeople() {
         return Flux.fromIterable(photoRepository.findAll());
+    }
+
+//    @Override
+    public Flux<Photo> savePhotos(List<Photo> photos) {
+//        photoRepository.saveAll(photos);
+        return Flux.fromIterable(photos).map(photoRepository::save);
+        /*return Flux.fromIterable(photos).publishOn(Schedulers.boundedElastic()).mapNotNull(photo -> {
+            try {
+                photoRepository.savePhoto(photo.getId(), photo.getPersonId(), new SerialBlob(photo.getPhoto()));
+                return photo;
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return null;
+            }
+        });*/
     }
 }

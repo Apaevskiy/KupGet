@@ -13,10 +13,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import lombok.Data;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -24,8 +21,9 @@ import java.util.stream.Collectors;
 public class CustomMenuItem {
     private GridPane menuItem;
     private CustomMenuItem parent;
-    private final List<CustomMenuItem> children = new ArrayList<>();
-    private final List<String> roles = new ArrayList<>();
+    private final Set<CustomMenuItem> children = new HashSet<>();
+    private final Set<String> roles = new HashSet<>();
+    private String text;
 
     public CustomMenuItem menuItem(String text, Node icon) {
         menuItem = new GridPane();
@@ -33,6 +31,7 @@ public class CustomMenuItem {
                 new ColumnConstraints(50),
                 new ColumnConstraints(0, GridPane.USE_COMPUTED_SIZE, GridPane.USE_COMPUTED_SIZE));
         Label label = new Label(text);
+        this.text = text;
         label.setMinWidth(0);
         label.setPrefHeight(35);
         GridPane.setHalignment(icon, HPos.CENTER);
@@ -47,11 +46,7 @@ public class CustomMenuItem {
         return new CustomMenuItem();
     }
 
-    public static void addToPane(VBox box, CustomMenuItem... items) {
-        box.getChildren().clear();
-        box.getChildren().addAll(Arrays.stream(items).map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
-    }
-    public static void addToPane(VBox box, List<CustomMenuItem> items) {
+    public static void addToPane(VBox box, Set<CustomMenuItem> items) {
         box.getChildren().clear();
         box.getChildren().addAll(items.stream().map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
     }
@@ -77,9 +72,27 @@ public class CustomMenuItem {
         }
         return this;
     }
-
+    public void addChildren(Set<CustomMenuItem> items) {
+        for (CustomMenuItem item : items){
+            item.setParent(this);
+            this.children.add(item);
+        }
+    }
     public CustomMenuItem setEventSwitchPane(EventHandler<? super MouseEvent> eventHandler) {
         menuItem.setOnMouseClicked(eventHandler);
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CustomMenuItem that = (CustomMenuItem) o;
+        return Objects.equals(menuItem, that.menuItem) && Objects.equals(children, that.children) && Objects.equals(roles, that.roles);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(menuItem, children, roles);
     }
 }

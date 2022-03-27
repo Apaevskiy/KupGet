@@ -21,5 +21,6 @@ public class Photo  implements Serializable {
 
     private long id;
     private long personId;
+    @Lob
     private byte[] photo;
 }
