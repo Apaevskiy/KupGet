@@ -10,10 +10,10 @@ import java.util.List;
 public interface PersonService {
     void updatePeople();
     List<Person> getPeople();
-    Mono<Person> savePerson(Person person);
     Mono<byte[]> getPhotoByPerson(Long id);
 
     Flux<Person> savePeople(List<Person> people);
 
     Flux<Photo> addPhotoToPeople();
+    Flux<Photo> savePhotos(List<Photo> photos);
 }

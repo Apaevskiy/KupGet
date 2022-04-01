@@ -30,6 +30,7 @@ import kup.get.controller.asu.ScheduleController;
 import kup.get.controller.asu.UpdateController;
 import kup.get.controller.asu.UsersController;
 import kup.get.controller.other.ImportExportController;
+import kup.get.controller.other.PersonController;
 import kup.get.controller.traffic.ItemController;
 import kup.get.controller.traffic.TeamAndVehicleController;
 import kup.get.controller.traffic.TrafficItemTypeController;
@@ -38,10 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -89,6 +87,7 @@ public class MainController extends MyAnchorPane {
                           ItemController itemController,
                           BadgeController badgeController,
                           ImportExportController importExportController,
+                          PersonController personController,
                           UpdateController updateController,
                           UsersController usersController,
                           ScheduleController scheduleController,
@@ -101,7 +100,7 @@ public class MainController extends MyAnchorPane {
 
         mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController,
                 badgeController, importExportController, usersController, updateController,
-                scheduleController);
+                scheduleController, personController);
 
         customMenuItemList.add(
                 CustomMenuItem.builder()
@@ -173,6 +172,11 @@ public class MainController extends MyAnchorPane {
                         .menuItem("Экспорт и импорт", new MaterialDesignIconView(MaterialDesignIcon.FILE_EXPORT))
                         .setRoles("ROLE_TRAFFIC", "ROLE_SUPERADMIN", "AFK")
                         .setEventSwitchPane(event -> hiddenPages(importExportController)));
+        customMenuItemList.add(
+                CustomMenuItem.builder()
+                        .menuItem("Сотрудники", new FontAwesomeIconView(FontAwesomeIcon.USERS))
+                        .setRoles("AFK")
+                        .setEventSwitchPane(event -> hiddenPages(personController)));
 
         returnButton.setOnMouseClicked(event -> {
             if (actualMenuItem.get() != null) {
@@ -223,10 +227,9 @@ public class MainController extends MyAnchorPane {
     }
 
     void addCustomMenuItems(String role) {
-        Set<CustomMenuItem> items = customMenuItemList.stream().filter(customMenuItem -> customMenuItem.getRoles().contains(role)).collect(Collectors.toSet());
-        System.out.println(items.stream().map(CustomMenuItem::getText).collect(Collectors.toList()));
+        Set<CustomMenuItem> items = customMenuItemList.stream().filter(customMenuItem -> customMenuItem.getRoles().contains(role)).collect(Collectors.toCollection(LinkedHashSet::new));
         if (!items.isEmpty()) {
-            vBoxMenuItems.getChildren().addAll(items.stream().map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
+            CustomMenuItem.addToPane(vBoxMenuItems, items);
             actualMenuItem.get().addChildren(items);
         }
     }
@@ -236,6 +239,7 @@ public class MainController extends MyAnchorPane {
                 .doFinally(signalType -> Platform.runLater(() -> loginButton.setDisable(false)))
                 .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage())))
                 .doOnComplete(() -> {
+                    services.getPersonService().updatePeople();
                     transition.set(switchPaneTransition(loginPane, workPlace));
                     transition.get().play();
                 })

@@ -22,15 +22,8 @@ public class TrafficItemType implements Serializable {
     private Long id;
     private int defaultDurationInMonth;
     private boolean status;
-    private boolean changed = false;
     @Column(unique = true)
     private String name;
-
-    public TrafficItemType(Long id, int defaultDurationInMonth, String name) {
-        this.id = id;
-        this.defaultDurationInMonth = defaultDurationInMonth;
-        this.name = name;
-    }
 
     @Override
     public String toString() {

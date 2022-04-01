@@ -1,31 +1,21 @@
 package kup.get.controller.asu;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
-import javafx.scene.input.MouseButton;
-import javafx.util.Callback;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
 import kup.get.entity.security.Role;
 import kup.get.entity.security.User;
-import kup.get.entity.traffic.TrafficVehicle;
-import kup.get.service.Services;
 import kup.get.service.socket.PersonSocketService;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
-
-import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
 @FxmlLoader(path = "/fxml/asu/users.fxml")
 public class UsersController extends MyAnchorPane {
@@ -54,16 +44,22 @@ public class UsersController extends MyAnchorPane {
     private final PersonSocketService services;
     private User user;
 
+    private final List<Role> roles = new ArrayList<>();
+    private final List<User> users = new ArrayList<>();
+
     public UsersController(PersonSocketService services) {
         this.services = services;
 
         usersTable
+                .setMyContextMenu(userCM())
+                .items(users)
                 .column("id", User::getId).setInvisible().and()
                 .addColumn("login", User::getUsername)
                 .addColumn("ФИО", User::getFIO)
                 .addColumn("Таб. №", User::getTabNum);
 
         rolesView.setCellFactory(CheckBoxListCell.forListView(Role::getChanged));
+        rolesView.setItems(FXCollections.observableArrayList(roles));
 
         saveButton.setOnAction(event -> {
             if (loginField.getText().isEmpty()) {
@@ -102,12 +98,6 @@ public class UsersController extends MyAnchorPane {
                 createAlert("Ошибка ввода данных", "Табельный номер должен состоять исключительно из цифр");
             }
             usersTable.refresh();
-        });
-
-        usersTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                usersTable.setContextMenu(userCM());
-            }
         });
 
         usersTable.setRowFactory(tv -> {
@@ -149,23 +139,25 @@ public class UsersController extends MyAnchorPane {
 
     @Override
     public void clearData() {
-        rolesView.getItems().clear();
-        usersTable.getItems().clear();
+        roles.clear();
+        users.clear();
 
         user = null;
         loginField.setText("");
         nameField.setText("");
         numberField.setText("");
         passwordField.setText("");
-        rolesView.getItems().forEach(u -> u.getChanged().set(false));
+        roles.forEach(u -> u.getChanged().set(false));
 
     }
 
     @Override
     public void fillData() {
         services.getRoles()
-                .subscribe(rolesView.getItems()::add);
+                .doFinally(signalType -> Platform.runLater(() -> rolesView.refresh()))
+                .subscribe(roles::add);
         services.getUsers()
-                .subscribe(usersTable.getItems()::add);
+                .doFinally(signalType -> Platform.runLater(() -> usersTable.refresh()))
+                .subscribe(users::add);
     }
 }

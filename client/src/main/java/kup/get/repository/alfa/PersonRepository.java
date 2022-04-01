@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface PersonRepository extends JpaRepository<Person, Long>{
+    Person findFirstById(Long id);
 //    @Query(value = "select * from sp_ol u where (u.D_UV>?1 or u.D_UV is null) and u.D_PR_NA_R is not null", nativeQuery = true)
 //    List<Person> findAllWorkPeople(String date);
 }

@@ -3,12 +3,15 @@ package kup.get.controller.asu;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.ComboBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.paint.Color;
@@ -16,9 +19,8 @@ import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.config.MyTable;
-import kup.get.config.RomanNumber;
-import kup.get.service.Services;
 import kup.get.entity.alfa.Person;
+import kup.get.service.Services;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -49,71 +51,95 @@ public class BadgeController extends MyAnchorPane {
     private TextField searchField;
 
     private final Services services;
-    private final ObservableList<Person> people = FXCollections.observableArrayList();
     private byte[] logo;
+    private final ObservableList<Badge> people = FXCollections.observableArrayList();
 
-    public BadgeController(Services services) {
+    public BadgeController(Services services, File fileLogo) {
         this.services = services;
-        File logoFile = new File("images/logo.png");
         try {
-            this.logo = Files.readAllBytes(logoFile.toPath());
+            this.logo = Files.readAllBytes(fileLogo.toPath());
         } catch (IOException e) {
             this.logo = null;
-            Platform.runLater(() -> createAlert("КУДА ДЕЛИ ЛОГОТИП?", "Верните логотип предприятия сюда:\n" + logoFile.getAbsolutePath()));
             e.printStackTrace();
         }
 
         peopleTable
-                .column("", badge -> {
-                    CheckBox checkBox = new CheckBox();
-                    checkBox.selectedProperty().setValue(badge.isActive());
-                    checkBox.selectedProperty().addListener(
-                            (ov, old_val, new_val) -> {
-                                badge.setActive(new_val);
-                                if (badge.getPerson().getPhoto() == null)
-                                    services.getPersonService().getPhotoByPerson(badge.getPerson().getId())
-                                            .doOnSuccess(badge.getPerson()::setPhoto)
-                                            .subscribe();
-                                peopleTable.refresh();
-                            });
-                    return checkBox;
-                })
-                .setMaxWidthColumn(25)
-                .and()
-                .column("Раз\nряд", badge -> {
-                    CheckBox checkBox = new CheckBox();
-                    checkBox.selectedProperty().setValue(badge.isRank());
-                    checkBox.selectedProperty().addListener(
-                            (ov, old_val, new_val) -> badge.setRank(new_val));
-                    return checkBox;
-                }).setMaxWidthColumn(50)
-                .and()
-                .column("Фото", badge -> {
-                    MaterialDesignIconView photoIcon = null;
-                    if (badge.getPerson().getPhoto() == null && badge.isActive()) {
-                        photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CLOSE_CIRCLE_OUTLINE);
-                        photoIcon.setFill(Color.RED);
-                        photoIcon.setSize("18");
-                    } else if (badge.getPerson().getPhoto() != null && badge.isActive()) {
-                        photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CHECKBOX_MARKED_CIRCLE_OUTLINE);
-                        photoIcon.setFill(Color.GREEN);
-                        photoIcon.setSize("18");
+                .items(people)
+                .searchBox(searchField, badge -> {
+                    if (searchField.getText() == null || searchField.getText().isEmpty()) {
+                        return true;
                     }
-                    return photoIcon;
-                }).setMaxWidthColumn(50)
-                .and()
-                .column("Коли\nчество", Badge::getAmount)
-                .setEditable(Badge::setAmount, TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                .setMaxWidthColumn(50)
-                .and()
-                .column("Вид", Badge::getType).setEditable(Badge::setType, b -> new ComboBoxTableCell<>(Type.values()))
-                .and()
-                .addColumn("Таб. №", badge -> badge.getPerson().getPersonnelNumber())
-                .addColumn("Фамилия", badge -> badge.getPerson().getLastName())
-                .addColumn("Имя", badge -> badge.getPerson().getFirstName())
-                .addColumn("Отчество", badge -> badge.getPerson().getMiddleName())
-                .addColumn("Должность", badge -> badge.getPerson().getPosition().getName())
-                .addColumn("Подразделение", badge -> badge.getPerson().getDepartment().getName());
+
+                    String lowerCaseFilter = searchField.getText().toLowerCase();
+                    if (badge.getPerson() == null)
+                        return false;
+                    return badge.getPerson().getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
+                            || badge.getPerson().getLastName().toLowerCase().contains(lowerCaseFilter)
+                            || badge.getPerson().getFirstName().toLowerCase().contains(lowerCaseFilter)
+                            || badge.getPerson().getMiddleName().toLowerCase().contains(lowerCaseFilter);
+                })
+                .addColumn(Boolean.class, col ->
+                        col.header("")
+                                .property(TableColumn::cellValueFactoryProperty, cellData -> {
+                                    BooleanProperty property = new SimpleBooleanProperty(cellData.getValue().isActive());
+                                    property.addListener((observable, oldValue, newValue) -> {
+                                        cellData.getValue().setActive(newValue);
+                                        if (cellData.getValue().getPerson().getPhoto() == null)
+                                            services.getPersonService().getPhotoByPerson(cellData.getValue().getPerson().getId())
+                                                    .doOnSuccess(cellData.getValue().getPerson()::setPhoto)
+                                                    .doFinally((s) -> Platform.runLater(() -> peopleTable.refresh()))
+                                                    .subscribe();
+                                    });
+                                    return property;
+                                })
+                                .widthColumn(30)
+                                .property(TableColumn::cellFactoryProperty, CheckBoxTableCell.forTableColumn(col)))
+                .addColumn(Boolean.class, col -> col
+                        .header("Раз\nряд")
+                        .property(TableColumn::cellValueFactoryProperty, cellData -> {
+                            BooleanProperty property = new SimpleBooleanProperty(cellData.getValue().isRank());
+                            property.addListener((observable, oldValue, newValue) -> cellData.getValue().setRank(newValue));
+                            return property;
+                        })
+                        .property(TableColumn::cellFactoryProperty, CheckBoxTableCell.forTableColumn(col))
+                        .widthColumn(30))
+                .addColumn(col -> col
+                        .header("Фото")
+                        .cellValueFactory(badge -> {
+                            MaterialDesignIconView photoIcon = null;
+                            if (badge.getPerson().getPhoto() == null && badge.isActive()) {
+                                photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CLOSE_CIRCLE_OUTLINE);
+                                photoIcon.setFill(Color.RED);
+                                photoIcon.setSize("18");
+                            } else if (badge.getPerson().getPhoto() != null && badge.isActive()) {
+                                photoIcon = new MaterialDesignIconView(MaterialDesignIcon.CHECKBOX_MARKED_CIRCLE_OUTLINE);
+                                photoIcon.setFill(Color.GREEN);
+                                photoIcon.setSize("18");
+                            }
+                            return photoIcon;
+                        })
+                        .widthColumn(50))
+                .addColumn(Integer.class, col -> col
+                        .header("Коли\nчество")
+                        .cellValueFactory(Badge::getAmount)
+                        .editable(Badge::setAmount)
+                        .cellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
+                        .widthColumn(50))
+                .addColumn(Type.class, col -> col
+                        .header("Вид")
+                        .cellValueFactory(Badge::getType)
+                        .editable(Badge::setType)
+                        .cellFactory(b -> new ComboBoxTableCell<>(Type.values()))
+                        .widthColumn(80))
+                .addColumn(col -> col
+                        .header("Таб. №")
+                        .cellValueFactory(badge -> badge.getPerson().getPersonnelNumber())
+                        .widthColumn(80))
+                .addColumn(col -> col.header("Фамилия").cellValueFactory(badge -> badge.getPerson().getLastName()))
+                .addColumn(col -> col.header("Имя").cellValueFactory(badge -> badge.getPerson().getFirstName()))
+                .addColumn(col -> col.header("Отчество").cellValueFactory(badge -> badge.getPerson().getMiddleName()))
+                .addColumn(col -> col.header("Должность").cellValueFactory(badge -> badge.getPerson().getPosition().getName()))
+                .addColumn(col -> col.header("Подразделение").cellValueFactory(badge -> badge.getPerson().getDepartment().getName()));
 
         generateExcelButton.setOnAction(event -> {
             HSSFWorkbook workbook = new HSSFWorkbook();
@@ -137,10 +163,11 @@ public class BadgeController extends MyAnchorPane {
                 for (int i = 0; i < badge.getAmount(); i++) {
                     addBigBadge(bigBadgesSheet, badge, row, column % 2 != 0 ? 0 : 3);
                     addPhoto(bigBadgesSheet, badge, Type.BIG, row, column % 2 != 0 ? 0 : 3);
-                    addLogo(bigBadgesSheet, row, column % 2 != 0 ? 1 : 4);
+                    addLogo(bigBadgesSheet, row, column % 2 != 0 ? 1 : 4, 0.80);
                     if (column % 2 == 0) {
-                        System.out.println(row);
                         row += 5;
+                        System.out.println(row);
+
                         getRow(bigBadgesSheet, row++, 500);
                     }
                     column++;
@@ -154,7 +181,7 @@ public class BadgeController extends MyAnchorPane {
                 for (int i = 0; i < badge.getAmount(); i++) {
                     addSmallBadge(smallBadges, badge, row, column % 2 != 0 ? 0 : 3);
                     addPhoto(smallBadges, badge, Type.SMALL, row, column % 2 != 0 ? 1 : 4);
-                    addLogo(smallBadges, row, column % 2 != 0 ? 0 : 3);
+                    addLogo(smallBadges, row, column % 2 != 0 ? 0 : 3, 0.87);
                     if (column % 2 == 0) {
                         row += 4;
                         getRow(bigBadgesSheet, row++, 500);
@@ -218,16 +245,16 @@ public class BadgeController extends MyAnchorPane {
     }
 
     private void addSmallBadge(Sheet sheet, Badge badge, int rowNum, int colNum) {
-        getRow(sheet, rowNum++, 25 * 20);
+        getRow(sheet, rowNum++, 860);
 
-        Row row = getRow(sheet, rowNum++, 25 * 20);
+        Row row = getRow(sheet, rowNum++, 500);
         generateCell(row, colNum, badge.getPerson().getLastName(), HSSFColor.HSSFColorPredefined.BLUE, 16)
                 .getCellStyle().setVerticalAlignment(VerticalAlignment.BOTTOM);
 
-        row = getRow(sheet, rowNum++, 25 * 25);
+        row = getRow(sheet, rowNum++, 625);
         generateCell(row, colNum, badge.getPerson().getFirstName(), HSSFColor.HSSFColorPredefined.BLUE, 16);
 
-        row = getRow(sheet, rowNum++, 43 * 20);
+        row = getRow(sheet, rowNum++, 500);
         generateCell(row, colNum, badge.getPerson().getMiddleName(), HSSFColor.HSSFColorPredefined.BLUE, 16)
                 .getCellStyle().setVerticalAlignment(VerticalAlignment.TOP);
         CellRangeAddress smallRangeAddress = new CellRangeAddress(rowNum - 4, rowNum - 1, colNum, colNum + 1);
@@ -240,14 +267,15 @@ public class BadgeController extends MyAnchorPane {
 
     private Row getRow(Sheet sheet, int rowNum, int height) {
         Row row = sheet.getRow(rowNum);
-        if (row == null)
+        if (row == null) {
             row = sheet.createRow(rowNum);
-        row.setHeight((short) height);
+            row.setHeight((short) height);
+        }
         return row;
     }
 
     private void addPhoto(Sheet sheet, Badge badge, Type type, int rowNum, int colNum) {
-        if(badge.getPerson().getPhoto() == null)
+        if (badge.getPerson().getPhoto() == null)
             services.getPersonService().getPhotoByPerson(badge.getPerson().getId())
                     .doOnSuccess(photo -> {
                         badge.getPerson().setPhoto(photo);
@@ -257,13 +285,13 @@ public class BadgeController extends MyAnchorPane {
                     })
                     .subscribe();
         else
-        drawing(sheet, badge.getPerson().getPhoto(), colNum, rowNum, colNum + 1,
-                rowNum + type.getRowCount(), type.getDx(), type.getDy(),
-                type.getPercentHeight(), type.getPercentWidth());
+            drawing(sheet, badge.getPerson().getPhoto(), colNum, rowNum, colNum + 1,
+                    rowNum + type.getRowCount(), type.getDx(), type.getDy(),
+                    type.getPercentHeight(), type.getPercentWidth());
     }
 
-    private void addLogo(Sheet sheet, int rowNum, int colNum) {
-        drawing(sheet, logo, colNum, rowNum, colNum + 1, rowNum + 1, 175, 20, 0.80, 0.90);
+    private void addLogo(Sheet sheet, int rowNum, int colNum, double resizeY) {
+        drawing(sheet, logo, colNum, rowNum, colNum + 1, rowNum + 1, 100, 30, 0.9, resizeY);
     }
 
     private void drawing(Sheet sheet, byte[] image, int colNum, int rowNum, int col2, int row2, int Dx1, int Dy1, double resizeX, double resizeY) {
@@ -305,7 +333,7 @@ public class BadgeController extends MyAnchorPane {
         private boolean active;
         private boolean rank;
         private Integer amount = 1;
-        private Type type = Type.BIG;
+        private Type type = Type.All;
 
         public Badge(Person person) {
             this.person = person;
@@ -331,28 +359,28 @@ public class BadgeController extends MyAnchorPane {
         }
     }
 
-    @Override
-    public void clearData() {
-        people.clear();
-        peopleTable.getItems().clear();
-    }
-
     public void krsPeople() {
-        people.addAll(services.getPersonService().getPeople().stream().filter(p -> p.getPosition().getId() == 8388).collect(Collectors.toList()));
-        for (Person person : people)
-            peopleTable.getItems().add(new Badge(person));
+        services.getPersonService().getPeople()
+                .stream()
+                .filter(p -> p.getDepartment() != null && p.getDepartment().getId() == 31)
+                .forEach(p -> people.add(new Badge(p)));
     }
 
     public void trafficPeople() {
-        people.addAll(services.getPersonService().getPeople().stream().filter(p -> p.getPosition().getId() == 8347).collect(Collectors.toList()));
-        for (Person person : people)
-            peopleTable.getItems().add(new Badge(person));
+        services.getPersonService().getPeople()
+                .stream()
+                .filter(p -> p.getDepartment() != null && p.getDepartment().getId() == 151)
+                .forEach(p -> people.add(new Badge(p)));
     }
 
     public void allPeople() {
-        people.addAll(services.getPersonService().getPeople());
-        for (Person person : people)
-            peopleTable.getItems().add(new Badge(person));
+        services.getPersonService().getPeople()
+                .forEach(p -> people.add(new Badge(p)));
+    }
+
+    @Override
+    public void clearData() {
+        people.clear();
     }
 
     @Override

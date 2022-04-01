@@ -5,7 +5,6 @@ import kup.get.entity.alfa.Photo;
 import kup.get.entity.security.Role;
 import kup.get.entity.security.User;
 import kup.get.service.PersonService;
-import org.reactivestreams.Publisher;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -23,25 +22,23 @@ public class PersonSocketService implements PersonService {
     }
 
     public void updatePeople() {
-            socketService.route("traffic.people")
+            socketService.route("auth.people")
                     .retrieveFlux(Person.class)
                     .subscribe(people::add);
-
-//        if(p.getPosition()!=null && p.getPosition().getId()==8347)
     }
 
     public List<Person> getPeople() {
         return people;
     }
 
-    public Mono<Person> savePerson(Person person) {     // DBA
+    public Mono<Person> savePerson(Person person) {
         return socketService.route("asu.savePerson")
                 .data(person)
                 .retrieveMono(Person.class);
     }
 
     public Mono<byte[]> getPhotoByPerson(Long id) {
-        return socketService.route("traffic.getPhotoByPerson")
+        return socketService.route("auth.getPhotoByPerson")
                 .data(id)
                 .retrieveMono(byte[].class);
     }
@@ -53,8 +50,13 @@ public class PersonSocketService implements PersonService {
     }
 
     public Flux<Photo> addPhotoToPeople() {
-        return socketService.route("traffic.getPhotoByPeople")
+        return socketService.route("auth.getPhotoByPeople")
                 .retrieveFlux(Photo.class);
+    }
+
+    @Override
+    public Flux<Photo> savePhotos(List<Photo> photos) {
+        return null;
     }
 
     public Flux<Role> getRoles() {

@@ -4,7 +4,6 @@ import javafx.animation.*;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
@@ -22,9 +21,6 @@ import kup.get.entity.traffic.TrafficTeam;
 import kup.get.entity.traffic.TrafficVehicle;
 import kup.get.service.Services;
 import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import reactor.core.publisher.Flux;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -68,10 +64,8 @@ public class ImportExportController extends MyAnchorPane {
 
 
     private final Label textGraphicButton = new Label("Экспорт");
-    private final Services services;
 
     public ImportExportController(Services services) {
-        this.services = services;
         TreeItem<CheckBox> peopleTreeItem = treeItemCheckBox("Сотрудники");
         TreeItem<CheckBox> photoTreeItem = treeItemCheckBox("С фото?");
 
@@ -195,11 +189,11 @@ public class ImportExportController extends MyAnchorPane {
                                     this.updateProgress(progress.getAndIncrement(), count);
                                     System.out.println(progress.get() + "/" + count);
                                 });
-                        /*services.getPersonService().savePhotos(items.getPhotos())
+                        services.getPersonService().savePhotos(items.getPhotos())
                                 .subscribe(p -> {
                                     this.updateProgress(progress.getAndIncrement(), count);
                                     System.out.println(progress.get() + "/" + count);
-                                });*/
+                                });
                         return null;
                     }
                 };
@@ -212,6 +206,7 @@ public class ImportExportController extends MyAnchorPane {
                             importProgressIndicator.setVisible(false);
                             createAlert("Иммпорт выполнен успешно",
                                     "Сотрудники: " + items.getPeople().size() + "\nЭкипажи: " + items.getTeams().size()
+                                            + "\nФото: " + items.getPhotos().size()
                                             + "\nТС: " + items.getVehicles().size() + "\nПеречень для ОТ: " + items.getTypes().size());
                         });
                 new Thread(task).start();

@@ -8,7 +8,6 @@ import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.AnchorPane;
 import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
@@ -23,8 +22,6 @@ import kup.get.service.Services;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
-
-import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
 @FxmlLoader(path = "/fxml/traffic/TeamAndVehicle.fxml")
 public class TeamAndVehicleController extends MyAnchorPane {
@@ -50,12 +47,14 @@ public class TeamAndVehicleController extends MyAnchorPane {
         this.services = services;
         peopleTable.setItems(peopleTable.getItems());
         trafficPeopleTable
+                .setMyContextMenu(trafficPeopleCM())
                 .headerColumn("Водители экипажа")
                 .column("Таб.№", p -> parsePerson(Person::getPersonnelNumber, p)).build()
                 .column("Фамилия", p -> parsePerson(Person::getLastName, p)).build()
                 .column("Имя", p -> parsePerson(Person::getFirstName, p)).build()
                 .column("Отчество", p -> parsePerson(Person::getMiddleName, p)).build();
         teamTable
+                .setMyContextMenu(teamCM())
                 .headerColumn("Экипажи")
                 .column("id экипажа", TrafficTeam::getId).setInvisible().build()
                 .column("№ экипажа", TrafficTeam::getNumber).setEditable((tt, value) -> {
@@ -68,6 +67,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
                 }, TextFieldTableCell.forTableColumn()).build();
 
         vehicleTable
+                .setMyContextMenu(vehicleCM())
                 .headerColumn("Транспортные стредства")
                 .column("Имя", TrafficVehicle::getId).setInvisible().build()
                 .column("№ ТС", TrafficVehicle::getNumber)
@@ -87,6 +87,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
                 .column("Режим работы", tv -> tv.getTeam().getWorkingMode()).build();
 
         peopleTable
+                .setMyContextMenu(peopleCM())
                 .headerColumn("Сотрудники")
                 .column("id", Person::getId).setInvisible().build()
                 .column("Таб.№", Person::getPersonnelNumber).build()
@@ -95,30 +96,6 @@ public class TeamAndVehicleController extends MyAnchorPane {
                 .column("Отчество", Person::getMiddleName).build()
                 .column("Подразделение", p -> p.getDepartment().getName()).setInvisible().build()
                 .column("Должность", p -> p.getPosition().getName()).setInvisible().build();
-
-
-        vehicleTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                vehicleTable.setContextMenu(vehicleCM());
-            }
-        });
-
-        peopleTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                peopleTable.setContextMenu(peopleCM());
-            }
-        });
-
-        teamTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                teamTable.setContextMenu(teamCM());
-            }
-        });
-        trafficPeopleTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                trafficPeopleTable.setContextMenu(trafficPeopleCM());
-            }
-        });
 
         vehicleTable.setRowFactory(tv -> {
             TableRow<TrafficVehicle> row = new TableRow<>();

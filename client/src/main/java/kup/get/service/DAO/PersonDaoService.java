@@ -1,7 +1,9 @@
 package kup.get.service.DAO;
 
+import kup.get.entity.alfa.Department;
 import kup.get.entity.alfa.Person;
 import kup.get.entity.alfa.Photo;
+import kup.get.entity.alfa.Position;
 import kup.get.repository.alfa.DepartmentRepository;
 import kup.get.repository.alfa.PersonRepository;
 import kup.get.repository.alfa.PhotoRepository;
@@ -33,35 +35,66 @@ public class PersonDaoService implements PersonService {
 
     private final PhotoRepository photoRepository;
     private final List<Person> people = new ArrayList<>();
+
     public void updatePeople() {
         people.clear();
         people.addAll(personRepository.findAll(/*String.valueOf(LocalDate.now())*/));
     }
 
     public List<Person> getPeople() {
-        return people;
+        return personRepository.findAll();
     }
 
-    public Mono<Person> savePerson(Person person) {
+    public Person savePerson(Person person) {
+        if (person != null) {
+            if (person.getPosition() != null) {
+                Position position = positionRepository.findFirstById(person.getPosition().getId());
+                if (position != null) {
+                    position.setName(person.getPosition().getName());
+                    person.setPosition(position);
+                }
+                else position = person.getPosition();
+                positionRepository.save(position);
+            }
+            if (person.getDepartment() != null) {
+                Department department = departmentRepository.findFirstById(person.getDepartment().getId());
+                if (department != null) {
+                    person.setDepartment(department);
+                }
+                else departmentRepository.save(person.getDepartment());
+            }
+            if (person.getId() != null) {
+                Person p = personRepository.findFirstById(person.getId());
+                if (p != null) {
+                    person.setLocalId(p.getLocalId());
+                    person.setPersonnelNumber(p.getPersonnelNumber());
+                    person.setDepartment(p.getDepartment());
+                    person.setPosition(p.getPosition());
+                    person.setLastName(p.getLastName());
+                    person.setFirstName(p.getFirstName());
+                    person.setMiddleName(p.getMiddleName());
+                    person.setRank(p.getRank());
+                }
+            }
+            return personRepository.save(person);
+        }
         return null;
     }
 
     public Mono<byte[]> getPhotoByPerson(Long id) {
         Photo photo = photoRepository.findFirstByPersonId(id);
-        return photo != null? Mono.just( photo.getPhoto()) : Mono.empty();
+        return photo != null ? Mono.just(photo.getPhoto()) : Mono.empty();
     }
 
     public Flux<Person> savePeople(List<Person> people) {
-        departmentRepository.saveAll(people.stream().map(Person::getDepartment).filter(Objects::nonNull).collect(Collectors.toList()));
-        positionRepository.saveAll(people.stream().map(Person::getPosition).filter(Objects::nonNull).collect(Collectors.toList()));
-        return Flux.fromIterable(personRepository.saveAll(people));
+        return Flux.fromIterable(people).map(this::savePerson);
     }
 
     public Flux<Photo> addPhotoToPeople() {
         return Flux.fromIterable(photoRepository.findAll());
     }
 
-//    @Override
+    //    @Override
     public Flux<Photo> savePhotos(List<Photo> photos) {
 //        photoRepository.saveAll(photos);
         return Flux.fromIterable(photos).map(photoRepository::save);
@@ -74,5 +107,17 @@ public class PersonDaoService implements PersonService {
                 return null;
             }
         });*/
+    }
+
+    public Department getDepartmentByName(String t) {
+        return departmentRepository.findByName(t);
+    }
+
+    public Position getPositionByName(String t) {
+        return positionRepository.findByName(t);
+    }
+
+    public void deletePerson(Person person) {
+        personRepository.delete(person);
     }
 }

@@ -22,8 +22,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
-
 @FxmlLoader(path = "/fxml/traffic/items.fxml")
 public class ItemController extends MyAnchorPane {
     @FXML
@@ -82,6 +80,7 @@ public class ItemController extends MyAnchorPane {
         ownerComboBox.setItems(FXCollections.observableArrayList(Owner.values()));
 
         itemTable
+                .setMyContextMenu(itemTableContextMenu())
                 .headerColumn(nameItemColumn)
                 .column("id", TrafficItem::getId).setInvisible().build()
                 .column("Наименование", ti -> ti.getType().getName()).build()
@@ -102,12 +101,6 @@ public class ItemController extends MyAnchorPane {
                 .headerColumn(Owner.VEHICLE.title).setInvisible()
                 .column("Номер ТС", ti -> ti.getVehicle().getNumber()).setInvisible().build()
                 .column("Модель ТС", ti -> ti.getVehicle().getModel()).setInvisible().build();
-
-        itemTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                itemTable.setContextMenu(itemTableContextMenu());
-            }
-        });
 
         ownerComboBox.setOnAction(event -> {
             Owner owner = ownerComboBox.getSelectionModel().getSelectedItem();
@@ -191,9 +184,7 @@ public class ItemController extends MyAnchorPane {
 
     private ContextMenu itemTableContextMenu() {
         return MyContextMenu.builder()
-                .item("Добавить", event -> switchPane(itemsPane, addItemPane))
-                .item("", event -> {
-                });
+                .item("Добавить", event -> switchPane(itemsPane, addItemPane));
     }
 
     @AllArgsConstructor

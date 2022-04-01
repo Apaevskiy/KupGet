@@ -16,21 +16,18 @@ public class PersonController {
     private final TrafficItemService trafficItemService;
     private final AlfaService alfaService;
 
-    @MessageMapping("traffic.people")
+    @MessageMapping("auth.people")
     Flux<Person> getDrivers() {
         return Flux.fromIterable(alfaService.getPeople());
     }
 
 
-
-
-
-    @MessageMapping("traffic.getPhotoByPerson")
+    @MessageMapping("auth.getPhotoByPerson")
     Mono<byte[]> getPhotoByPerson(Mono<Long> idMono) {
         return idMono.map(alfaService::getPhotoByPerson);
     }
 
-    @MessageMapping("traffic.getPhotoByPeople")
+    @MessageMapping("auth.getPhotoByPeople")
     Flux<Photo> getPhotoByPeople() {
         return Flux.fromIterable(alfaService.getPhotoByPeople());
     }

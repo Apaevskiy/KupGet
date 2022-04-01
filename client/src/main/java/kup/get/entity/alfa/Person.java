@@ -20,19 +20,18 @@ public class Person  implements Serializable {
 
     private Long id;
     private String personnelNumber;
-
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
-    @JoinColumn(name = "department")
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "department", nullable = true)
     private Department department;
 
-    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
-    @JoinColumn(name = "position")
+    @ManyToOne(fetch = FetchType.EAGER, optional = true)
+    @JoinColumn(name = "position", nullable = true)
     private Position position;
 
     private String lastName;
     private String firstName;
     private String middleName;
-    private Integer rank;
+    private int rank;
 
     @Transient
     transient private byte[] photo;

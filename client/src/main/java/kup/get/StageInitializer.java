@@ -7,13 +7,14 @@ import kup.get.controller.MainController;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 
+
 @Component
 public class StageInitializer implements ApplicationListener<JavaFxApplication.StageReadyEvent> {
 
     private final Scene scene;
 
     public StageInitializer(MainController mainController) {
-        this.scene=new Scene(mainController);
+        this.scene = new Scene(mainController);
         mainController.setPrefWidth(1300);
         mainController.setPrefHeight(800);
 //        scene.addEventFilter(KeyEvent.KEY_PRESSED, mainController::switchPane);
@@ -21,10 +22,10 @@ public class StageInitializer implements ApplicationListener<JavaFxApplication.S
 
     @Override
     public void onApplicationEvent(JavaFxApplication.StageReadyEvent event) {
-            Stage stage = event.getStage();
-            stage.setTitle("Ведомость реализации ПП контролерами");
-            stage.setScene(scene);
-            stage.getIcons().add(new Image("/images/logo.png"));
-            stage.show();
+        Stage stage = event.getStage();
+        stage.setTitle("Портал КУП Горэлектротранспорт");
+        stage.setScene(scene);
+        stage.getIcons().add(new Image("/images/logo.png"));
+        stage.show();
     }
 }

@@ -48,7 +48,7 @@ public class CustomMenuItem {
 
     public static void addToPane(VBox box, Set<CustomMenuItem> items) {
         box.getChildren().clear();
-        box.getChildren().addAll(items.stream().map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
+        box.getChildren().addAll(items.stream().sorted(Comparator.comparing(CustomMenuItem::getText)).map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
     }
 
     public CustomMenuItem setRoles(String... roles) {
@@ -60,7 +60,7 @@ public class CustomMenuItem {
         menuItem.setOnMouseClicked(event -> {
             actualItem.set(this);
             returnButton.setVisible(true);
-            box.getChildren().setAll(children.stream().map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
+            box.getChildren().setAll(children.stream().sorted(Comparator.comparing(CustomMenuItem::getText)).map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
         });
         return this;
     }

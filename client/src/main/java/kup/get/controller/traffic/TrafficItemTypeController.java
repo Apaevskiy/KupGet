@@ -1,22 +1,22 @@
 package kup.get.controller.traffic;
 
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.TextFieldTableCell;
-import javafx.scene.input.MouseButton;
 import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
-import kup.get.service.Services;
+import kup.get.entity.alfa.Person;
 import kup.get.entity.traffic.TrafficItemType;
+import kup.get.service.Services;
 import reactor.core.publisher.Mono;
 
 import java.util.function.BiConsumer;
-
-import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
 @FxmlLoader(path = "/fxml/traffic/itemType.fxml")
 public class TrafficItemTypeController extends MyAnchorPane {
@@ -31,50 +31,64 @@ public class TrafficItemTypeController extends MyAnchorPane {
     public TrafficItemTypeController(Services services) {
         this.services = services;
         itemTypeTable
-                .headerColumn("Перечень пунктов для ОТ")
-                .column("id", TrafficItemType::getId).setInvisible().build()
-                .column("Статус", type -> {
-                    CheckBox checkBox = new CheckBox();
-                    checkBox.selectedProperty().setValue(type.isStatus());
-                    checkBox.selectedProperty().addListener(
-                            (ov, old_val, new_val) ->
-                                    saveTrafficType(type, TrafficItemType::setStatus, new_val));
-                    return checkBox;
-                }).build()
-                .column("Наименование", TrafficItemType::getName)
+                .contextMenu(myContextMenu ->
+                        myContextMenu.item("Добавить", e -> {
+                            if (itemTypeTable.getItems().size() == 0 || itemTypeTable.getItems().get(itemTypeTable.getItems().size() - 1).getId()!=null) {
+                                itemTypeTable.getItems().add(new TrafficItemType());
+                                itemTypeTable.getSelectionModel().selectLast();
+                            } else {
+                                itemTypeTable.getSelectionModel().selectLast();
+                            }
+                        }))
+                .addColumn(parentColumn ->
+                        parentColumn.header("Перечень пунктов для ОТ")
+                                .childColumn(col -> col
+                                        .header("id")
+                                        .cellValueFactory(TrafficItemType::getId)
+                                        .property(TableColumn::visibleProperty, false))
+                                .childColumn(col -> col
+                                        .header("Статус")
+                                        .cellValueFactory(cellData -> {
+                                            BooleanProperty property = new SimpleBooleanProperty(cellData.isStatus());
+                                            property.addListener((observable, oldValue, newValue) -> saveTrafficType(cellData, TrafficItemType::setStatus, newValue));
+                                            return property;
+                                        }))
+                                .childColumn(col -> col
+                                        .header("Наименование")
+                                        .cellValueFactory(TrafficItemType::getName)
+                                .editable((type, value) -> saveTrafficType(TrafficItemType::setName))
+                                )
+                                .childColumn(col -> col
+                                        .header("Повториять каждые\n(месяцев)")
+                                        .cellValueFactory(cellData -> {
+                                            BooleanProperty property = new SimpleBooleanProperty(cellData.isStatus());
+                                            property.addListener((observable, oldValue, newValue) -> saveTrafficType(cellData, TrafficItemType::setStatus, newValue));
+                                            return property;
+                                        }))
+                )
+                .column("", )
                 .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn()).build()
-                .column("Повториять каждые\n(месяцев)", TrafficItemType::getDefaultDurationInMonth)
+                .column("", TrafficItemType::getDefaultDurationInMonth)
                 .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter())).build();
 
-        itemTypeTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                itemTypeTable.setContextMenu(createContextMenu());
-            }
+    }
+
+    private <T> BiConsumer<TrafficItemType, T> saveTrafficType(BiConsumer<TrafficItemType, T> consumer) {
+        return consumer.andThen((type, t) ->{
+            services.getTrafficService()
+                    .saveItemType(type)
+                    .onErrorResume(e -> {
+                        Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\nПри необходимости обратитесь к администратору"));
+                        return Mono.empty();
+                    })
+                    .doOnSuccess(it -> {
+                        type.setId(it.getId());
+                        type.setDefaultDurationInMonth(it.getDefaultDurationInMonth());
+                        type.setStatus(it.isStatus());
+                        type.setName(it.getName());
+                    })
+                    .subscribe();
         });
-    }
-
-    private <t> void saveTrafficType(TrafficItemType itemType, BiConsumer<TrafficItemType, t> consumer, t value) {
-        consumer.accept(itemType, value);
-        services.getTrafficService()
-                .saveItemType(itemType)
-                .onErrorResume(e -> {
-                    Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\nПри необходимости обратитесь к администратору"));
-                    return Mono.empty();
-                })
-                .doOnSuccess(it -> itemType.setId(it.getId()))
-                .subscribe();
-    }
-
-    private ContextMenu createContextMenu() {
-        return MyContextMenu.builder()
-                .item("Добавить", e -> {
-                    if (itemTypeTable.getItems().size() == 0 || itemTypeTable.getItems().get(itemTypeTable.getItems().size() - 1).getId()!=null) {
-                        itemTypeTable.getItems().add(new TrafficItemType());
-                        itemTypeTable.getSelectionModel().selectLast();
-                    } else {
-                        itemTypeTable.getSelectionModel().selectLast();
-                    }
-                });
     }
 
     @Override

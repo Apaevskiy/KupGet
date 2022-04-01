@@ -29,8 +29,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
-
 @FxmlLoader(path = "/fxml/asu/schedule.fxml")
 public class ScheduleController extends MyAnchorPane {
     @FXML
@@ -47,6 +45,7 @@ public class ScheduleController extends MyAnchorPane {
 
     public ScheduleController() {
         routeTable
+                .setMyContextMenu(createContextMenu())
                 .column("Номер\nмаршрута", d -> d.getRoute().getName())
                 .setEditable((direction, s) -> direction.getRoute().setName(s), TextFieldTableCell.forTableColumn()).and()
                 .column("Дни\nнедели", d -> d.getRoute().getWorkDays())
@@ -180,12 +179,6 @@ public class ScheduleController extends MyAnchorPane {
 
             createAlert("Уведомление", "Текст скопирован в буфер обмена!");
         });
-
-        routeTable.addEventHandler(MOUSE_CLICKED, event -> {
-            if (event.getButton() == MouseButton.SECONDARY) {
-                routeTable.setContextMenu(createContextMenu());
-            }
-        });
     }
 
     private ContextMenu createContextMenu() {
@@ -262,8 +255,7 @@ public class ScheduleController extends MyAnchorPane {
                             routeTable.refresh();
                         }
                     }
-                })
-                .item("Обновить", e -> routeTable.refresh());
+                });
     }
 
     private String createTableFlexLine(Route route) {

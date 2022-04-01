@@ -51,6 +51,7 @@ public class Services {
     }
 
     public void closeConnection() {
+        if (!config.getRequester().isDisposed())
         config.getRequester().dispose();
     }
 }
