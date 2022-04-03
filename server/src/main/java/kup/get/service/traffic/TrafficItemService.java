@@ -70,13 +70,7 @@ public class TrafficItemService {
     }
 
     public TrafficItem saveTrafficItem(TrafficItem trafficItem) {
-        if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonId()!=null){
-            TrafficPerson person = personRepository.findFirstByPersonId(trafficItem.getPerson().getPersonId());
-            if(person==null){
-                personRepository.save(trafficItem.getPerson());
-            }
-            trafficItem.setPerson(person);
-        }
-        return itemRepository.save(trafficItem);
+        System.out.println(trafficItem);
+        return itemRepository.saveAndFlush(trafficItem);
     }
 }

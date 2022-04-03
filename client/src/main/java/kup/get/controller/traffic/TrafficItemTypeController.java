@@ -4,14 +4,14 @@ import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.CheckBoxTableCell;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
-import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
-import kup.get.entity.alfa.Person;
 import kup.get.entity.traffic.TrafficItemType;
 import kup.get.service.Services;
 import reactor.core.publisher.Mono;
@@ -33,7 +33,7 @@ public class TrafficItemTypeController extends MyAnchorPane {
         itemTypeTable
                 .contextMenu(myContextMenu ->
                         myContextMenu.item("Добавить", e -> {
-                            if (itemTypeTable.getItems().size() == 0 || itemTypeTable.getItems().get(itemTypeTable.getItems().size() - 1).getId()!=null) {
+                            if (itemTypeTable.getItems().size() == 0 || itemTypeTable.getItems().get(itemTypeTable.getItems().size() - 1).getId() != null) {
                                 itemTypeTable.getItems().add(new TrafficItemType());
                                 itemTypeTable.getSelectionModel().selectLast();
                             } else {
@@ -46,35 +46,31 @@ public class TrafficItemTypeController extends MyAnchorPane {
                                         .header("id")
                                         .cellValueFactory(TrafficItemType::getId)
                                         .property(TableColumn::visibleProperty, false))
-                                .childColumn(col -> col
+                                .<Boolean>childColumn(col -> col
                                         .header("Статус")
-                                        .cellValueFactory(cellData -> {
-                                            BooleanProperty property = new SimpleBooleanProperty(cellData.isStatus());
-                                            property.addListener((observable, oldValue, newValue) -> saveTrafficType(cellData, TrafficItemType::setStatus, newValue));
+                                        .property(TableColumn::cellValueFactoryProperty, cellData -> {
+                                            BooleanProperty property = new SimpleBooleanProperty(cellData.getValue().isStatus());
+                                            property.addListener((observable, oldValue, newValue) -> saveTrafficType(TrafficItemType::setStatus).accept(cellData.getValue(), newValue));
                                             return property;
-                                        }))
-                                .childColumn(col -> col
+                                        })
+                                        .cellFactory(CheckBoxTableCell.forTableColumn(col))
+                                        .widthColumn(60))
+                                .<String>childColumn(col -> col
                                         .header("Наименование")
                                         .cellValueFactory(TrafficItemType::getName)
-                                .editable((type, value) -> saveTrafficType(TrafficItemType::setName))
+                                        .editable(saveTrafficType(TrafficItemType::setName))
+                                        .cellFactory(TextFieldTableCell.forTableColumn())
                                 )
-                                .childColumn(col -> col
+                                .<Integer>childColumn(col -> col
                                         .header("Повториять каждые\n(месяцев)")
-                                        .cellValueFactory(cellData -> {
-                                            BooleanProperty property = new SimpleBooleanProperty(cellData.isStatus());
-                                            property.addListener((observable, oldValue, newValue) -> saveTrafficType(cellData, TrafficItemType::setStatus, newValue));
-                                            return property;
-                                        }))
-                )
-                .column("", )
-                .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setName, value), TextFieldTableCell.forTableColumn()).build()
-                .column("", TrafficItemType::getDefaultDurationInMonth)
-                .setEditable((type, value) -> saveTrafficType(type, TrafficItemType::setDefaultDurationInMonth, value), TextFieldTableCell.forTableColumn(new IntegerStringConverter())).build();
-
+                                        .cellValueFactory(TrafficItemType::getDefaultDurationInMonth)
+                                        .editable(saveTrafficType(TrafficItemType::setDefaultDurationInMonth))
+                                        .cellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter())))
+                );
     }
 
     private <T> BiConsumer<TrafficItemType, T> saveTrafficType(BiConsumer<TrafficItemType, T> consumer) {
-        return consumer.andThen((type, t) ->{
+        return consumer.andThen((type, t) -> {
             services.getTrafficService()
                     .saveItemType(type)
                     .onErrorResume(e -> {

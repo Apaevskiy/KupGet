@@ -8,7 +8,6 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.input.*;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
-import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,17 +44,86 @@ public class ScheduleController extends MyAnchorPane {
 
     public ScheduleController() {
         routeTable
-                .setMyContextMenu(createContextMenu())
-                .column("Номер\nмаршрута", d -> d.getRoute().getName())
-                .setEditable((direction, s) -> direction.getRoute().setName(s), TextFieldTableCell.forTableColumn()).and()
-                .column("Дни\nнедели", d -> d.getRoute().getWorkDays())
-                .setEditable((direction, s) -> direction.getRoute().setWorkDays(s), TextFieldTableCell.forTableColumn()).and()
-                .column("Отправление", Direction::getDeparturePoint)
-                .setEditable(Direction::setDeparturePoint, TextFieldTableCell.forTableColumn()).and()
-                .column("Стиль", d -> d.getRoute().getStyle())
-                .setEditable((direction, s) -> direction.getRoute().setStyle(s), TextFieldTableCell.forTableColumn()).and()
-                .addColumn("Начало\nдвижения", Direction::getStartWork)
-                .addColumn("Окончание\nдвижения", Direction::getEndWork);
+                .contextMenu(cm -> cm
+                        .item("Добавить маршрут", e -> {
+                            Direction direction = new Direction();
+                            direction.setRoute(new Route());
+                            routeTable.getItems().add(direction);
+                            routeTable.getSelectionModel().select(direction);
+                            routeTable.refresh();
+                        })
+                        .item("Добавить направление", e -> {
+                            SelectionModel<Direction> model = routeTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                Direction direction = new Direction();
+                                direction.setRoute(model.getSelectedItem().getRoute());
+                                routeTable.getItems().add(model.getSelectedIndex(), direction);
+                                routeTable.getSelectionModel().select(model.getSelectedIndex());
+                                routeTable.refresh();
+                            }
+                        })
+                        .item("Сменить направление", e -> {
+                            SelectionModel<Direction> model = routeTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                Route route = model.getSelectedItem().getRoute();
+                                if (route != null && route.getTo() != null && route.getOut() != null) {
+                                    String str = route.getTo().getDeparturePoint();
+                                    route.getTo().setDeparturePoint(route.getOut().getDeparturePoint());
+                                    route.getOut().setDeparturePoint(str);
+                                    routeTable.refresh();
+                                }
+                            }
+                        })
+                        .item("Переместить наверх", e -> {
+                            SelectionModel<Direction> model = routeTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                Route route = model.getSelectedItem().getRoute();
+                                if (route != null && route.getTo() != null) {
+                                    routeTable.getItems().remove(route.getTo());
+                                    routeTable.getItems().add(0, route.getTo());
+                                }
+                                if (route != null && route.getOut() != null) {
+                                    routeTable.getItems().remove(route.getOut());
+                                    routeTable.getItems().add(0, route.getOut());
+                                }
+                                routeTable.refresh();
+                            }
+                        })
+                        .item("Переместить вниз", e -> {
+                            SelectionModel<Direction> model = routeTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                Route route = model.getSelectedItem().getRoute();
+                                if (route != null && route.getTo() != null) {
+                                    routeTable.getItems().remove(route.getTo());
+                                    routeTable.getItems().add(route.getTo());
+                                } else if (route != null && route.getOut() != null) {
+                                    routeTable.getItems().remove(route.getOut());
+                                    routeTable.getItems().add(route.getOut());
+                                    routeTable.refresh();
+                                }
+                            }
+                        })
+                        .item("Удалить", e -> {
+                            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                            alert.setTitle("Подтверждение");
+                            alert.setHeaderText("Вы действительно хотите удалить маршрут?");
+                            alert.setContentText("Нажмите ОК для удаление и Cancel для отмены");
+
+                            Optional<ButtonType> option = alert.showAndWait();
+                            if (option.isPresent() && option.get() == ButtonType.OK) {
+                                SelectionModel<Direction> model = routeTable.getSelectionModel();
+                                if (model != null && model.getSelectedItem() != null) {
+                                    routeTable.getItems().remove(model.getSelectedItem());
+                                    routeTable.refresh();
+                                }
+                            }
+                        }))
+                .<String>addColumn(col -> col.header("Номер\nмаршрута").cellValueFactory( d -> d.getRoute().getName()).editable((direction, s) -> direction.getRoute().setName(s)).cellFactory(TextFieldTableCell.forTableColumn()))
+                .<String>addColumn(col -> col.header("Дни\nнедели").cellValueFactory(d -> d.getRoute().getWorkDays()).editable((direction, s) -> direction.getRoute().setWorkDays(s)).cellFactory(TextFieldTableCell.forTableColumn()))
+                .<String>addColumn(col -> col.header("Отправление").cellValueFactory( Direction::getDeparturePoint).editable(Direction::setDeparturePoint).cellFactory(TextFieldTableCell.forTableColumn()))
+                .<String>addColumn(col -> col.header("Стиль").cellValueFactory(d -> d.getRoute().getStyle()).editable((direction, s) -> direction.getRoute().setStyle(s)).cellFactory(TextFieldTableCell.forTableColumn()))
+                .addColumn(col -> col.header("Начало\nдвижения").cellValueFactory(Direction::getStartWork))
+                .addColumn(col -> col.header("Окончание\nдвижения").cellValueFactory(Direction::getEndWork));
 
         routeTable.setRowFactory(tv -> {
             TableRow<Direction> row = new TableRow<>();
@@ -181,82 +249,6 @@ public class ScheduleController extends MyAnchorPane {
         });
     }
 
-    private ContextMenu createContextMenu() {
-        return MyContextMenu.builder()
-                .item("Добавить маршрут", e -> {
-                    Direction direction = new Direction();
-                    direction.setRoute(new Route());
-                    routeTable.getItems().add(direction);
-                    routeTable.getSelectionModel().select(direction);
-                    routeTable.refresh();
-                })
-                .item("Добавить направление", e -> {
-                    SelectionModel<Direction> model = routeTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        Direction direction = new Direction();
-                        direction.setRoute(model.getSelectedItem().getRoute());
-                        routeTable.getItems().add(model.getSelectedIndex(), direction);
-                        routeTable.getSelectionModel().select(model.getSelectedIndex());
-                        routeTable.refresh();
-                    }
-                })
-                .item("Сменить направление", e -> {
-                    SelectionModel<Direction> model = routeTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        Route route = model.getSelectedItem().getRoute();
-                        if (route != null && route.getTo() != null && route.getOut() != null) {
-                            String str = route.getTo().getDeparturePoint();
-                            route.getTo().setDeparturePoint(route.getOut().getDeparturePoint());
-                            route.getOut().setDeparturePoint(str);
-                            routeTable.refresh();
-                        }
-                    }
-                })
-                .item("Переместить наверх", e -> {
-                    SelectionModel<Direction> model = routeTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        Route route = model.getSelectedItem().getRoute();
-                        if (route != null && route.getTo() != null) {
-                            routeTable.getItems().remove(route.getTo());
-                            routeTable.getItems().add(0, route.getTo());
-                        }
-                        if (route != null && route.getOut() != null) {
-                            routeTable.getItems().remove(route.getOut());
-                            routeTable.getItems().add(0, route.getOut());
-                        }
-                        routeTable.refresh();
-                    }
-                })
-                .item("Переместить вниз", e -> {
-                    SelectionModel<Direction> model = routeTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        Route route = model.getSelectedItem().getRoute();
-                        if (route != null && route.getTo() != null) {
-                            routeTable.getItems().remove(route.getTo());
-                            routeTable.getItems().add(route.getTo());
-                        } else if (route != null && route.getOut() != null) {
-                            routeTable.getItems().remove(route.getOut());
-                            routeTable.getItems().add(route.getOut());
-                            routeTable.refresh();
-                        }
-                    }
-                })
-                .item("Удалить", e -> {
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Подтверждение");
-                    alert.setHeaderText("Вы действительно хотите удалить маршрут?");
-                    alert.setContentText("Нажмите ОК для удаление и Cancel для отмены");
-
-                    Optional<ButtonType> option = alert.showAndWait();
-                    if (option.isPresent() && option.get() == ButtonType.OK) {
-                        SelectionModel<Direction> model = routeTable.getSelectionModel();
-                        if (model != null && model.getSelectedItem() != null) {
-                            routeTable.getItems().remove(model.getSelectedItem());
-                            routeTable.refresh();
-                        }
-                    }
-                });
-    }
 
     private String createTableFlexLine(Route route) {
         return "\t<div class=\"table_flex_line\">\n" +

@@ -14,7 +14,7 @@ import javax.persistence.*;
 @Table(name = "product")
 public class Product {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String status;
     private double numberRequire;

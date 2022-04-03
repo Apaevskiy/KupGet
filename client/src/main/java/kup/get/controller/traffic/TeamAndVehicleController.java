@@ -3,8 +3,8 @@ package kup.get.controller.traffic;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.SelectionModel;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldTableCell;
@@ -12,7 +12,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
-import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
 import kup.get.entity.alfa.Person;
 import kup.get.entity.traffic.TrafficPerson;
@@ -21,6 +20,7 @@ import kup.get.entity.traffic.TrafficVehicle;
 import kup.get.service.Services;
 import reactor.core.publisher.Mono;
 
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 @FxmlLoader(path = "/fxml/traffic/TeamAndVehicle.fxml")
@@ -30,7 +30,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
     private AnchorPane briefingPane;
 
     @FXML
-    private TextField searchBriefing;
+    private TextField searchField;
 
     @FXML
     private MyTable<TrafficVehicle> vehicleTable;
@@ -45,57 +45,175 @@ public class TeamAndVehicleController extends MyAnchorPane {
 
     public TeamAndVehicleController(Services services) {
         this.services = services;
-        peopleTable.setItems(peopleTable.getItems());
+
         trafficPeopleTable
-                .setMyContextMenu(trafficPeopleCM())
-                .headerColumn("Водители экипажа")
-                .column("Таб.№", p -> parsePerson(Person::getPersonnelNumber, p)).build()
-                .column("Фамилия", p -> parsePerson(Person::getLastName, p)).build()
-                .column("Имя", p -> parsePerson(Person::getFirstName, p)).build()
-                .column("Отчество", p -> parsePerson(Person::getMiddleName, p)).build();
+                .contextMenu(myContextMenu -> myContextMenu
+                        .item("Открепить сотрудника", event -> {
+                            SelectionModel<TrafficPerson> personModel = trafficPeopleTable.getSelectionModel();
+                            if (personModel != null && personModel.getSelectedItem() != null) {
+                                personModel.getSelectedItem().setTeam(null);
+                                services.getTrafficService()
+                                        .saveTrafficPerson(personModel.getSelectedItem())
+                                        .onErrorResume(this::error)
+                                        .doOnSuccess(tp -> {
+                                            trafficPeopleTable.getItems().remove(personModel.getSelectedItem());
+                                            personModel.getSelectedItem().setTeam(tp.getTeam());
+                                        })
+                                        .subscribe();
+                            }
+                        }))
+                .addColumn(parentColumn ->
+                        parentColumn.header("Водители экипажа")
+                                .childColumn(col -> col
+                                        .header("Таб.№")
+                                        .cellValueFactory(p -> p.getTransientPerson().getPersonnelNumber()))
+                                .childColumn(col -> col
+                                        .header("Фамилия")
+                                        .cellValueFactory(p -> p.getTransientPerson().getLastName()))
+                                .childColumn(col -> col
+                                        .header("Имя")
+                                        .cellValueFactory(p -> p.getTransientPerson().getFirstName()))
+                                .childColumn(col -> col
+                                        .header("Отчество")
+                                        .cellValueFactory(p -> p.getTransientPerson().getMiddleName())));
         teamTable
-                .setMyContextMenu(teamCM())
-                .headerColumn("Экипажи")
-                .column("id экипажа", TrafficTeam::getId).setInvisible().build()
-                .column("№ экипажа", TrafficTeam::getNumber).setEditable((tt, value) -> {
-                    tt.setNumber(value);
-                    saveTrafficTeam(tt);
-                }, TextFieldTableCell.forTableColumn()).build()
-                .column("Режим работы", TrafficTeam::getWorkingMode).setEditable((tt, value) -> {
-                    tt.setWorkingMode(value);
-                    saveTrafficTeam(tt);
-                }, TextFieldTableCell.forTableColumn()).build();
+                .contextMenu(cm -> cm
+                        .item("Добавить экипаж", event -> {
+                            teamTable.getItems().add(new TrafficTeam());
+                            teamTable.getSelectionModel().selectLast();
+                        })
+                        .item("Удалить экипаж", event -> {
+                            SelectionModel<TrafficTeam> model = teamTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                services.getTrafficService().deleteTrafficTeam(model.getSelectedItem())
+                                        .onErrorResume(this::error)
+                                        .doOnSuccess(b -> teamTable.getItems().remove(model.getSelectedItem()))
+                                        .subscribe();
+                            }
+                        })
+                        .item("Закрепить экипаж", event -> {
+                            SelectionModel<TrafficTeam> teamModel = teamTable.getSelectionModel();
+                            if (teamModel != null && teamModel.getSelectedItem() != null) {
+                                SelectionModel<TrafficVehicle> vehicleModel = vehicleTable.getSelectionModel();
+                                if (vehicleModel != null && vehicleModel.getSelectedItem() != null) {
+                                    vehicleModel.getSelectedItem().setTeam(teamModel.getSelectedItem());
+                                    saveTrafficVehicle(TrafficVehicle::setTeam).accept(vehicleModel.getSelectedItem(), teamModel.getSelectedItem());
+                                }
+                            }
+                        }))
+                .addColumn(parentColumn ->
+                        parentColumn.header("Экипажи")
+                                .childColumn(col -> col
+                                        .header("id экипажа")
+                                        .cellValueFactory(TrafficTeam::getId)
+                                        .property(TableColumn::visibleProperty, false))
+                                .<String>childColumn(col -> col
+                                        .header("№ экипажа")
+                                        .cellValueFactory(TrafficTeam::getNumber)
+                                        .editable(saveTrafficTeam(TrafficTeam::setNumber))
+                                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                                .<String>childColumn(col -> col
+                                        .header("Режим работы")
+                                        .cellValueFactory(TrafficTeam::getWorkingMode)
+                                        .editable(saveTrafficTeam(TrafficTeam::setWorkingMode))
+                                        .cellFactory(TextFieldTableCell.forTableColumn())));
 
         vehicleTable
-                .setMyContextMenu(vehicleCM())
-                .headerColumn("Транспортные стредства")
-                .column("Имя", TrafficVehicle::getId).setInvisible().build()
-                .column("№ ТС", TrafficVehicle::getNumber)
-                .setEditable((tv, value) -> {
-                    tv.setNumber(value);
-                    saveTrafficVehicle(tv);
-                }, TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                .build()
-                .column("Модель ТС", TrafficVehicle::getModel)
-                .setEditable((tv, value) -> {
-                    tv.setModel(value);
-                    saveTrafficVehicle(tv);
-                }, TextFieldTableCell.forTableColumn())
-                .build()
-                .column("id экипажа", tv -> tv.getTeam().getId()).setInvisible().build()
-                .column("№ экипажа", tv -> tv.getTeam().getNumber()).build()
-                .column("Режим работы", tv -> tv.getTeam().getWorkingMode()).build();
+                .contextMenu(cm -> cm
+                        .item("Добавить ТС", event -> {
+                            vehicleTable.getItems().add(new TrafficVehicle());
+                            vehicleTable.getSelectionModel().selectLast();
+                        })
+                        .item("Удалить ТС", event -> {
+                            SelectionModel<TrafficVehicle> model = vehicleTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                services.getTrafficService().deleteTrafficVehicle(model.getSelectedItem())
+                                        .onErrorResume(this::error)
+                                        .doOnSuccess(b -> vehicleTable.getItems().remove(model.getSelectedItem()))
+                                        .subscribe();
+                            }
+                        })
+                        .item("Открепить экипаж", event -> {
+                            SelectionModel<TrafficVehicle> model = vehicleTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                saveTrafficVehicle(TrafficVehicle::setTeam).accept(model.getSelectedItem(), null);
+                            }
+                        }))
+                .addColumn(parentColumn ->
+                        parentColumn.header("Транспортные стредства")
+                                .childColumn(col -> col
+                                        .header("id")
+                                        .cellValueFactory(TrafficVehicle::getId)
+                                        .property(TableColumn::visibleProperty, false))
+                                .<Integer>childColumn(col -> col
+                                        .header("№ ТС")
+                                        .cellValueFactory(TrafficVehicle::getNumber)
+                                        .editable(saveTrafficVehicle(TrafficVehicle::setNumber))
+                                        .cellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter())))
+                                .<String>childColumn(col -> col
+                                        .header("Модель ТС")
+                                        .cellValueFactory(TrafficVehicle::getModel)
+                                        .editable(saveTrafficVehicle(TrafficVehicle::setModel))
+                                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                                .childColumn(col -> col
+                                        .header("id экипажа")
+                                        .cellValueFactory(tv -> tv.getTeam().getId())
+                                        .property(TableColumn::visibleProperty, false))
+                                .<String>childColumn(col -> col
+                                        .header("№ экипажа")
+                                        .cellValueFactory(tv -> tv.getTeam().getNumber()))
+                                .<String>childColumn(col -> col
+                                        .header("Режим работы")
+                                        .cellValueFactory(tv -> tv.getTeam().getWorkingMode())));
 
         peopleTable
-                .setMyContextMenu(peopleCM())
-                .headerColumn("Сотрудники")
-                .column("id", Person::getId).setInvisible().build()
-                .column("Таб.№", Person::getPersonnelNumber).build()
-                .column("Фамилия", Person::getLastName).build()
-                .column("Имя", Person::getFirstName).build()
-                .column("Отчество", Person::getMiddleName).build()
-                .column("Подразделение", p -> p.getDepartment().getName()).setInvisible().build()
-                .column("Должность", p -> p.getPosition().getName()).setInvisible().build();
+                .searchBox(searchField, person -> {
+                    if (searchField.getText() == null || searchField.getText().isEmpty()) {
+                        return true;
+                    }
+
+                    String lowerCaseFilter = searchField.getText().toLowerCase();
+                    if (person == null)
+                        return false;
+                    return person.getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
+                            || person.getLastName().toLowerCase().contains(lowerCaseFilter)
+                            || person.getFirstName().toLowerCase().contains(lowerCaseFilter)
+                            || person.getMiddleName().toLowerCase().contains(lowerCaseFilter)
+                            || person.getDepartment().getName().toLowerCase().contains(lowerCaseFilter)
+                            || person.getPosition().getName().toLowerCase().contains(lowerCaseFilter);
+                })
+                .contextMenu(cm -> cm
+                        .item("Закрепить сотрудника", event -> {
+                            SelectionModel<TrafficTeam> teamModel = teamTable.getSelectionModel();
+                            if (teamModel != null && teamModel.getSelectedItem() != null) {
+                                SelectionModel<Person> personModel = peopleTable.getSelectionModel();
+                                if (personModel != null && personModel.getSelectedItem() != null) {
+                                    TrafficPerson person = new TrafficPerson();
+                                    person.setTransientPerson(personModel.getSelectedItem());
+                                    person.setTeam(teamModel.getSelectedItem());
+                                    services.getTrafficService()
+                                            .saveTrafficPerson(person)
+                                            .onErrorResume(this::error)
+                                            .doOnSuccess(tt -> {
+                                                trafficPeopleTable.getItems().add(tt);
+                                                trafficPeopleTable.refresh();
+                                            })
+                                            .subscribe();
+                                }
+                            }
+                        }))
+                .addColumn(parentColumn ->
+                        parentColumn.header("Сотрудники")
+                                .childColumn(col -> col.header("id").cellValueFactory(Person::getId)
+                                        .property(TableColumn::visibleProperty, false))
+                                .childColumn(col -> col.header("Таб.№").cellValueFactory(Person::getPersonnelNumber))
+                                .childColumn(col -> col.header("Фамилия").cellValueFactory(Person::getLastName))
+                                .childColumn(col -> col.header("Имя").cellValueFactory(Person::getFirstName))
+                                .childColumn(col -> col.header("Отчество").cellValueFactory(Person::getMiddleName))
+                                .childColumn(col -> col.header("Подразделение").cellValueFactory(p -> p.getDepartment().getName())
+                                        .property(TableColumn::visibleProperty, false))
+                                .childColumn(col -> col.header("Должность").cellValueFactory(p -> p.getPosition().getName())
+                                        .property(TableColumn::visibleProperty, false)));
 
         vehicleTable.setRowFactory(tv -> {
             TableRow<TrafficVehicle> row = new TableRow<>();
@@ -127,135 +245,38 @@ public class TeamAndVehicleController extends MyAnchorPane {
         });
     }
 
-    private String parsePerson(Function<Person, String> function, TrafficPerson p) {
-        try {
-            return peopleTable.getItems().stream()
-                    .filter(person -> person.getId().equals(p.getPersonId()))
-                    .findFirst()
-                    .map(function)
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
+
+    private <T> BiConsumer<TrafficTeam, T> saveTrafficTeam(BiConsumer<TrafficTeam, T> consumer) {
+        return consumer.andThen((trafficTeam, t) ->
+                services.getTrafficService().saveTrafficTeam(trafficTeam)
+                        .onErrorResume(this::error)
+                        .doOnSuccess(tt -> {
+                            trafficTeam.setId(tt.getId());
+                            trafficTeam.setWorkingMode(tt.getWorkingMode());
+                            trafficTeam.setNumber(tt.getNumber());
+                            teamTable.refresh();
+                        })
+                        .subscribe());
+
     }
 
-    private void saveTrafficTeam(TrafficTeam trafficTeam) {
-        services.getTrafficService()
-                .saveTrafficTeam(trafficTeam)
-                .onErrorResume(e -> error())
-                .doOnSuccess(tt -> trafficTeam.setId(tt.getId()))
-                .subscribe();
+    private <T> BiConsumer<TrafficVehicle, T> saveTrafficVehicle(BiConsumer<TrafficVehicle, T> consumer) {
+        return consumer.andThen((trafficVehicle, t) ->
+                services.getTrafficService()
+                        .saveTrafficVehicle(trafficVehicle)
+                        .onErrorResume(this::error)
+                        .doOnSuccess(tv -> {
+                            trafficVehicle.setId(tv.getId());
+                            trafficVehicle.setNumber(tv.getNumber());
+                            trafficVehicle.setModel(tv.getModel());
+                            trafficVehicle.setTeam(tv.getTeam());
+                            vehicleTable.refresh();
+                        })
+                        .subscribe());
     }
 
-    private void saveTrafficVehicle(TrafficVehicle trafficVehicle) {
-        services.getTrafficService()
-                .saveTrafficVehicle(trafficVehicle)
-                .onErrorResume(e -> error())
-                .doOnSuccess(p -> vehicleTable.refresh())
-                .subscribe(tv -> trafficVehicle.setId(tv.getId()));
-    }
-
-    private ContextMenu vehicleCM() {
-        return MyContextMenu.builder()
-                .item("Добавить ТС", event -> {
-                    vehicleTable.getItems().add(new TrafficVehicle());
-                    vehicleTable.getSelectionModel().selectLast();
-                })
-                .item("Удалить ТС", event -> {
-                    SelectionModel<TrafficVehicle> model = vehicleTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        services.getTrafficService().deleteTrafficVehicle(model.getSelectedItem())
-                                .onErrorResume(e -> error())
-                                .doOnSuccess(b -> vehicleTable.getItems().remove(model.getSelectedItem()))
-                                .subscribe();
-                    }
-                })
-                .item("Открепить экипаж", event -> {
-                    SelectionModel<TrafficVehicle> model = vehicleTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        model.getSelectedItem().setTeam(null);
-                        saveTrafficVehicle(model.getSelectedItem());
-                    }
-                });
-    }
-
-    private ContextMenu peopleCM() {
-        return MyContextMenu
-                .builder()
-                .item("Закрепить сотрудника", event -> {
-                    SelectionModel<TrafficTeam> teamModel = teamTable.getSelectionModel();
-                    if (teamModel != null && teamModel.getSelectedItem() != null) {
-                        SelectionModel<Person> personModel = peopleTable.getSelectionModel();
-                        if (personModel != null && personModel.getSelectedItem() != null) {
-                            TrafficPerson person = new TrafficPerson();
-                            person.setPersonId(personModel.getSelectedItem().getId());
-                            person.setTeam(teamModel.getSelectedItem());
-                            services.getTrafficService()
-                                    .saveTrafficPerson(person)
-                                    .onErrorResume(e -> error())
-                                    .doOnSuccess(tt -> {
-                                        trafficPeopleTable.getItems().add(tt);
-                                        trafficPeopleTable.refresh();
-                                    })
-                                    .subscribe();
-                        }
-                    }
-                })
-                .item("Обновить таблицу", event -> {
-                    services.getPersonService().updatePeople();
-//                    peopleTable.getItems().clear();
-//                    peopleTable.setItems(FXCollections.observableArrayList(services.getPersonService().getPeople()));
-                });
-    }
-
-    private ContextMenu trafficPeopleCM() {
-        return MyContextMenu
-                .builder()
-                .item("Открепить сотрудника", event -> {
-                    SelectionModel<TrafficPerson> personModel = trafficPeopleTable.getSelectionModel();
-                    if (personModel != null && personModel.getSelectedItem() != null) {
-                        personModel.getSelectedItem().setTeam(null);
-                        services.getTrafficService()
-                                .saveTrafficPerson(personModel.getSelectedItem())
-                                .onErrorResume(e -> error())
-                                .doOnSuccess(tp -> {
-                                    trafficPeopleTable.getItems().remove(personModel.getSelectedItem());
-                                    personModel.getSelectedItem().setTeam(tp.getTeam());
-                                })
-                                .subscribe();
-                    }
-                });
-    }
-
-    private ContextMenu teamCM() {
-        return MyContextMenu.builder()
-                .item("Добавить экипаж", event -> {
-                    teamTable.getItems().add(new TrafficTeam());
-                    teamTable.getSelectionModel().selectLast();
-                })
-                .item("Удалить экипаж", event -> {
-                    SelectionModel<TrafficTeam> model = teamTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        services.getTrafficService().deleteTrafficTeam(model.getSelectedItem())
-                                .onErrorResume(e -> error())
-                                .doOnSuccess(b -> teamTable.getItems().remove(model.getSelectedItem()))
-                                .subscribe();
-                    }
-                })
-                .item("Закрепить экипаж", event -> {
-                    SelectionModel<TrafficTeam> teamModel = teamTable.getSelectionModel();
-                    if (teamModel != null && teamModel.getSelectedItem() != null) {
-                        SelectionModel<TrafficVehicle> vehicleModel = vehicleTable.getSelectionModel();
-                        if (vehicleModel != null && vehicleModel.getSelectedItem() != null) {
-                            vehicleModel.getSelectedItem().setTeam(teamModel.getSelectedItem());
-                            saveTrafficVehicle(vehicleModel.getSelectedItem());
-                        }
-                    }
-                });
-    }
-
-    private <t> Mono<t> error() {
-        Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\nПри необходимости обратитесь к администратору"));
+    private <t> Mono<t> error(Throwable throwable) {
+        Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\n" + throwable.getLocalizedMessage()));
         return Mono.empty();
     }
 

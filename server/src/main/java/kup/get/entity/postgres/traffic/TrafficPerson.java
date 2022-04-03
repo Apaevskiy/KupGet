@@ -1,5 +1,6 @@
 package kup.get.entity.postgres.traffic;
 
+import kup.get.entity.alfa.Person;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,10 +12,10 @@ import javax.persistence.*;
 @Setter
 public class TrafficPerson {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private Long personId;
+    private Long person;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "traffic_team_id")

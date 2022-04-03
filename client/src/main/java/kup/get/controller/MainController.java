@@ -36,7 +36,6 @@ import kup.get.controller.traffic.TeamAndVehicleController;
 import kup.get.controller.traffic.TrafficItemTypeController;
 import kup.get.service.Services;
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -63,6 +62,9 @@ public class MainController extends MyAnchorPane {
     private Button hidePanelButton;
     @FXML
     private GridPane returnButton;
+
+    @FXML
+    private Label menuLabel;
 
     @FXML
     private GridPane loginPane;
@@ -106,7 +108,7 @@ public class MainController extends MyAnchorPane {
                 CustomMenuItem.builder()
                         .menuItem("Служба движения", new MaterialDesignIconView(MaterialDesignIcon.BUS))
                         .setRoles("ROLE_TRAFFIC", "ROLE_SUPERADMIN", "AFK")
-                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
                                         .menuItem("Отчёты", new MaterialDesignIconView(MaterialDesignIcon.CLIPBOARD_TEXT))
@@ -128,7 +130,7 @@ public class MainController extends MyAnchorPane {
                 CustomMenuItem.builder()
                         .menuItem("КРС", new FontAwesomeIconView(FontAwesomeIcon.USER_SECRET))
                         .setRoles("ROLE_KRS", "ROLE_SUPERADMIN")
-                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
                                         .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
@@ -141,12 +143,12 @@ public class MainController extends MyAnchorPane {
                 CustomMenuItem.builder()
                         .menuItem("Энергослужба", new WeatherIconView(WeatherIcon.OWM_210))
                         .setRoles("ROLE_ENERGY", "ROLE_SUPERADMIN")
-                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton));
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel));
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("АСУ", new FontAwesomeIconView(FontAwesomeIcon.PIED_PIPER_ALT))
                         .setRoles("ROLE_SUPERADMIN")
-                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton)
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
                                         .menuItem("Пропуска", new OctIconView(OctIcon.CREDIT_CARD))
@@ -183,9 +185,14 @@ public class MainController extends MyAnchorPane {
                 CustomMenuItem parent = actualMenuItem.get().getParent();
                 if (parent != null) {
                     CustomMenuItem.addToPane(vBoxMenuItems, parent.getChildren());
-                    if (parent.getParent() == null)
+                    if (parent.getParent() == null){
                         returnButton.setVisible(false);
-                } else returnButton.setVisible(false);
+                        menuLabel.setText("Портал КУП ГЭТ");
+                    }
+                } else {
+                    returnButton.setVisible(false);
+                    menuLabel.setText("Портал КУП ГЭТ");
+                }
             }
         });
 

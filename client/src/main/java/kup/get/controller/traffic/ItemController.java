@@ -3,47 +3,48 @@ package kup.get.controller.traffic;
 import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
-import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
-import kup.get.service.Services;
 import kup.get.entity.alfa.Person;
-import kup.get.entity.traffic.*;
+import kup.get.entity.traffic.TrafficItem;
+import kup.get.entity.traffic.TrafficItemType;
+import kup.get.entity.traffic.TrafficTeam;
+import kup.get.entity.traffic.TrafficVehicle;
+import kup.get.service.Services;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 @FxmlLoader(path = "/fxml/traffic/items.fxml")
 public class ItemController extends MyAnchorPane {
     @FXML
-    private Button excelButton;
+    private GridPane itemsPane;
 
+    @FXML
+    private Button excelButton;
     @FXML
     private MyTable<TrafficItem> itemTable;
-
+    @FXML
+    private TextField searchItemField;
     @FXML
     private ComboBox<Owner> ownerComboBox;
-
-    @FXML
-    private DatePicker finishDatePicker;
     @FXML
     private DatePicker startDatePricker;
+    @FXML
+    private DatePicker finishDatePicker;
     @FXML
     private ComboBox<TrafficItemType> filterItemTypeComboBox;
 
     @FXML
     private GridPane addItemPane;
-    @FXML
-    private GridPane itemsPane;
 
     @FXML
     private TextArea commentField;
@@ -60,47 +61,84 @@ public class ItemController extends MyAnchorPane {
     @FXML
     private Button canselButton;
     @FXML
-    private TextField searchPerson;
-    @FXML
     private TabPane tabPane;
     @FXML
     private MyTable<Person> peopleTable;
     @FXML
+    private TextField searchPeopleField;
+    @FXML
     private MyTable<TrafficTeam> teamTable;
     @FXML
+    private TextField searchTeamField;
+    @FXML
     private MyTable<TrafficVehicle> vehicleTable;
+    @FXML
+    private TextField searchVehicleField;
 
     private final Services services;
     private final AtomicReference<SequentialTransition> transition;
     private final String nameItemColumn = "Предметы";
+    private final ObservableList<Person> people = FXCollections.observableArrayList();
+    private final ObservableList<TrafficItem> items = FXCollections.observableArrayList();
+    private final ObservableList<TrafficTeam> teams = FXCollections.observableArrayList();
+    private final ObservableList<TrafficVehicle> vehicles = FXCollections.observableArrayList();
 
     public ItemController(Services services, AtomicReference<SequentialTransition> sequentialTransition) {
         this.services = services;
         this.transition = sequentialTransition;
         ownerComboBox.setItems(FXCollections.observableArrayList(Owner.values()));
-
         itemTable
-                .setMyContextMenu(itemTableContextMenu())
-                .headerColumn(nameItemColumn)
-                .column("id", TrafficItem::getId).setInvisible().build()
-                .column("Наименование", ti -> ti.getType().getName()).build()
-                .column("Описание", TrafficItem::getDescription).build()
-                .column("Начало периода", TrafficItem::getDateStart).build()
-                .column("Конец периода", TrafficItem::getDateFinish).build()
-                .and()
-                .headerColumn(Owner.PERSON.title).setInvisible()
-                .column("Таб. №", ti -> parsePerson(Person::getPersonnelNumber, ti.getPerson())).setInvisible().build()
-                .column("Фамилия", ti -> parsePerson(Person::getLastName, ti.getPerson())).setInvisible().build()
-                .column("Имя", ti -> parsePerson(Person::getFirstName, ti.getPerson())).setInvisible().build()
-                .column("Отчество", ti -> parsePerson(Person::getMiddleName, ti.getPerson())).setInvisible().build()
-                .and()
-                .headerColumn(Owner.TEAM.title).setInvisible()
-                .column("Номер экипажа", ti -> ti.getTeam().getNumber()).setInvisible().build()
-                .column("Режим работы", ti -> ti.getTeam().getWorkingMode()).setInvisible().build()
-                .and()
-                .headerColumn(Owner.VEHICLE.title).setInvisible()
-                .column("Номер ТС", ti -> ti.getVehicle().getNumber()).setInvisible().build()
-                .column("Модель ТС", ti -> ti.getVehicle().getModel()).setInvisible().build();
+                .items(items)
+                .searchBox(searchItemField, item -> {
+                    if (searchItemField.getText() == null || searchItemField.getText().isEmpty()) {
+                        return true;
+                    }
+
+                    String lowerCaseFilter = searchItemField.getText().toLowerCase();
+                    if (item == null)
+                        return false;
+                    if (item.getPerson() != null && (item.getPerson().getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
+                            || item.getPerson().getLastName().toLowerCase().contains(lowerCaseFilter)
+                            || item.getPerson().getFirstName().toLowerCase().contains(lowerCaseFilter)
+                            || item.getPerson().getMiddleName().toLowerCase().contains(lowerCaseFilter)))
+                        return true;
+
+                    return item.getType().getName().toLowerCase().contains(lowerCaseFilter)
+                            || item.getDescription().toLowerCase().contains(lowerCaseFilter)
+                            || item.getDateStart().toString().toLowerCase().contains(lowerCaseFilter)
+                            || item.getDateFinish().toString().toLowerCase().contains(lowerCaseFilter)
+                            || item.getTeam().getNumber().toLowerCase().contains(lowerCaseFilter)
+                            || item.getTeam().getWorkingMode().toLowerCase().contains(lowerCaseFilter)
+                            || String.valueOf(item.getVehicle().getNumber()).toLowerCase().contains(lowerCaseFilter)
+                            || item.getVehicle().getModel().toLowerCase().contains(lowerCaseFilter);
+                })
+                .contextMenu(cm -> cm.item("Добавить", event -> switchPane(itemsPane, addItemPane)))
+                .addColumn(itemColumn -> itemColumn
+                        .header(nameItemColumn)
+                        .childColumn(col -> col.header("id").cellValueFactory(TrafficItem::getId).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Наименование").cellValueFactory(ti -> ti.getType().getName()))
+                        .childColumn(col -> col.header("Описание").cellValueFactory(TrafficItem::getDescription))
+                        .childColumn(col -> col.header("Начало периода").cellValueFactory(TrafficItem::getDateStart))
+                        .childColumn(col -> col.header("Конец периода").cellValueFactory(TrafficItem::getDateFinish)))
+                .addColumn(itemColumn -> itemColumn
+                        .header(Owner.PERSON.title)
+                        .property(TableColumnBase::visibleProperty, false)
+                        .childColumn(col -> col.header("Таб. №").cellValueFactory(ti -> ti.getPerson().getPersonnelNumber()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Фамилия").cellValueFactory(ti -> ti.getPerson().getLastName()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Имя").cellValueFactory(ti -> ti.getPerson().getFirstName()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Отчество").cellValueFactory(ti -> ti.getPerson().getMiddleName()).property(TableColumnBase::visibleProperty, false)))
+                .addColumn(itemColumn -> itemColumn
+                        .header(Owner.TEAM.title)
+                        .property(TableColumnBase::visibleProperty, false)
+                        .childColumn(col -> col.header("id").cellValueFactory(ti -> ti.getTeam().getId()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Номер экипажа").cellValueFactory(ti -> ti.getTeam().getNumber()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Режим работы").cellValueFactory(ti -> ti.getTeam().getWorkingMode()).property(TableColumnBase::visibleProperty, false)))
+                .addColumn(itemColumn -> itemColumn
+                        .header(Owner.VEHICLE.title)
+                        .property(TableColumnBase::visibleProperty, false)
+                        .childColumn(col -> col.header("id").cellValueFactory(ti -> ti.getVehicle().getId()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Номер ТС").cellValueFactory(ti -> ti.getVehicle().getNumber()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Модель ТС").cellValueFactory(ti -> ti.getVehicle().getModel()).property(TableColumnBase::visibleProperty, false)));
 
         ownerComboBox.setOnAction(event -> {
             Owner owner = ownerComboBox.getSelectionModel().getSelectedItem();
@@ -114,35 +152,73 @@ public class ItemController extends MyAnchorPane {
         canselButton.setOnAction(event -> switchPane(addItemPane, itemsPane));
 
         dateStartField.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
-            if(itemTypeComboBox.getValue()!=null && !newValue.isEmpty()){
+            if (itemTypeComboBox.getValue() != null && !newValue.isEmpty()) {
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
                 dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(itemTypeComboBox.getValue().getDefaultDurationInMonth()));
             }
         });
 
         peopleTable
-                .headerColumn(Owner.PERSON.title)
-                .column("Таб. №", Person::getPersonnelNumber).build()
-                .column("Фамилия", Person::getLastName).build()
-                .column("Имя", Person::getFirstName).build()
-                .column("Отчество", Person::getMiddleName).build();
-        teamTable.headerColumn(Owner.TEAM.title)
-                .column("Номер экипажа", TrafficTeam::getNumber).build()
-                .column("Режим работы", TrafficTeam::getWorkingMode).build();
+                .items(people)
+                .searchBox(searchPeopleField, person -> {
+                    if (searchPeopleField.getText() == null || searchPeopleField.getText().isEmpty()) {
+                        return true;
+                    }
+
+                    String lowerCaseFilter = searchPeopleField.getText().toLowerCase();
+                    if (person == null)
+                        return false;
+                    return person.getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
+                            || person.getLastName().toLowerCase().contains(lowerCaseFilter)
+                            || person.getFirstName().toLowerCase().contains(lowerCaseFilter)
+                            || person.getMiddleName().toLowerCase().contains(lowerCaseFilter);
+                })
+                .addColumn(col -> col.header("Таб. №").cellValueFactory(Person::getPersonnelNumber))
+                .addColumn(col -> col.header("Фамилия").cellValueFactory(Person::getLastName))
+                .addColumn(col -> col.header("Имя").cellValueFactory(Person::getFirstName))
+                .addColumn(col -> col.header("Отчество").cellValueFactory(Person::getMiddleName));
+        teamTable
+                .items(teams)
+                .searchBox(searchTeamField, team -> {
+                    if (searchTeamField.getText() == null || searchTeamField.getText().isEmpty()) {
+                        return true;
+                    }
+
+                    String lowerCaseFilter = searchTeamField.getText().toLowerCase();
+                    if (team == null)
+                        return false;
+                    return team.getNumber().toLowerCase().contains(lowerCaseFilter) || team.getWorkingMode().toLowerCase().contains(lowerCaseFilter);
+                })
+                .addColumn(col -> col.header("id").cellValueFactory(TrafficTeam::getId).property(TableColumnBase::visibleProperty, false))
+                .addColumn(col -> col.header("Номер экипажа").cellValueFactory(TrafficTeam::getNumber))
+                .addColumn(col -> col.header("Режим работы").cellValueFactory(TrafficTeam::getWorkingMode));
         vehicleTable
-                .headerColumn(Owner.VEHICLE.title)
-                .column("Номер ТС", TrafficVehicle::getNumber).build()
-                .column("Модель ТС", TrafficVehicle::getModel).build()
-                .column("Номер экипажа", tv -> tv.getTeam().getNumber()).build()
-                .column("Режим работы", tv -> tv.getTeam().getWorkingMode()).build();
+                .items(vehicles)
+                .searchBox(searchVehicleField, team -> {
+                    if (searchVehicleField.getText() == null || searchVehicleField.getText().isEmpty()) {
+                        return true;
+                    }
+                    String lowerCaseFilter = searchVehicleField.getText().toLowerCase();
+                    if (team == null)
+                        return false;
+                    return String.valueOf(team.getNumber()).toLowerCase().contains(lowerCaseFilter)
+                            || team.getModel().toLowerCase().contains(lowerCaseFilter)
+                            || team.getTeam().getNumber().toLowerCase().contains(lowerCaseFilter)
+                            || team.getTeam().getWorkingMode().toLowerCase().contains(lowerCaseFilter);
+                })
+                .addColumn(col -> col.header("id").cellValueFactory(TrafficVehicle::getId).property(TableColumnBase::visibleProperty, false))
+                .addColumn(col -> col.header("Номер ТС").cellValueFactory(TrafficVehicle::getNumber))
+                .addColumn(col -> col.header("Модель ТС").cellValueFactory(TrafficVehicle::getModel))
+                .addColumn(col -> col.header("Номер экипажа").cellValueFactory(tv -> tv.getTeam().getNumber()))
+                .addColumn(col -> col.header("Режим работы").cellValueFactory(tv -> tv.getTeam().getWorkingMode()));
+
         addButton.setOnAction(event -> {
             SelectionModel<?> model = null;
             infoLabel.setStyle("-fx-text-fill: red");
             TrafficItem item = new TrafficItem();
-            System.out.println(tabPane.getSelectionModel().getSelectedItem().getText());
             if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Водители")) {
                 model = peopleTable.getSelectionModel();
-                item.setPerson(new TrafficPerson((Person) model.getSelectedItem()));
+                item.setPerson((Person) model.getSelectedItem());
             } else if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Экипажи")) {
                 model = teamTable.getSelectionModel();
                 item.setTeam((TrafficTeam) model.getSelectedItem());
@@ -162,7 +238,7 @@ public class ItemController extends MyAnchorPane {
                                 services.getTrafficService().saveTrafficItem(item)
                                         .doOnSuccess(tt -> {
                                             item.setId(tt.getId());
-                                            itemTable.getItems().add(item);
+                                            items.add(item);
                                             Platform.runLater(() -> {
                                                 infoLabel.setStyle("-fx-text-fill: green");
                                                 infoLabel.setText("Успешно");
@@ -180,11 +256,6 @@ public class ItemController extends MyAnchorPane {
                 } else infoLabel.setText("Выберите пункт выпадающего списка");
             } else infoLabel.setText("Выберите элемент из таблицы");
         });
-    }
-
-    private ContextMenu itemTableContextMenu() {
-        return MyContextMenu.builder()
-                .item("Добавить", event -> switchPane(itemsPane, addItemPane));
     }
 
     @AllArgsConstructor
@@ -207,41 +278,44 @@ public class ItemController extends MyAnchorPane {
         transition.get().play();
     }
 
-    private String parsePerson(Function<Person, String> function, TrafficPerson p) {
-        try {
-            return peopleTable.getItems().stream()
-                    .filter(person -> person.getId().equals(p.getPersonId()))
-                    .findFirst()
-                    .map(function)
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     @Override
     public void clearData() {
         itemTable.getItems().clear();
         itemTypeComboBox.getItems().clear();
         filterItemTypeComboBox.getItems().clear();
-        peopleTable.getItems().clear();
-        teamTable.getItems().clear();
-        vehicleTable.getItems().clear();
+        people.clear();
+        teams.clear();
+        vehicles.clear();
     }
 
     @Override
     public void fillData() {
-        services.getTrafficService().getTrafficItems().subscribe(itemTable.getItems()::add);
+        people.addAll(services.getPersonService().getPeople());
+        services.getTrafficService().getTrafficItems()
+                .map(ti -> {
+                    if(!people.isEmpty() && ti.getTrafficPerson()!=null && ti.getPerson()==null){
+                        System.out.println(ti);
+                        Person person = people.stream().filter(p -> p.getId().equals(ti.getTrafficPerson().getPerson())).findFirst().orElse(null);
+                        System.out.println(person);
+                        ti.setPerson(person);
+                    }
+                    return ti;
+                }).subscribe(items::add);
+        System.out.println(people.stream().filter(p -> p.getId()==15L).findFirst());
+        System.out.println(people.stream().filter(p -> p.getId()==8L).findFirst());
         services.getTrafficService().getItemsType().subscribe(type -> {
             itemTypeComboBox.getItems().add(type);
             filterItemTypeComboBox.getItems().add(type);
         });
-        peopleTable.getItems().addAll(services.getPersonService().getPeople());
+
+
+
+
         services.getTrafficService().getAllTrafficTeam()
                 .doOnComplete(() -> teamTable.refresh())
-                .subscribe(teamTable.getItems()::add);
+                .subscribe(teams::add);
         services.getTrafficService().getTrafficVehicle()
                 .doOnComplete(() -> vehicleTable.refresh())
-                .subscribe(vehicleTable.getItems()::add);
+                .subscribe(vehicles::add);
     }
 }

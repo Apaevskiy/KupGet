@@ -16,7 +16,7 @@ import java.time.LocalDate;
 @Table(name = "written_of")
 public class WrittenOfProducts {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private double numberRequire;
     private double remaining;

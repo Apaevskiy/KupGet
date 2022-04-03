@@ -16,7 +16,7 @@ import java.time.Month;
 @ToString
 public class TrafficItemType {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     private int defaultDurationInMonth;

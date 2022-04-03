@@ -50,7 +50,7 @@
                            <Font size="18.0" />
                         </font>
                      </Button>
-                     <TextField fx:id="usernameField" alignment="CENTER" maxWidth="300.0" promptText="Username" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                     <TextField fx:id="usernameField" alignment="CENTER" maxWidth="300.0" promptText="Username" text="sanya" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
                         <padding>
                            <Insets bottom="5.0" left="3.0" right="3.0" top="5.0" />
                         </padding>
@@ -77,7 +77,7 @@
                            <Insets bottom="5.0" />
                         </padding>
                      </Label>
-                     <PasswordField fx:id="passwordField" alignment="CENTER" maxWidth="300.0" promptText="Password" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                     <PasswordField fx:id="passwordField" alignment="CENTER" maxWidth="300.0" promptText="Password" text="1101" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="TOP">
                         <padding>
                            <Insets bottom="5.0" left="3.0" right="3.0" top="5.0" />
                         </padding>
@@ -128,7 +128,7 @@
                      <Cursor fx:constant="HAND" />
                   </cursor>
                </Button>
-               <Label minWidth="0.0" text="Портал КУП ГЭТ" textFill="WHITE">
+               <Label fx:id="menuLabel" minWidth="0.0" text="Портал КУП ГЭТ" textFill="WHITE">
                   <font>
                      <Font name="Franklin Gothic Medium Cond" size="26.0" />
                   </font>

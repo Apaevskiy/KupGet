@@ -78,7 +78,7 @@ public class BadgeController extends MyAnchorPane {
                             || badge.getPerson().getFirstName().toLowerCase().contains(lowerCaseFilter)
                             || badge.getPerson().getMiddleName().toLowerCase().contains(lowerCaseFilter);
                 })
-                .addColumn(Boolean.class, col ->
+                .<Boolean>addColumn(col ->
                         col.header("")
                                 .property(TableColumn::cellValueFactoryProperty, cellData -> {
                                     BooleanProperty property = new SimpleBooleanProperty(cellData.getValue().isActive());
@@ -94,7 +94,7 @@ public class BadgeController extends MyAnchorPane {
                                 })
                                 .widthColumn(30)
                                 .property(TableColumn::cellFactoryProperty, CheckBoxTableCell.forTableColumn(col)))
-                .addColumn(Boolean.class, col -> col
+                .<Boolean>addColumn(col -> col
                         .header("Раз\nряд")
                         .property(TableColumn::cellValueFactoryProperty, cellData -> {
                             BooleanProperty property = new SimpleBooleanProperty(cellData.getValue().isRank());
@@ -119,13 +119,13 @@ public class BadgeController extends MyAnchorPane {
                             return photoIcon;
                         })
                         .widthColumn(50))
-                .addColumn(Integer.class, col -> col
+                .<Integer>addColumn(col -> col
                         .header("Коли\nчество")
                         .cellValueFactory(Badge::getAmount)
                         .editable(Badge::setAmount)
                         .cellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
                         .widthColumn(50))
-                .addColumn(Type.class, col -> col
+                .<Type>addColumn(col -> col
                         .header("Вид")
                         .cellValueFactory(Badge::getType)
                         .editable(Badge::setType)

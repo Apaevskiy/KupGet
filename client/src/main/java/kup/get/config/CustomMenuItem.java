@@ -56,10 +56,11 @@ public class CustomMenuItem {
         return this;
     }
 
-    public CustomMenuItem setEventOpenMenu(VBox box, AtomicReference<CustomMenuItem>  actualItem, GridPane returnButton) {
+    public CustomMenuItem setEventOpenMenu(VBox box, AtomicReference<CustomMenuItem>  actualItem, GridPane returnButton, Label menuLabel) {
         menuItem.setOnMouseClicked(event -> {
             actualItem.set(this);
             returnButton.setVisible(true);
+            menuLabel.setText(this.getText());
             box.getChildren().setAll(children.stream().sorted(Comparator.comparing(CustomMenuItem::getText)).map(CustomMenuItem::getMenuItem).collect(Collectors.toList()));
         });
         return this;

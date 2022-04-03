@@ -26,15 +26,15 @@ public class TrafficDaoService implements MyTrafficService {
     }
 
     public Mono<TrafficItemType> saveItemType(TrafficItemType type) {
-        return Mono.just(typeRepository.save(type));
+        return Mono.just(type).map(typeRepository::save);
     }
 
     public Mono<TrafficTeam> saveTrafficTeam(TrafficTeam trafficTeam) {
-        return Mono.just(teamRepository.save(trafficTeam));
+        return Mono.just(trafficTeam).map(teamRepository::save);
     }
 
     public Mono<TrafficVehicle> saveTrafficVehicle(TrafficVehicle trafficVehicle) {
-        return Mono.just(vehicleRepository.save(trafficVehicle));
+        return Mono.just(trafficVehicle).map(vehicleRepository::save);
     }
 
     public Mono<Void> deleteTrafficVehicle(TrafficVehicle vehicle) {
@@ -56,7 +56,7 @@ public class TrafficDaoService implements MyTrafficService {
     }
 
     public Mono<TrafficPerson> saveTrafficPerson(TrafficPerson trafficPerson) {
-        return Mono.just(personRepository.save(trafficPerson));
+        return Mono.just(trafficPerson).map(personRepository::save);
     }
 
     public Flux<TrafficPerson> getTrafficPeople() {
@@ -72,18 +72,18 @@ public class TrafficDaoService implements MyTrafficService {
     }
 
     public Mono<TrafficItem> saveTrafficItem(TrafficItem trafficItem) {
-        if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonId()!=null){
+        /*if(trafficItem.getPerson()!=null && trafficItem.getPerson().getPersonId()!=null){
             TrafficPerson person = personRepository.findFirstByPersonId(trafficItem.getPerson().getPersonId());
             if(person==null){
                 personRepository.save(trafficItem.getPerson());
             }
             trafficItem.setPerson(person);
-        }
-        return Mono.just(itemRepository.save(trafficItem));
+        }*/
+        return Mono.just(trafficItem).map(itemRepository::save);
     }
 
     public Flux<TrafficTeam> saveTrafficTeams(List<TrafficTeam> teams) {
-        return Flux.fromIterable(teamRepository.saveAll(teams));
+        return Flux.fromIterable(teams).map(teamRepository::save);
     }
 
     public Flux<TrafficVehicle> saveTrafficVehicles(List<TrafficVehicle> vehicles) {

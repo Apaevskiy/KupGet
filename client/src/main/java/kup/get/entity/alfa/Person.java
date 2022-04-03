@@ -31,7 +31,8 @@ public class Person  implements Serializable {
     private String lastName;
     private String firstName;
     private String middleName;
-    private int rank;
+
+    private Integer rank;
 
     @Transient
     transient private byte[] photo;

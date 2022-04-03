@@ -1,9 +1,6 @@
 package kup.get.entity.alfa;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -13,6 +10,7 @@ import javax.persistence.*;
 @Getter
 @Setter
 @NoArgsConstructor
+@ToString
 public class Person {
     @Id
     @Column(name = "KU")
@@ -35,6 +33,10 @@ public class Person {
     @Column(name = "IM")
     private String firstName;
 
+
     @Column(name = "OTCH")
     private String middleName;
+
+    @Column(name = "RAZR")
+    private Integer rank;
 }

@@ -1,9 +1,7 @@
 package kup.get.entity.traffic;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
+import kup.get.entity.alfa.Person;
+import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
@@ -13,6 +11,7 @@ import java.time.LocalDate;
 @Table(name = "traffic_item")
 @Getter
 @Setter
+@ToString
 public class TrafficItem {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -36,7 +35,10 @@ public class TrafficItem {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "person_id")
-    private TrafficPerson person;
+    private Person person;
+
+    @Transient
+    private TrafficPerson trafficPerson;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vehicle_id")

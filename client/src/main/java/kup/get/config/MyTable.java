@@ -21,20 +21,15 @@ import static javafx.scene.input.MouseEvent.MOUSE_CLICKED;
 
 
 public class MyTable<S> extends TableView<S> {
-    private final MyContextMenu contextMenu = new MyContextMenu().item("Обновить таблицу", e -> this.refresh());
+    private final MyContextMenu contextMenu = new MyContextMenu();
 
     public MyTable() {
-        this.setMinWidth(USE_PREF_SIZE);
+        contextMenu.item("Обновить таблицу", e -> this.refresh());
         this.addEventHandler(MOUSE_CLICKED, event -> {
             if (event.getButton() == MouseButton.SECONDARY) {
                 this.setContextMenu(contextMenu);
             }
         });
-    }
-
-    public <T> MyTable<S> addColumn(Class<T> type, Function<MyTableColumn<T>, MyTableColumn<T>> column) {
-        this.getColumns().add(column.apply(new MyTableColumn<>(null)));
-        return this;
     }
 
     public <T> MyTable<S> addColumn(Function<MyTableColumn<T>, MyTableColumn<T>> column) {
@@ -82,7 +77,7 @@ public class MyTable<S> extends TableView<S> {
             return this;
         }
 
-        public <t> MyTableColumn<T> childColumn(Function<MyTableColumn<T>, MyTableColumn<T>> column) {
+        public <t> MyTableColumn<T> childColumn(Function<MyTableColumn<t>, MyTableColumn<t>> column) {
             this.getColumns().add(column.apply(new MyTableColumn<>(null)));
             return this;
         }
@@ -97,11 +92,6 @@ public class MyTable<S> extends TableView<S> {
             });
             return this;
         }
-
-        /*public MyTableColumn<T> cellValueFactoryy(Callback<CellDataFeatures<S, T>, ObservableValue<T>> value) {
-            this.setCellValueFactory(value);
-            return this;
-        }*/
 
         public MyTableColumn<T> cellFactory(Callback<TableColumn<S, T>, TableCell<S, T>> columnCallback) {
             this.setCellFactory(columnCallback);
@@ -127,6 +117,7 @@ public class MyTable<S> extends TableView<S> {
         public MyContextMenu item(String name, EventHandler<ActionEvent> action) {
             MenuItem menuItem = new MenuItem(name);
             menuItem.setOnAction(action);
+            contextMenu.getItems().add(menuItem);
             return this;
         }
 
@@ -135,10 +126,12 @@ public class MyTable<S> extends TableView<S> {
             contextMenu.getItems().add(function.apply(menu));
             return this;
         }
+
         class MyMenu extends Menu {
             public MyMenu(String title) {
                 super(title);
             }
+
             public MyContextMenu.MyMenu item(String name, EventHandler<ActionEvent> action) {
                 MenuItem menuItem = new MenuItem(name);
                 menuItem.setOnAction(action);

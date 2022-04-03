@@ -2,12 +2,12 @@ package kup.get.controller.asu;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.CheckBoxListCell;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
-import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
 import kup.get.entity.security.Role;
 import kup.get.entity.security.User;
@@ -45,18 +45,35 @@ public class UsersController extends MyAnchorPane {
     private User user;
 
     private final List<Role> roles = new ArrayList<>();
-    private final List<User> users = new ArrayList<>();
+    private final ObservableList<User> users = FXCollections.observableArrayList();
 
     public UsersController(PersonSocketService services) {
         this.services = services;
 
         usersTable
-                .setMyContextMenu(userCM())
+                .contextMenu(cm -> cm
+                        .item("Добавить пользователя", event -> {
+                            user = null;
+                            loginField.setText("");
+                            nameField.setText("");
+                            numberField.setText("");
+                            passwordField.setText("");
+                            rolesView.getItems().forEach(u -> u.getChanged().set(false));
+                        })
+                        .item("Удалить пользователя", event -> {
+                            SelectionModel<User> model = usersTable.getSelectionModel();
+                            if (model != null && model.getSelectedItem() != null) {
+                                services.deleteUser(model.getSelectedItem())
+                                        .doOnError(e -> Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить пользователя")))
+                                        .doOnSuccess(b -> usersTable.getItems().remove(model.getSelectedItem()))
+                                        .subscribe();
+                            }
+                        }))
                 .items(users)
-                .column("id", User::getId).setInvisible().and()
-                .addColumn("login", User::getUsername)
-                .addColumn("ФИО", User::getFIO)
-                .addColumn("Таб. №", User::getTabNum);
+                .addColumn(col -> col.header("id").cellValueFactory(User::getId).property(TableColumnBase::visibleProperty, false))
+                .addColumn(col -> col.header("login").cellValueFactory(User::getUsername))
+                .addColumn(col -> col.header("ФИО").cellValueFactory(User::getFIO))
+                .addColumn(col -> col.header("Таб. №").cellValueFactory(User::getTabNum));
 
         rolesView.setCellFactory(CheckBoxListCell.forListView(Role::getChanged));
         rolesView.setItems(FXCollections.observableArrayList(roles));
@@ -70,7 +87,7 @@ public class UsersController extends MyAnchorPane {
                 if (user == null) {
                     user = new User();
                 }
-                user.setRoles(rolesView.getItems().stream().filter(r -> r.getChanged().get()).collect(Collectors.toSet()));
+                user.setRoles(roles.stream().filter(r -> r.getChanged().get()).collect(Collectors.toSet()));
                 user.setUsername(loginField.getText());
                 user.setFIO(nameField.getText());
                 user.setTabNum(numberField.getText().isEmpty() ? null : Long.valueOf(numberField.getText()));
@@ -90,7 +107,7 @@ public class UsersController extends MyAnchorPane {
                             nameField.setText("");
                             numberField.setText("");
                             passwordField.setText("");
-                            rolesView.getItems().forEach(us -> us.getChanged().set(false));
+                            roles.forEach(us -> us.getChanged().set(false));
                         })
                         .subscribe();
             } catch (NumberFormatException e) {
@@ -108,33 +125,12 @@ public class UsersController extends MyAnchorPane {
                     loginField.setText(user.getUsername());
                     nameField.setText(user.getFIO());
                     numberField.setText(String.valueOf(user.getTabNum()));
-                    rolesView.getItems().forEach(role -> role.getChanged().set(user.getRoles().contains(role)));
+                    roles.forEach(role -> role.getChanged().set(user.getRoles().contains(role)));
                     rolesView.refresh();
                 }
             });
             return row;
         });
-    }
-
-    private ContextMenu userCM() {
-        return MyContextMenu.builder()
-                .item("Добавить пользователя", event -> {
-                    user = null;
-                    loginField.setText("");
-                    nameField.setText("");
-                    numberField.setText("");
-                    passwordField.setText("");
-                    rolesView.getItems().forEach(u -> u.getChanged().set(false));
-                })
-                .item("Удалить пользователя", event -> {
-                    SelectionModel<User> model = usersTable.getSelectionModel();
-                    if (model != null && model.getSelectedItem() != null) {
-                        services.deleteUser(model.getSelectedItem())
-                                .doOnError(e -> Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить пользователя")))
-                                .doOnSuccess(b -> usersTable.getItems().remove(model.getSelectedItem()))
-                                .subscribe();
-                    }
-                });
     }
 
     @Override

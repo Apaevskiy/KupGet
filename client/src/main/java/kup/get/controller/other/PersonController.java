@@ -9,7 +9,6 @@ import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
-import kup.get.config.FX.MyContextMenu;
 import kup.get.config.MyTable;
 import kup.get.entity.alfa.Department;
 import kup.get.entity.alfa.Person;
@@ -33,35 +32,63 @@ public class PersonController extends MyAnchorPane {
         this.service = service;
 
         peopleTable
-                .setMyContextMenu(createContextMenu())
-                .addColumn("Таб.№",
-                        Person::getPersonnelNumber,
-                        savePerson(Person::setPersonnelNumber),
-                        TextFieldTableCell.forTableColumn())
-                .addColumn("Фамилия",
-                        Person::getLastName,
-                        savePerson(Person::setLastName),
-                        TextFieldTableCell.forTableColumn())
-                .addColumn("Имя",
-                        Person::getFirstName,
-                        savePerson(Person::setFirstName),
-                        TextFieldTableCell.forTableColumn())
-                .addColumn("Отчество",
-                        Person::getMiddleName,
-                        savePerson(Person::setMiddleName),
-                        TextFieldTableCell.forTableColumn())
-                .addColumn("Разряд",
-                        Person::getRank,
-                        savePerson(Person::setRank),
-                        TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
-                .addColumn("Должность",
-                        p -> p.getPosition().getName(),
-                        savePosition(),
-                        TextFieldTableCell.forTableColumn())
-                .addColumn("Подразделение",
-                        p -> p.getDepartment().getName(),
-                        saveDepartment(),
-                        TextFieldTableCell.forTableColumn());
+                .contextMenu(cm -> cm
+                        .item("Добавить", e -> {
+                            peopleTable.getItems().add(new Person());
+                            peopleTable.getSelectionModel().selectLast();
+                            peopleTable.refresh();
+                        })
+                        .item("Удалить", e -> {
+                            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                            alert.setTitle("Подтверждение");
+                            alert.setHeaderText("Вы действительно хотите удалить сотрудника?");
+                            alert.setContentText("Нажмите ОК для удаление и Cancel для отмены");
+
+                            Optional<ButtonType> option = alert.showAndWait();
+                            if (option.isPresent() && option.get() == ButtonType.OK) {
+                                SelectionModel<Person> model = peopleTable.getSelectionModel();
+                                if (model != null && model.getSelectedItem() != null) {
+                                    service.deletePerson(model.getSelectedItem());
+                                    peopleTable.getItems().remove(model.getSelectedItem());
+                                    peopleTable.refresh();
+                                }
+                            }
+                        }))
+                .<String>addColumn(col -> col
+                        .header("Таб.№")
+                        .cellValueFactory(Person::getPersonnelNumber)
+                        .editable(savePerson(Person::setPersonnelNumber))
+                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                .<String>addColumn(col -> col
+                        .header("Фамилия")
+                        .cellValueFactory(Person::getLastName)
+                        .editable(savePerson(Person::setLastName))
+                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                .<String>addColumn(col -> col
+                        .header("Имя")
+                        .cellValueFactory(Person::getFirstName)
+                        .editable(savePerson(Person::setFirstName))
+                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                .<String>addColumn(col -> col
+                        .header("Отчество")
+                        .cellValueFactory(Person::getMiddleName)
+                        .editable(savePerson(Person::setMiddleName))
+                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                .<Integer>addColumn(col -> col
+                        .header("Разряд")
+                        .cellValueFactory(Person::getRank)
+                        .editable(savePerson(Person::setRank))
+                        .cellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter())))
+                .<String>addColumn(col -> col
+                        .header("Должность")
+                        .cellValueFactory( p -> p.getPosition().getName())
+                        .editable(savePosition())
+                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                .<String>addColumn(col -> col
+                        .header("Подразделение")
+                        .cellValueFactory( p -> p.getDepartment().getName())
+                        .editable(saveDepartment())
+                        .cellFactory(TextFieldTableCell.forTableColumn()));
     }
 
     private BiConsumer<Person, String> saveDepartment() {
@@ -76,7 +103,7 @@ public class PersonController extends MyAnchorPane {
                 })
                 .andThen((person, t) -> {
                     Person per = service.savePerson(person);
-                    if(per!=null)
+                    if (per != null)
                         person.setDepartment(per.getDepartment());
                 });
     }
@@ -91,17 +118,17 @@ public class PersonController extends MyAnchorPane {
                     }
                     person.setPosition(position);
                 })
-                .andThen((person, t) ->{
+                .andThen((person, t) -> {
                     Person per = service.savePerson(person);
-                    if(per!=null)
+                    if (per != null)
                         person.setPosition(per.getPosition());
                 });
     }
 
     private <T> BiConsumer<Person, T> savePerson(BiConsumer<Person, T> consumer) {
-        return consumer.andThen((person, t) ->{
+        return consumer.andThen((person, t) -> {
             Person p = service.savePerson(person);
-            if (person != null && p != null){
+            if (person != null && p != null) {
                 person.setId(p.getId());
                 person.setFirstName(p.getFirstName());
                 person.setLastName(p.getLastName());
@@ -110,31 +137,6 @@ public class PersonController extends MyAnchorPane {
                 person.setPersonnelNumber(p.getPersonnelNumber());
             }
         });
-    }
-
-    private ContextMenu createContextMenu() {
-        return MyContextMenu.builder()
-                .item("Добавить", e -> {
-                    peopleTable.getItems().add(new Person());
-                    peopleTable.getSelectionModel().selectLast();
-                    peopleTable.refresh();
-                })
-                .item("Удалить", e -> {
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Подтверждение");
-                    alert.setHeaderText("Вы действительно хотите удалить сотрудника?");
-                    alert.setContentText("Нажмите ОК для удаление и Cancel для отмены");
-
-                    Optional<ButtonType> option = alert.showAndWait();
-                    if (option.isPresent() && option.get() == ButtonType.OK) {
-                        SelectionModel<Person> model = peopleTable.getSelectionModel();
-                        if (model != null && model.getSelectedItem() != null) {
-                            service.deletePerson(model.getSelectedItem());
-                            peopleTable.getItems().remove(model.getSelectedItem());
-                            peopleTable.refresh();
-                        }
-                    }
-                });
     }
 
     @Override

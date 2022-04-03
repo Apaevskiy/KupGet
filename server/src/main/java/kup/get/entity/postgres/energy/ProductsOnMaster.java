@@ -17,7 +17,7 @@ import java.time.LocalDate;
 @Table(name = "products_on_master")
 public class ProductsOnMaster {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private double numberRequire;
     private double remaining;

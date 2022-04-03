@@ -13,7 +13,7 @@ import javax.persistence.*;
 @ToString
 public class Version {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
 //    @Column(unique = true)
     private String release;
