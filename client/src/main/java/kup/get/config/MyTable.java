@@ -1,8 +1,7 @@
 package kup.get.config;
 
 
-import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -52,9 +51,18 @@ public class MyTable<S> extends TableView<S> {
         return this;
     }
 
-    public MyTable<S> searchBox(TextField searchField, Function<S, Boolean> function) {
+    public MyTable<S> searchBox(StringProperty property, Function<S, Boolean> function) {
         FilteredList<S> filteredData = new FilteredList<>(this.getItems(), b -> true);
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> filteredData.setPredicate(function::apply));
+        property.addListener((observable, oldValue, newValue) -> filteredData.setPredicate(function::apply));
+        SortedList<S> sortedData = new SortedList<>(filteredData);
+        sortedData.comparatorProperty().bind(this.comparatorProperty());
+        this.setItems(sortedData);
+        return this;
+    }
+
+    public MyTable<S> searchBox(ObjectProperty<EventHandler<ActionEvent>> property, Function<S, Boolean> function) {
+        FilteredList<S> filteredData = new FilteredList<>(this.getItems(), b -> true);
+        property.set(event -> filteredData.setPredicate(function::apply));
         SortedList<S> sortedData = new SortedList<>(filteredData);
         sortedData.comparatorProperty().bind(this.comparatorProperty());
         this.setItems(sortedData);

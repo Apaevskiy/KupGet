@@ -3,6 +3,8 @@ package kup.get.controller.traffic;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TextField;
@@ -27,14 +29,25 @@ public class TrafficItemTypeController extends MyAnchorPane {
     private TextField searchItemTypeField;
 
     private final Services services;
+    private final ObservableList<TrafficItemType> types = FXCollections.observableArrayList();
 
     public TrafficItemTypeController(Services services) {
         this.services = services;
         itemTypeTable
+                .items(types)
+                .searchBox(searchItemTypeField.textProperty(), type -> {
+                    if (searchItemTypeField.getText() == null || searchItemTypeField.getText().isEmpty()) {
+                        return true;
+                    }
+                    String lowerCaseFilter = searchItemTypeField.getText().toLowerCase();
+
+                    return type.getName().toLowerCase().contains(lowerCaseFilter)
+                            || String.valueOf(type.getDefaultDurationInMonth()).contains(lowerCaseFilter);
+                })
                 .contextMenu(myContextMenu ->
                         myContextMenu.item("Добавить", e -> {
-                            if (itemTypeTable.getItems().size() == 0 || itemTypeTable.getItems().get(itemTypeTable.getItems().size() - 1).getId() != null) {
-                                itemTypeTable.getItems().add(new TrafficItemType());
+                            if (types.size() == 0 || types.get(types.size() - 1).getId() != null) {
+                                types.add(new TrafficItemType());
                                 itemTypeTable.getSelectionModel().selectLast();
                             } else {
                                 itemTypeTable.getSelectionModel().selectLast();
@@ -89,14 +102,14 @@ public class TrafficItemTypeController extends MyAnchorPane {
 
     @Override
     public void clearData() {
-        itemTypeTable.getItems().clear();
+        types.clear();
     }
 
     @Override
     public void fillData() {
         services.getTrafficService()
                 .getItemsType()
-                .doOnNext(item -> itemTypeTable.getItems().add(item))
+                .doOnNext(types::add)
                 .doOnComplete(() -> itemTypeTable.refresh())
                 .subscribe();
     }

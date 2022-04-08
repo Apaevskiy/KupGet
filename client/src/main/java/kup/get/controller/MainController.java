@@ -4,15 +4,12 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIcon;
 import de.jensd.fx.glyphs.materialdesignicons.MaterialDesignIconView;
-import de.jensd.fx.glyphs.materialicons.MaterialIcon;
-import de.jensd.fx.glyphs.materialicons.MaterialIconView;
 import de.jensd.fx.glyphs.octicons.OctIcon;
 import de.jensd.fx.glyphs.octicons.OctIconView;
 import de.jensd.fx.glyphs.weathericons.WeatherIcon;
 import de.jensd.fx.glyphs.weathericons.WeatherIconView;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
-import javafx.animation.SequentialTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -22,7 +19,7 @@ import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-import kup.get.config.CustomMenuItem;
+import kup.get.config.FX.CustomMenuItem;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.controller.asu.BadgeController;
@@ -36,6 +33,7 @@ import kup.get.controller.traffic.TeamAndVehicleController;
 import kup.get.controller.traffic.TrafficItemTypeController;
 import kup.get.service.Services;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Hooks;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
@@ -77,8 +75,16 @@ public class MainController extends MyAnchorPane {
     @FXML
     private Button loginButton;
 
+    @FXML
+    private GridPane errorPane;
+    @FXML
+    private Button exitButton;
+    @FXML
+    private Button reconnectButton;
+    @FXML
+    private Button offlineButton;
+
     private final AtomicReference<CustomMenuItem> actualMenuItem = new AtomicReference<>(CustomMenuItem.builder());
-    private final AtomicReference<SequentialTransition> transition;
     private final List<CustomMenuItem> customMenuItemList = new ArrayList<>();
     private final Services services;
     private boolean checkHiddenMenu = true;
@@ -93,16 +99,22 @@ public class MainController extends MyAnchorPane {
                           UpdateController updateController,
                           UsersController usersController,
                           ScheduleController scheduleController,
-                          AtomicReference<SequentialTransition> transition, Services services) {
-        this.transition = transition;
+                          Services services) {
         this.services = services;
         this.setVisible(true);
         this.setOpacity(1);
 
-
         mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController,
                 badgeController, importExportController, usersController, updateController,
                 scheduleController, personController);
+
+        Hooks.onErrorDropped(err -> Platform.runLater(() -> {
+            workPlace.setOpacity(0);
+            workPlace.setVisible(false);
+            errorPane.setOpacity(1);
+            errorPane.setVisible(true);
+        }));
+
 
         customMenuItemList.add(
                 CustomMenuItem.builder()
@@ -114,7 +126,7 @@ public class MainController extends MyAnchorPane {
                                         .menuItem("Отчёты", new MaterialDesignIconView(MaterialDesignIcon.CLIPBOARD_TEXT))
                                         .setEventSwitchPane(event -> hiddenPages(itemController)),
                                 CustomMenuItem.builder()
-                                        .menuItem("Перечень пунктов", new MaterialIconView(MaterialIcon.WIDGETS))
+                                        .menuItem("Перечень пунктов", new FontAwesomeIconView(FontAwesomeIcon.CART_PLUS))
                                         .setEventSwitchPane(event -> hiddenPages(typeController)),
                                 CustomMenuItem.builder()
                                         .menuItem("Экипажи и ТС", new FontAwesomeIconView(FontAwesomeIcon.USERS))
@@ -185,7 +197,7 @@ public class MainController extends MyAnchorPane {
                 CustomMenuItem parent = actualMenuItem.get().getParent();
                 if (parent != null) {
                     CustomMenuItem.addToPane(vBoxMenuItems, parent.getChildren());
-                    if (parent.getParent() == null){
+                    if (parent.getParent() == null) {
                         returnButton.setVisible(false);
                         menuLabel.setText("Портал КУП ГЭТ");
                     }
@@ -212,20 +224,41 @@ public class MainController extends MyAnchorPane {
         logoutButton.setOnAction(event -> {
             services.closeConnection();
             vBoxMenuItems.getChildren().clear();
-            transition.set(switchPaneTransition(workPlace, loginPane));
-            transition.get().play();
+            switchPaneTransition(workPlace, loginPane).play();
             actualPane.setOpacity(0);
             actualPane.setVisible(false);
             passwordField.setText("");
         });
+        offlineButton.setOnAction(event -> {
+            errorPane.setOpacity(0);
+            errorPane.setVisible(false);
+
+            this.addCustomMenuItems("AFK");
+            switchPaneTransition(loginPane, workPlace).play();
+        });
+        reconnectButton.setOnAction(event -> {
+            errorPane.setOpacity(0);
+            errorPane.setVisible(false);
+            connectToServer();
+        });
+        exitButton.setOnAction(event -> System.exit(0));
     }
 
     @PostConstruct
     void connectToServer() {
         services.createClientTransport()
+                .doOnSuccess(dc -> {
+                    loginPane.setOpacity(1);
+                    loginPane.setVisible(true);
+                })
                 .doOnError(throwable -> {
                     if (throwable.getMessage().contains("Connection refused")) {
-                        Platform.runLater(this::afk);
+                        Platform.runLater(() -> {
+                            loginPane.setOpacity(0);
+                            loginPane.setVisible(false);
+                            errorPane.setOpacity(1);
+                            errorPane.setVisible(true);
+                        });
                     } else {
                         Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage()));
                     }
@@ -247,49 +280,19 @@ public class MainController extends MyAnchorPane {
                 .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage())))
                 .doOnComplete(() -> {
                     services.getPersonService().updatePeople();
-                    transition.set(switchPaneTransition(loginPane, workPlace));
-                    transition.get().play();
+                    switchPaneTransition(loginPane, workPlace).play();
                 })
                 .subscribe(s -> Platform.runLater(() -> this.addCustomMenuItems(s)));
     }
 
-    void afk() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-
-        alert.setTitle("Ошибка соединения");
-        alert.setHeaderText("Не удалось подключиться к серверу!");
-        alert.setContentText("Продолжить работу в автономном режиме?\n" +
-                "Часть функционала программы будет недоступна.");
-        ButtonType offlineButton = new ButtonType("Автономный\nрежим");
-        ButtonType reconnectButton = new ButtonType("Подключиться\nснова");
-        ButtonType exitButton = new ButtonType("Выход");
-        alert.getButtonTypes().clear();
-
-        alert.getButtonTypes().addAll(offlineButton, reconnectButton, exitButton);
-
-        Optional<ButtonType> option = alert.showAndWait();
-
-        if (option.isPresent() && option.get() == offlineButton) {
-            this.addCustomMenuItems("AFK");
-            transition.set(switchPaneTransition(loginPane, workPlace));
-            transition.get().play();
-            loginButton.setDisable(false);
-        } else if (option.isPresent() && option.get() == reconnectButton) {
-            connectToServer();
-        } else {
-            System.exit(130);
-        }
-    }
-
     private void hiddenPages(MyAnchorPane appearancePane) {
         if (actualPane != null) {
-            transition.set(switchPaneTransition(actualPane, appearancePane));
+            switchPaneTransition(actualPane, appearancePane).play();
             actualPane.clearData();
         } else {
-            transition.set(appearancePaneTransition(appearancePane));
+            appearancePaneTransition(appearancePane).play();
         }
         appearancePane.fillData();
-        transition.get().play();
         actualPane = appearancePane;
     }
 

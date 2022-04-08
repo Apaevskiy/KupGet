@@ -20,7 +20,7 @@
 <?import javafx.scene.text.Font?>
 <?import kup.get.config.MyTable?>
 
-<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
     <GridPane fx:id="itemsPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <columnConstraints>
          <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" />
@@ -39,7 +39,6 @@
              <Insets bottom="2.0" left="3.0" right="3.0" top="2.0" />
          </padding>
         </ComboBox>
-        <Button fx:id="excelButton" disable="true" mnemonicParsing="false" prefHeight="27.0" prefWidth="76.0" styleClass="clickButton" text="Excel" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowSpan="2" GridPane.valignment="CENTER" />
       <ComboBox fx:id="filterItemTypeComboBox" prefHeight="0.0" prefWidth="206.0" promptText="Транспортное средство" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
          <padding>
             <Insets bottom="2.0" left="3.0" right="3.0" top="2.0" />
@@ -69,6 +68,14 @@
             </TextField>
          </children>
       </HBox>
+      <Button fx:id="excelButton" alignment="CENTER" mnemonicParsing="false" styleClass="testButton" text="Выгрузить в Excel" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowSpan="2" GridPane.valignment="CENTER">
+         <graphic>
+            <FontAwesomeIconView fill="WHITE" glyphName="TABLE" size="20" />
+         </graphic>
+         <font>
+            <Font size="16.0" />
+         </font>
+      </Button>
     </GridPane>
    <GridPane fx:id="addItemPane" opacity="0.0" visible="false" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
      <columnConstraints>

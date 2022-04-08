@@ -19,6 +19,7 @@ import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.config.MyTable;
+import kup.get.config.FX.RomanNumber;
 import kup.get.entity.alfa.Person;
 import kup.get.service.Services;
 import lombok.AllArgsConstructor;
@@ -65,7 +66,7 @@ public class BadgeController extends MyAnchorPane {
 
         peopleTable
                 .items(people)
-                .searchBox(searchField, badge -> {
+                .searchBox(searchField.textProperty(), badge -> {
                     if (searchField.getText() == null || searchField.getText().isEmpty()) {
                         return true;
                     }
@@ -94,15 +95,12 @@ public class BadgeController extends MyAnchorPane {
                                 })
                                 .widthColumn(30)
                                 .property(TableColumn::cellFactoryProperty, CheckBoxTableCell.forTableColumn(col)))
-                .<Boolean>addColumn(col -> col
+                .<Integer>addColumn(col -> col
                         .header("Раз\nряд")
-                        .property(TableColumn::cellValueFactoryProperty, cellData -> {
-                            BooleanProperty property = new SimpleBooleanProperty(cellData.getValue().isRank());
-                            property.addListener((observable, oldValue, newValue) -> cellData.getValue().setRank(newValue));
-                            return property;
-                        })
-                        .property(TableColumn::cellFactoryProperty, CheckBoxTableCell.forTableColumn(col))
-                        .widthColumn(30))
+                        .cellValueFactory(badge -> badge.getPerson().getRank())
+                        .editable((badge, v) -> badge.getPerson().setRank(v))
+                        .cellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()))
+                        .widthColumn(50))
                 .addColumn(col -> col
                         .header("Фото")
                         .cellValueFactory(badge -> {
@@ -157,7 +155,7 @@ public class BadgeController extends MyAnchorPane {
             smallBadges.setColumnWidth(4, 4265);
 
             int row = 0, column = 1;
-            for (Badge badge : peopleTable.getItems().stream()
+            for (Badge badge : people.stream()
                     .filter(badge -> badge.isActive() && !badge.getType().equals(Type.SMALL))
                     .collect(Collectors.toList())) {
                 for (int i = 0; i < badge.getAmount(); i++) {
@@ -175,7 +173,7 @@ public class BadgeController extends MyAnchorPane {
             }
             row = 0;
             column = 1;
-            for (Badge badge : peopleTable.getItems().stream()
+            for (Badge badge : people.stream()
                     .filter(badge -> badge.isActive() && !badge.getType().equals(Type.BIG))
                     .collect(Collectors.toList())) {
                 for (int i = 0; i < badge.getAmount(); i++) {
@@ -219,9 +217,10 @@ public class BadgeController extends MyAnchorPane {
         getRow(sheet, rowNum++, 25 * 20);
 
         row = getRow(sheet, rowNum++, 25 * 20);
+        System.out.println(badge.getPerson().getRank());
         generateCell(row, colNum + 1,
-                badge.isRank()
-                        ? badge.getPerson().getPosition().getName() + "\n" + /*RomanNumber.toRoman(badge.getPerson().getRank()) +*/ "I класса"
+                badge.getPerson().getRank()!=null
+                        ? badge.getPerson().getPosition().getName() + "\n" + RomanNumber.toRoman(badge.getPerson().getRank()) + " класса"
                         : badge.getPerson().getPosition().getName(),
                 HSSFColor.HSSFColorPredefined.RED, 10);
 

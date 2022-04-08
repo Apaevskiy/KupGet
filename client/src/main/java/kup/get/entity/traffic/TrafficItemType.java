@@ -1,12 +1,10 @@
 package kup.get.entity.traffic;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 @Table(name = "traffic_item_type")
@@ -14,6 +12,7 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class TrafficItemType implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

@@ -29,9 +29,9 @@ public class TrafficItem {
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.DETACH})
     @JoinColumn(name = "team_id")
     private TrafficTeam team;
-    @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.DETACH})
-    @JoinColumn(name = "person_id")
-    private TrafficPerson trafficPerson;
+
+    private Long person;
+
     @ManyToOne(fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.DETACH})
     @JoinColumn(name = "vehicle_id")
     private TrafficVehicle vehicle;

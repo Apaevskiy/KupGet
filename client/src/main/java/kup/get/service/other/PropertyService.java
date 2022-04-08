@@ -12,8 +12,8 @@ public class PropertyService {
     private final Map<String, String> properties = new HashMap<>();
     private File file;
 
-    /*public PropertyService() {
-        try {
+    public PropertyService() {
+        /*try {
             file = ResourceUtils.getFile("classpath:setting.properties");
             BufferedReader reader = new BufferedReader(new FileReader(file));
             String line;
@@ -23,18 +23,7 @@ public class PropertyService {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        }
-    }*/
-    public String getIpServer(){
-        return properties.get("server.ip");
-    }
-    public int getPortServer(){
-        return Integer.parseInt(properties.get("server.port"));
-    }
-    public void saveServerConfig(String ip, String port){
-        properties.put("server.ip", ip);
-        properties.put("server.port", port);
-        writeProperties();
+        }*/
     }
 
     private void writeProperties() {

@@ -4,8 +4,6 @@ import io.rsocket.DuplexConnection;
 import io.rsocket.SocketAcceptor;
 import io.rsocket.metadata.WellKnownMimeType;
 import io.rsocket.transport.netty.client.TcpClientTransport;
-import kup.get.controller.MainController;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
@@ -19,8 +17,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Objects;
 
 @Component
+@Slf4j
 public class RSocketClientBuilderImpl {
     private RSocketRequester requester;
     private final RSocketRequester.Builder builder;
@@ -50,7 +50,6 @@ public class RSocketClientBuilderImpl {
     public RSocketRequester getRequester() {
         return requester;
     }
-
     @Slf4j
     static class ClientHandler {
         @MessageMapping("client-status")

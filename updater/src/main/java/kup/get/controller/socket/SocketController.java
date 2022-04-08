@@ -19,13 +19,13 @@ public class SocketController {
 
     public Mono<Version> getActualVersion() {
         return config.getRequester()
-                .route("getActualVersion")
+                .route("update.getActualVersion")
                 .retrieveMono(Version.class);
     }
 
     public List<FileOfProgram> getUpdateFiles(Version version) {
         return config.getRequester()
-                .route("getUpdates")
+                .route("update.getUpdates")
                 .data(version)
                 .retrieveFlux(FileOfProgram.class)
                 .collect(Collectors.toList())
@@ -34,7 +34,7 @@ public class SocketController {
 
     public List<FileOfProgram> getSavedFiles() {
         return config.getRequester()
-                .route("filesSaved")
+                .route("update.filesSaved")
                 .retrieveFlux(FileOfProgram.class)
                 .collect(Collectors.toList())
                 .block();
@@ -42,7 +42,7 @@ public class SocketController {
 
     public List<Version> getUpdateInformation(Version version) {
         return config.getRequester()
-                .route("informationAboutUpdate")
+                .route("update.informationAboutUpdate")
                 .data(version)
                 .retrieveFlux(Version.class)
                 .collect(Collectors.toList())

@@ -33,10 +33,6 @@ public class Person {
     @Column(name = "IM")
     private String firstName;
 
-
     @Column(name = "OTCH")
     private String middleName;
-
-    @Column(name = "RAZR")
-    private Integer rank;
 }

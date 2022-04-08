@@ -2,4 +2,6 @@
 
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane fx:id="workPlace" prefHeight="450.0" prefWidth="650.0" stylesheets="@../css/test.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kup.get.controller.MainController" />
+<fx:root prefHeight="650.0" prefWidth="1000.0" stylesheets="@../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane fx:id="workPlace" prefHeight="450.0" prefWidth="650.0" stylesheets="@../css/test.css" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1"/>
+</fx:root>

@@ -6,8 +6,13 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.config.MyTable;
@@ -18,10 +23,23 @@ import kup.get.entity.traffic.TrafficTeam;
 import kup.get.entity.traffic.TrafficVehicle;
 import kup.get.service.Services;
 import lombok.AllArgsConstructor;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.util.CellRangeAddress;
 
+import java.awt.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Date;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @FxmlLoader(path = "/fxml/traffic/items.fxml")
 public class ItemController extends MyAnchorPane {
@@ -82,14 +100,60 @@ public class ItemController extends MyAnchorPane {
     private final ObservableList<TrafficItem> items = FXCollections.observableArrayList();
     private final ObservableList<TrafficTeam> teams = FXCollections.observableArrayList();
     private final ObservableList<TrafficVehicle> vehicles = FXCollections.observableArrayList();
+    private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
     public ItemController(Services services, AtomicReference<SequentialTransition> sequentialTransition) {
         this.services = services;
         this.transition = sequentialTransition;
         ownerComboBox.setItems(FXCollections.observableArrayList(Owner.values()));
+
         itemTable
                 .items(items)
-                .searchBox(searchItemField, item -> {
+                .searchBox(ownerComboBox.onActionProperty(), item -> {
+                    Owner owner = ownerComboBox.getSelectionModel().getSelectedItem();
+
+                    if (owner == null)
+                        return true;
+
+                    switch (owner) {
+                        case TEAM: {
+                            itemTable.getColumns().forEach(column -> column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
+                            return item.getTeam() != null;
+                        }
+                        case All: {
+                            itemTable.getColumns().forEach(column -> column.setVisible(true));
+                            return true;
+                        }
+                        case VEHICLE: {
+                            itemTable.getColumns().forEach(column -> column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
+                            return item.getVehicle() != null;
+                        }
+                        case PERSON: {
+                            itemTable.getColumns().forEach(column -> column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
+                            return item.getTransientPerson() != null || item.getPerson() != null;
+                        }
+                    }
+                    return true;
+                })
+                .searchBox(filterItemTypeComboBox.onActionProperty(), item -> {
+                    TrafficItemType type = filterItemTypeComboBox.getSelectionModel().getSelectedItem();
+                    if (type == null)
+                        return true;
+                    return item.getType().equals(type);
+                })
+                .searchBox(startDatePricker.onActionProperty(), item -> {
+                    LocalDate date = startDatePricker.getValue();
+                    if (date == null)
+                        return true;
+                    return item.getDateFinish().isAfter(date);
+                })
+                .searchBox(finishDatePicker.onActionProperty(), item -> {
+                    LocalDate date = finishDatePicker.getValue();
+                    if (date == null)
+                        return true;
+                    return item.getDateFinish().isBefore(date);
+                })
+                .searchBox(searchItemField.textProperty(), item -> {
                     if (searchItemField.getText() == null || searchItemField.getText().isEmpty()) {
                         return true;
                     }
@@ -97,20 +161,25 @@ public class ItemController extends MyAnchorPane {
                     String lowerCaseFilter = searchItemField.getText().toLowerCase();
                     if (item == null)
                         return false;
-                    if (item.getPerson() != null && (item.getPerson().getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
-                            || item.getPerson().getLastName().toLowerCase().contains(lowerCaseFilter)
-                            || item.getPerson().getFirstName().toLowerCase().contains(lowerCaseFilter)
-                            || item.getPerson().getMiddleName().toLowerCase().contains(lowerCaseFilter)))
+                    if (item.getTransientPerson() != null &&
+                            (item.getTransientPerson().getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
+                                    || item.getTransientPerson().getLastName().toLowerCase().contains(lowerCaseFilter)
+                                    || item.getTransientPerson().getFirstName().toLowerCase().contains(lowerCaseFilter)
+                                    || item.getTransientPerson().getMiddleName().toLowerCase().contains(lowerCaseFilter)))
+                        return true;
+                    if (item.getTeam() != null &&
+                            (item.getTeam().getNumber().toLowerCase().contains(lowerCaseFilter)
+                                    || item.getTeam().getWorkingMode().toLowerCase().contains(lowerCaseFilter)))
+                        return true;
+                    if (item.getVehicle() != null && (
+                            String.valueOf(item.getVehicle().getNumber()).toLowerCase().contains(lowerCaseFilter)
+                                    || item.getVehicle().getModel().toLowerCase().contains(lowerCaseFilter)))
                         return true;
 
                     return item.getType().getName().toLowerCase().contains(lowerCaseFilter)
                             || item.getDescription().toLowerCase().contains(lowerCaseFilter)
                             || item.getDateStart().toString().toLowerCase().contains(lowerCaseFilter)
-                            || item.getDateFinish().toString().toLowerCase().contains(lowerCaseFilter)
-                            || item.getTeam().getNumber().toLowerCase().contains(lowerCaseFilter)
-                            || item.getTeam().getWorkingMode().toLowerCase().contains(lowerCaseFilter)
-                            || String.valueOf(item.getVehicle().getNumber()).toLowerCase().contains(lowerCaseFilter)
-                            || item.getVehicle().getModel().toLowerCase().contains(lowerCaseFilter);
+                            || item.getDateFinish().toString().toLowerCase().contains(lowerCaseFilter);
                 })
                 .contextMenu(cm -> cm.item("Добавить", event -> switchPane(itemsPane, addItemPane)))
                 .addColumn(itemColumn -> itemColumn
@@ -118,15 +187,43 @@ public class ItemController extends MyAnchorPane {
                         .childColumn(col -> col.header("id").cellValueFactory(TrafficItem::getId).property(TableColumnBase::visibleProperty, false))
                         .childColumn(col -> col.header("Наименование").cellValueFactory(ti -> ti.getType().getName()))
                         .childColumn(col -> col.header("Описание").cellValueFactory(TrafficItem::getDescription))
-                        .childColumn(col -> col.header("Начало периода").cellValueFactory(TrafficItem::getDateStart))
-                        .childColumn(col -> col.header("Конец периода").cellValueFactory(TrafficItem::getDateFinish)))
+                        .<LocalDate>childColumn(col -> col.header("Начало периода").cellValueFactory(TrafficItem::getDateStart)
+                                .property(TableColumn::cellFactoryProperty, param -> new TableCell<TrafficItem, LocalDate>() {
+                                    @Override
+                                    protected void updateItem(LocalDate date, boolean empty) {
+                                        super.updateItem(date, empty);
+                                        if (date != null && !empty) {
+                                            this.setText(date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                                        } else {
+                                            this.setText("");
+                                        }
+                                    }
+                                }))
+                        .<LocalDate>childColumn(col -> col.header("Конец периода").cellValueFactory(TrafficItem::getDateFinish)
+                                .property(TableColumn::cellFactoryProperty, param -> new TableCell<TrafficItem, LocalDate>() {
+                                    @Override
+                                    protected void updateItem(LocalDate date, boolean empty) {
+                                        super.updateItem(date, empty);
+                                        if (date != null && !empty) {
+                                            this.setText(date.format(dateTimeFormatter));
+                                            if (date.isBefore(LocalDate.now()))
+                                                this.setTextFill(Color.RED);
+                                            else if (date.isBefore(LocalDate.now().plusMonths(1L)))
+                                                this.setTextFill(Color.ORANGE);
+                                        } else {
+                                            this.setText("");
+                                            this.setTextFill(Color.BLACK);
+                                        }
+                                    }
+                                })
+                        ))
                 .addColumn(itemColumn -> itemColumn
                         .header(Owner.PERSON.title)
                         .property(TableColumnBase::visibleProperty, false)
-                        .childColumn(col -> col.header("Таб. №").cellValueFactory(ti -> ti.getPerson().getPersonnelNumber()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Фамилия").cellValueFactory(ti -> ti.getPerson().getLastName()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Имя").cellValueFactory(ti -> ti.getPerson().getFirstName()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Отчество").cellValueFactory(ti -> ti.getPerson().getMiddleName()).property(TableColumnBase::visibleProperty, false)))
+                        .childColumn(col -> col.header("Таб. №").cellValueFactory(ti -> ti.getTransientPerson().getPersonnelNumber()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Фамилия").cellValueFactory(ti -> ti.getTransientPerson().getLastName()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Имя").cellValueFactory(ti -> ti.getTransientPerson().getFirstName()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Отчество").cellValueFactory(ti -> ti.getTransientPerson().getMiddleName()).property(TableColumnBase::visibleProperty, false)))
                 .addColumn(itemColumn -> itemColumn
                         .header(Owner.TEAM.title)
                         .property(TableColumnBase::visibleProperty, false)
@@ -140,27 +237,22 @@ public class ItemController extends MyAnchorPane {
                         .childColumn(col -> col.header("Номер ТС").cellValueFactory(ti -> ti.getVehicle().getNumber()).property(TableColumnBase::visibleProperty, false))
                         .childColumn(col -> col.header("Модель ТС").cellValueFactory(ti -> ti.getVehicle().getModel()).property(TableColumnBase::visibleProperty, false)));
 
-        ownerComboBox.setOnAction(event -> {
-            Owner owner = ownerComboBox.getSelectionModel().getSelectedItem();
-            if (owner.equals(Owner.All)) {
-                itemTable.getColumns().forEach(column -> column.setVisible(true));
-            } else {
-                itemTable.getColumns().forEach(column -> column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
-            }
-        });
-
         canselButton.setOnAction(event -> switchPane(addItemPane, itemsPane));
 
         dateStartField.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
             if (itemTypeComboBox.getValue() != null && !newValue.isEmpty()) {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-                dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(itemTypeComboBox.getValue().getDefaultDurationInMonth()));
+                try{
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+                    dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(itemTypeComboBox.getValue().getDefaultDurationInMonth()));
+                } catch (DateTimeParseException ignored){
+
+                }
             }
         });
 
         peopleTable
                 .items(people)
-                .searchBox(searchPeopleField, person -> {
+                .searchBox(searchPeopleField.textProperty(), person -> {
                     if (searchPeopleField.getText() == null || searchPeopleField.getText().isEmpty()) {
                         return true;
                     }
@@ -179,7 +271,7 @@ public class ItemController extends MyAnchorPane {
                 .addColumn(col -> col.header("Отчество").cellValueFactory(Person::getMiddleName));
         teamTable
                 .items(teams)
-                .searchBox(searchTeamField, team -> {
+                .searchBox(searchTeamField.textProperty(), team -> {
                     if (searchTeamField.getText() == null || searchTeamField.getText().isEmpty()) {
                         return true;
                     }
@@ -194,7 +286,7 @@ public class ItemController extends MyAnchorPane {
                 .addColumn(col -> col.header("Режим работы").cellValueFactory(TrafficTeam::getWorkingMode));
         vehicleTable
                 .items(vehicles)
-                .searchBox(searchVehicleField, team -> {
+                .searchBox(searchVehicleField.textProperty(), team -> {
                     if (searchVehicleField.getText() == null || searchVehicleField.getText().isEmpty()) {
                         return true;
                     }
@@ -218,7 +310,9 @@ public class ItemController extends MyAnchorPane {
             TrafficItem item = new TrafficItem();
             if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Водители")) {
                 model = peopleTable.getSelectionModel();
-                item.setPerson((Person) model.getSelectedItem());
+                Person person = (Person) model.getSelectedItem();
+                item.setTransientPerson(person);
+                item.setPerson(person.getId());
             } else if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Экипажи")) {
                 model = teamTable.getSelectionModel();
                 item.setTeam((TrafficTeam) model.getSelectedItem());
@@ -246,6 +340,7 @@ public class ItemController extends MyAnchorPane {
                                                 dateStartField.setValue(null);
                                                 dateFinishField.setValue(null);
                                                 itemTypeComboBox.getSelectionModel().clearSelection();
+                                                switchPane(addItemPane, itemsPane);
                                             });
                                         })
                                         .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText("Ошибка " + throwable.getMessage())))
@@ -256,6 +351,80 @@ public class ItemController extends MyAnchorPane {
                 } else infoLabel.setText("Выберите пункт выпадающего списка");
             } else infoLabel.setText("Выберите элемент из таблицы");
         });
+        excelButton.setOnAction(event -> {
+            excelButton.setDisable(true);
+            System.out.println(itemTable.getColumns().stream().filter(col -> col.visibleProperty().get()).collect(Collectors.toList()).get(0).getCellObservableValue(0));
+            System.out.println(itemTable.getItems().size());
+
+            HSSFWorkbook workbook = new HSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Отчёт");
+            org.apache.poi.ss.usermodel.Font font = workbook.createFont();
+            style = workbook.createCellStyle();
+            style.setFont(font);
+            style.setAlignment(HorizontalAlignment.CENTER);
+            style.setVerticalAlignment(VerticalAlignment.CENTER);
+            font.setFontHeight((short) (12 * 20));
+            font.setFontName("Times New Roman");
+
+            AtomicInteger colNum = new AtomicInteger(0);
+            for (TableColumn<?, ?> tableColumn : itemTable.getColumns().stream().filter(col -> col.visibleProperty().get()).collect(Collectors.toList())) {
+                getColumn(tableColumn, sheet, 0, colNum);
+                System.out.println("colNum: " + colNum);
+            }
+
+            try {
+                SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
+                File file = new File("Отчёт " + ft.format(new Date()) + ".xls");
+                FileOutputStream outFile = new FileOutputStream(file);
+                workbook.write(outFile);
+                outFile.close();
+                Desktop.getDesktop().open(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            excelButton.setDisable(false);
+        });
+    }
+
+    CellStyle style;
+
+    <T, S> void getColumn(TableColumn<T, S> column, Sheet sheet, int rowNum, AtomicInteger colNum) {
+        if (!column.getColumns().isEmpty()) {
+            generateCell(getRow(sheet, rowNum), colNum.get(), String.valueOf(column.getText()), style);
+            sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, colNum.get(), (int) (colNum.get() - 1 + column.getColumns().stream().filter(col -> col.visibleProperty().get()).count())));
+            for (TableColumn<T, ?> tableColumn : column.getColumns().stream().filter(col -> col.visibleProperty().get()).collect(Collectors.toList())) {
+                getColumn(tableColumn, sheet, rowNum + 1, colNum);
+                colNum.getAndIncrement();
+            }
+        } else {
+            generateCell(getRow(sheet, rowNum++), colNum.get(), String.valueOf(column.getText()), style);
+            for (int i = 0; i < itemTable.getItems().size(); i++) {
+                String value = "";
+                if(column.getCellData(i)!=null && column.getCellData(i) instanceof LocalDate){
+                    value = ((LocalDate)column.getCellData(i)).format(dateTimeFormatter);
+                }
+                else if(column.getCellData(i)!=null){
+                    value = String.valueOf(column.getCellData(i));
+                }
+                generateCell(getRow(sheet, rowNum++), colNum.get(), value, style);
+            }
+            sheet.autoSizeColumn(colNum.get());
+        }
+    }
+
+    private Row getRow(Sheet sheet, int rowNum) {
+        Row row = sheet.getRow(rowNum);
+        if (row == null) {
+            row = sheet.createRow(rowNum);
+        }
+        return row;
+    }
+
+    private void generateCell(Row row, int columnIndex, String value, CellStyle style) {
+        Cell cell = row.createCell(columnIndex, CellType.STRING);
+        cell.setCellValue(value);
+        cell.setCellStyle(style);
     }
 
     @AllArgsConstructor
@@ -280,7 +449,7 @@ public class ItemController extends MyAnchorPane {
 
     @Override
     public void clearData() {
-        itemTable.getItems().clear();
+        items.clear();
         itemTypeComboBox.getItems().clear();
         filterItemTypeComboBox.getItems().clear();
         people.clear();
@@ -292,23 +461,18 @@ public class ItemController extends MyAnchorPane {
     public void fillData() {
         people.addAll(services.getPersonService().getPeople());
         services.getTrafficService().getTrafficItems()
+                .doOnComplete(() -> itemTable.refresh())
                 .map(ti -> {
-                    if(!people.isEmpty() && ti.getTrafficPerson()!=null && ti.getPerson()==null){
-                        System.out.println(ti);
-                        Person person = people.stream().filter(p -> p.getId().equals(ti.getTrafficPerson().getPerson())).findFirst().orElse(null);
-                        System.out.println(person);
-                        ti.setPerson(person);
+                    if (!people.isEmpty() && ti.getTransientPerson() == null) {
+                        Person person = people.stream().filter(p -> p.getId().equals(ti.getPerson())).findFirst().orElse(null);
+                        ti.setTransientPerson(person);
                     }
                     return ti;
                 }).subscribe(items::add);
-        System.out.println(people.stream().filter(p -> p.getId()==15L).findFirst());
-        System.out.println(people.stream().filter(p -> p.getId()==8L).findFirst());
         services.getTrafficService().getItemsType().subscribe(type -> {
             itemTypeComboBox.getItems().add(type);
             filterItemTypeComboBox.getItems().add(type);
         });
-
-
 
 
         services.getTrafficService().getAllTrafficTeam()

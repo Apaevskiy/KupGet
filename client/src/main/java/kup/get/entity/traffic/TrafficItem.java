@@ -20,9 +20,9 @@ public class TrafficItem {
     private Long id;
     private String description;
 
-    @DateTimeFormat(pattern="yyyy-MM-dd")
+    @DateTimeFormat(pattern="dd.MM.yyyy")
     private LocalDate dateStart;
-    @DateTimeFormat(pattern="yyyy-MM-dd")
+    @DateTimeFormat(pattern="dd.MM.yyyy")
     private LocalDate dateFinish;
 
     @OneToOne(fetch = FetchType.EAGER)
@@ -33,12 +33,12 @@ public class TrafficItem {
     @JoinColumn(name = "team_id")
     private TrafficTeam team;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "person_id")
-    private Person person;
+    private Person transientPerson;
 
     @Transient
-    private TrafficPerson trafficPerson;
+    private transient Long person;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vehicle_id")

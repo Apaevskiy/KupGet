@@ -2,6 +2,7 @@ package kup.get.controller.traffic;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TableColumn;
@@ -20,6 +21,8 @@ import kup.get.entity.traffic.TrafficVehicle;
 import kup.get.service.Services;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -42,6 +45,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
     private MyTable<Person> peopleTable;
 
     private final Services services;
+    private final ObservableList<Person> people = FXCollections.observableArrayList();
 
     public TeamAndVehicleController(Services services) {
         this.services = services;
@@ -167,7 +171,8 @@ public class TeamAndVehicleController extends MyAnchorPane {
                                         .cellValueFactory(tv -> tv.getTeam().getWorkingMode())));
 
         peopleTable
-                .searchBox(searchField, person -> {
+                .items(people)
+                .searchBox(searchField.textProperty(), person -> {
                     if (searchField.getText() == null || searchField.getText().isEmpty()) {
                         return true;
                     }
@@ -224,6 +229,13 @@ public class TeamAndVehicleController extends MyAnchorPane {
                         services.getTrafficService()
                                 .getPeopleByTeam(row.getItem().getTeam())
                                 .doOnCancel(() -> trafficPeopleTable.refresh())
+                                .map(ti -> {
+                                    if (!people.isEmpty() && ti.getTransientPerson() == null) {
+                                        Person person = people.stream().filter(p -> p.getId().equals(ti.getPerson())).findFirst().orElse(null);
+                                        ti.setTransientPerson(person);
+                                    }
+                                    return ti;
+                                })
                                 .subscribe(trafficPeopleTable.getItems()::add);
                     }
                 }
@@ -238,6 +250,13 @@ public class TeamAndVehicleController extends MyAnchorPane {
                     services.getTrafficService()
                             .getPeopleByTeam(row.getItem())
                             .doOnCancel(() -> trafficPeopleTable.refresh())
+                            .map(ti -> {
+                                if (!people.isEmpty() && ti.getTransientPerson() == null) {
+                                    Person person = people.stream().filter(p -> p.getId().equals(ti.getPerson())).findFirst().orElse(null);
+                                    ti.setTransientPerson(person);
+                                }
+                                return ti;
+                            })
                             .subscribe(trafficPeopleTable.getItems()::add);
                 }
             });
@@ -285,12 +304,12 @@ public class TeamAndVehicleController extends MyAnchorPane {
         trafficPeopleTable.getItems().clear();
         teamTable.getItems().clear();
         vehicleTable.getItems().clear();
-        peopleTable.getItems().clear();
+        people.clear();
     }
 
     @Override
     public void fillData() {
-        peopleTable.setItems(FXCollections.observableArrayList(services.getPersonService().getPeople()));
+        people.addAll(services.getPersonService().getPeople());
         services.getTrafficService().getTrafficVehicle().subscribe(vehicleTable.getItems()::add);
         services.getTrafficService().getAllTrafficTeam().subscribe(teamTable.getItems()::add);
     }

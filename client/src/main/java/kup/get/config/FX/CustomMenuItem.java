@@ -1,4 +1,4 @@
-package kup.get.config;
+package kup.get.config.FX;
 
 import javafx.event.EventHandler;
 import javafx.geometry.HPos;

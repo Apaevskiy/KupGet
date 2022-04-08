@@ -7,6 +7,7 @@ import kup.get.service.DAO.TrafficDaoService;
 import kup.get.service.socket.PersonSocketService;
 import kup.get.service.socket.TrafficSocketService;
 import lombok.AllArgsConstructor;
+import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,7 +44,6 @@ public class Services {
                 .route("getAuthorities")
                 .retrieveFlux(String.class);
     }
-
     public Flux<String> getAuthorities() {
         return config.getRequester()
                 .route("getAuthorities")
