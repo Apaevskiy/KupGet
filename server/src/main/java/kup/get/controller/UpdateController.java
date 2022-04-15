@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 public class UpdateController {
     private final VersionService service;
 
-    @MessageMapping("getActualVersion")
+    /*@MessageMapping("getActualVersion")
     public Mono<Version> getActualVersion() {
         return Mono.just(service.getActualVersion());
     }
@@ -35,5 +35,14 @@ public class UpdateController {
         return message.flatMapMany(version ->
             Flux.fromIterable(service.getInformationAboutUpdate(version))
         );
+    }*/
+
+
+    @MessageMapping("update.getFilesOfProgram")
+    public Flux<FileOfProgram> getFilesOfProgram() {
+        return Flux.fromIterable(service.getFilesOfProgram());
     }
+
+
+
 }

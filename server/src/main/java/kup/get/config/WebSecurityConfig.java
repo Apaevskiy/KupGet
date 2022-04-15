@@ -72,6 +72,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     PayloadSocketAcceptorInterceptor authorization(RSocketSecurity security) {
         return security.authorizePayload(authorize ->
                         authorize
+                                .route("update.*").permitAll()
                                 .route("traffic.*").hasRole("SUPERADMIN")
                                 .route("asu.*").hasRole("SUPERADMIN")
                                 .anyRequest().authenticated()

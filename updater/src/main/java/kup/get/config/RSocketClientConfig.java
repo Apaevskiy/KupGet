@@ -1,37 +1,41 @@
 package kup.get.config;
 
-import io.rsocket.transport.netty.client.TcpClientTransport;
-import kup.get.service.PropertyService;
-import org.springframework.messaging.rsocket.RSocketRequester;
-import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
+import javafx.animation.SequentialTransition;
+import org.springframework.boot.rsocket.messaging.RSocketStrategiesCustomizer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.codec.cbor.Jackson2CborDecoder;
+import org.springframework.http.codec.cbor.Jackson2CborEncoder;
+import org.springframework.security.rsocket.metadata.SimpleAuthenticationEncoder;
+import org.springframework.util.ResourceUtils;
 
-import javax.annotation.PostConstruct;
-import java.net.ConnectException;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.concurrent.atomic.AtomicReference;
 
-@Component
+@Configuration
 public class RSocketClientConfig {
-    private final PropertyService propertyService;
-    private RSocketRequester requester;
-    private final RSocketRequester.Builder builder;
-
-    public RSocketClientConfig(PropertyService propertyService, RSocketRequester.Builder builder) {
-        this.propertyService = propertyService;
-        this.builder = builder;
+    @Bean
+    RSocketStrategiesCustomizer rSocketStrategiesCustomizer() {
+        return strategies -> strategies
+                .encoders(encoders -> {
+                    encoders.add(new Jackson2CborEncoder());
+                    encoders.add( new SimpleAuthenticationEncoder());
+                })
+                .decoders(decoders -> decoders.add(new Jackson2CborDecoder()));
+    }
+    @Bean
+    AtomicReference<SequentialTransition> getTransition(){
+        return new AtomicReference<>(new SequentialTransition());
     }
 
-    public String createRequester() {
-        System.out.println("ip: "+propertyService.getIpServer() + " port: " + propertyService.getPortServer());
-        TcpClientTransport transport = TcpClientTransport.create(propertyService.getIpServer(), propertyService.getPortServer());
-        return transport.connect()
-                .flatMap(dc -> Mono.just(""))
-                .doOnSuccess(dc -> requester = builder.transport(transport))
-                .onErrorReturn(ConnectException.class,"ConnectException")
-                .onErrorReturn(Exception.class,"Exception")
-                .block();
-    }
-
-    public RSocketRequester getRequester() {
-        return requester;
+    @Bean
+    File getLogo(){
+        try {
+            return ResourceUtils.getFile("classpath:images/logo.png");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

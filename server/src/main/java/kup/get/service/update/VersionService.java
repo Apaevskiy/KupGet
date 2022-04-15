@@ -59,6 +59,14 @@ public class VersionService {
     }
 
 
+    public List<FileOfProgram> getFilesOfProgram(){
+        List<FileOfProgram> list = new ArrayList<>();
+        zipService.listFilesForFolder(new File("program"), list);
+        return list;
+    }
+
+
+
     @Synchronized
     public Flux<HttpStatus> uploadFile(Flux<DataBuffer> bufferFlux, String inf, String comment) throws IOException {
         File file = new File("bufferUpdateFile.jar");

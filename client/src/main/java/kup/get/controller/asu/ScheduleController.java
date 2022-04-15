@@ -186,13 +186,14 @@ public class ScheduleController extends MyAnchorPane {
         saveButton.setOnAction(event -> {
             SelectionModel<Direction> model = routeTable.getSelectionModel();
             if (model != null && model.getSelectedItem() != null) {
-                Pattern pattern = Pattern.compile("\\d{1,2}\\.\\d{1,2}(\n|$)");
+                Pattern pattern = Pattern.compile("(^|\n)\\d{1,2}\\.\\d{1,2}(\n|\r\n|$)");
                 Matcher matcher = pattern.matcher(scheduleArea.getText());
                 String start = "", end = "";
                 while (matcher.find()) {
                     if (start.isEmpty())
                         start = matcher.group();
                     end = matcher.group();
+                    System.out.println(end);
                 }
                 String[] startList = start.replaceAll("\n", "").split("\\."),
                         endList = end.replaceAll("\n", "").split("\\.");
@@ -203,9 +204,14 @@ public class ScheduleController extends MyAnchorPane {
 
                         model.getSelectedItem().setSchedule(
                                 scheduleArea.getText()
-                                        .replaceAll("\\d{1,2}\\.\\d{1,2}\\.1", " (в депо №1), ")
-                                        .replaceAll("\\d{1,2}\\.\\d{1,2}\\.2", " (в депо №2), ")
-                                        .replaceAll("\\d{1,2}\\.\\d{1,2}\\.3", " (до парка Фестивальный), ")
+                                        .replaceAll("\\.1$", " (в депо №1)")
+                                        .replaceAll("\\.2$", " (в депо №2)")
+                                        .replaceAll("\\.3$", " (до парка Фестивальный)")
+                                        .replaceAll("\\.4$", " (до ЗСК)")
+                                        .replaceAll("\\.1\n", " (в депо №1), ")
+                                        .replaceAll("\\.2\n", " (в депо №2), ")
+                                        .replaceAll("\\.3\n", " (до парка Фестивальный), ")
+                                        .replaceAll("\\.4\n", " (до ЗСК), ")
                                         .replaceAll("\n", ", ")
                                         .replaceAll("\\.", "-")
                         );
@@ -286,24 +292,24 @@ public class ScheduleController extends MyAnchorPane {
                 Elements listSpan = tableLine.select("span");
                 if (listSpan.size() == 6) {
                     route = new Route();
-                    route.setName(listSpan.get(0).text());
-                    route.setWorkDays(listSpan.get(1).text());
+                    route.setName(listSpan.get(0).html());
+                    route.setWorkDays(listSpan.get(1).html());
                     route.setStyle(listSpan.get(1).attr("style"));
 
                     Direction direction = new Direction(
-                            listSpan.get(2).text(),
-                            listSpan.get(3).text(),
-                            listSpan.get(4).text(),
-                            listSpan.get(5).text(),
+                            listSpan.get(2).html(),
+                            listSpan.get(3).html(),
+                            listSpan.get(4).html(),
+                            listSpan.get(5).html(),
                             route);
                     route.setTo(direction);
                     routeTable.getItems().add(direction);
                 } else if (listSpan.size() == 5) {
                     Direction direction = new Direction(
-                            listSpan.get(1).text(),
-                            listSpan.get(2).text(),
-                            listSpan.get(3).text(),
-                            listSpan.get(4).text(),
+                            listSpan.get(1).html(),
+                            listSpan.get(2).html(),
+                            listSpan.get(3).html(),
+                            listSpan.get(4).html(),
                             route);
                     if (route != null)
                         route.setOut(direction);

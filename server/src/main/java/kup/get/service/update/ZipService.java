@@ -2,6 +2,7 @@ package kup.get.service.update;
 
 import kup.get.entity.postgres.update.FileOfProgram;
 import kup.get.entity.postgres.update.Version;
+import lombok.NonNull;
 import org.apache.poi.util.IOUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -9,7 +10,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -60,7 +63,8 @@ public class ZipService {
             return null;
         }
     }
-    private void update(List<FileOfProgram> listNewFiles, Version version, List<FileOfProgram> listOldFiles){
+
+    private void update(List<FileOfProgram> listNewFiles, Version version, List<FileOfProgram> listOldFiles) {
         try {
             List<FileOfProgram> listSavedFiles = new ArrayList<>(listOldFiles);
 
@@ -80,6 +84,7 @@ public class ZipService {
             e.printStackTrace();
         }
     }
+
     public void update(Version version, MultipartFile file, List<FileOfProgram> listOldFiles) {
         try {
             update(read(new ZipInputStream(file.getInputStream())), version, listOldFiles);
@@ -87,7 +92,30 @@ public class ZipService {
             e.printStackTrace();
         }
     }
+
     public void update(Version version, File file, List<FileOfProgram> listOldFiles) {
         update(readFile(file), version, listOldFiles);
+    }
+
+
+    public void listFilesForFolder(File folder, List<FileOfProgram> list) {
+        try {
+            if (!folder.exists())
+                Files.createDirectory(folder.toPath());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        for (File fileEntry : folder.listFiles()) {
+            if (fileEntry.isDirectory()) {
+                listFilesForFolder(fileEntry, list);
+            } else {
+                FileOfProgram fileOfProgram = new FileOfProgram();
+                fileOfProgram.setName(fileEntry.getPath());
+                fileOfProgram.setSize(fileEntry.length());
+                fileOfProgram.setTime(fileEntry.lastModified());
+                list.add(fileOfProgram);
+            }
+        }
     }
 }

@@ -1,18 +1,14 @@
 package kup.get.controller.FX;
 
-import javafx.concurrent.WorkerStateEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.AnchorPane;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
-import kup.get.controller.socket.SocketController;
+import kup.get.controller.socket.SocketService;
 import kup.get.entity.Version;
 import kup.get.service.*;
-
-import java.io.File;
-import java.util.List;
 
 @FxmlLoader(path = "/fxml/updates.fxml")
 public class UpdateController extends MyAnchorPane {
@@ -33,27 +29,31 @@ public class UpdateController extends MyAnchorPane {
     private final ZipService zipService;
     private final PropertyService propertyService;
     private final InformationController informationController;
-    private final SocketController socketController;
+    private final SocketService socketService;
 
-    public UpdateController(ZipService zipService, PropertyService propertyService, InformationController informationController, SocketController socketController) {
+    public UpdateController(ZipService zipService, PropertyService propertyService, InformationController informationController, SocketService socketService) {
         this.zipService = zipService;
         this.propertyService = propertyService;
         this.informationController = informationController;
-        this.socketController = socketController;
+        this.socketService = socketService;
     }
 
     public void checkUpdates() {
         this.getStyleClass().removeAll("hidden");
-        Version versionProgram = propertyService.getVersion();
+
+        socketService.getFilesOfProgram()
+                .subscribe(System.out::println);
+
+        /*Version versionProgram = propertyService.getVersion();
         socketController.getActualVersion().doOnSuccess(version -> {
             if (version.getId() != versionProgram.getId()) {
                 updateProgram(versionProgram, version);
             }
-        }).subscribe();
+        }).subscribe();*/
     }
 
     private void updateProgram(Version version, Version actualVersion) {
-        QueryTask queryTask = new QueryTask(processInformationField);
+        /*QueryTask queryTask = new QueryTask(processInformationField);
         Thread threadQueryWriter = new Thread(queryTask);
 
         UpdateTask task = new UpdateTask(socketController, zipService, queryTask, version, threadQueryWriter);
@@ -79,6 +79,6 @@ public class UpdateController extends MyAnchorPane {
                 }
             }
         });
-        threadTask.start();
+        threadTask.start();*/
     }
 }

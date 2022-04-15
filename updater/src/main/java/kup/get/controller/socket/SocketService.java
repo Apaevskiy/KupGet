@@ -1,19 +1,17 @@
 package kup.get.controller.socket;
 
-import kup.get.config.RSocketClientConfig;
+import kup.get.config.RSocketClientBuilderImpl;
 import kup.get.entity.FileOfProgram;
 import kup.get.entity.Version;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Component
-public class SocketController {
-    private final RSocketClientConfig config;
+public class SocketService {
+    private final RSocketClientBuilderImpl config;
 
-    public SocketController(RSocketClientConfig config) {
+    public SocketService(RSocketClientBuilderImpl config) {
         this.config = config;
     }
 
@@ -23,7 +21,7 @@ public class SocketController {
                 .retrieveMono(Version.class);
     }
 
-    public List<FileOfProgram> getUpdateFiles(Version version) {
+    /*public List<FileOfProgram> getUpdateFiles(Version version) {
         return config.getRequester()
                 .route("update.getUpdates")
                 .data(version)
@@ -47,5 +45,12 @@ public class SocketController {
                 .retrieveFlux(Version.class)
                 .collect(Collectors.toList())
                 .block();
+    }*/
+
+
+    public Flux<FileOfProgram> getFilesOfProgram() {
+        return config.getRequester()
+                .route("update.getFilesOfProgram")
+                .retrieveFlux(FileOfProgram.class);
     }
 }

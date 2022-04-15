@@ -1,39 +1,63 @@
 package kup.get.controller.FX;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
-import kup.get.config.RSocketClientConfig;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
+import kup.get.config.RSocketClientBuilderImpl;
+import kup.get.controller.socket.SocketService;
 
 @FxmlLoader(path = "/fxml/main.fxml")
 public class MainController extends MyAnchorPane {
     @FXML
-    private AnchorPane workPlace;
+    private TextArea updateInformationArea;
 
-    public MainController(SettingController settingController, UpdateController updateController, InformationController informationController, RSocketClientConfig config) {
-        workPlace.getChildren().addAll(settingController, updateController, informationController);
-        hiddenPages(workPlace.getChildren(), updateController);
-        String checkConnection = config.createRequester();
-        if (checkConnection.isEmpty()) {
-            updateController.checkUpdates();
-        } else {
-            settingController.information(checkConnection);
-            hiddenPages(workPlace.getChildren(), settingController);
-        }
+    @FXML
+    private ProgressBar progressBar;
+    @FXML
+    private Label progressText;
+
+    @FXML
+    private GridPane settingPane;
+
+    @FXML
+    private Button saveButton;
+    @FXML
+    private TextField ipField;
+    @FXML
+    private Button resetButton;
+    @FXML
+    private Label informationLabel;
+    @FXML
+    private TextField portField;
+
+    private final RSocketClientBuilderImpl config;
+    private final SocketService socketService;
+
+    public MainController(RSocketClientBuilderImpl config, SocketService socketService) {
+        this.config = config;
+        this.socketService = socketService;
+        this.config.createClientTransport()
+                .doOnSuccess(duplexConnection -> {
+                    this.config.createRequester();
+                    checkUpdates();
+                })
+                .doOnError(throwable -> Platform.runLater(() -> {
+                    informationLabel.setText("Ошибка:\n"+throwable.getLocalizedMessage());
+                    settingPane.setDisable(true);
+                }))
+                .subscribe();
+
+
+
     }
-    private void hiddenPages(List<Node> list, Node pane) {
-        for (Node node : list) {
-            if (node.equals(pane)) {
-                node.getStyleClass().removeAll("hidden");
-            } else {
-                if (!node.getStyleClass().contains("hidden")) node.getStyleClass().add("hidden");
+    void checkUpdates(){
+        socketService.getActualVersion().doOnSuccess(version -> {
+            if (version.getId() != versionProgram.getId()) {
+                updateProgram(versionProgram, version);
             }
-        }
+        }).subscribe();
     }
 }

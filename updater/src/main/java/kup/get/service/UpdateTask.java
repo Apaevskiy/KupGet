@@ -1,26 +1,24 @@
 package kup.get.service;
 
 import javafx.concurrent.Task;
-import kup.get.controller.socket.SocketController;
-import kup.get.entity.FileOfProgram;
+import kup.get.controller.socket.SocketService;
 import kup.get.entity.Version;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.List;
 
 public class UpdateTask extends Task<File> {
-    private final SocketController socketController;
+    private final SocketService socketService;
     private final ZipService zipService;
     private final QueryTask queryTask;
 
     private final Version version;
     private final Thread threadQueryWriter;
 
-    public UpdateTask(SocketController socketController, ZipService zipService, QueryTask queryTask, Version version, Thread threadQueryWriter) {
-        this.socketController = socketController;
+    public UpdateTask(SocketService socketService, ZipService zipService, QueryTask queryTask, Version version, Thread threadQueryWriter) {
+        this.socketService = socketService;
         this.zipService = zipService;
         this.queryTask = queryTask;
         this.version = version;
@@ -33,7 +31,7 @@ public class UpdateTask extends Task<File> {
 
     @Override
     protected File call() throws IOException {
-        threadQueryWriter.start();
+        /*threadQueryWriter.start();
 
         this.copy("Загрузка обновлений");
         List<FileOfProgram> listNewFiles = socketController.getUpdateFiles(version);
@@ -66,7 +64,7 @@ public class UpdateTask extends Task<File> {
             }
 
             return programFile;
-        }
+        }*/
         return null;
     }
 

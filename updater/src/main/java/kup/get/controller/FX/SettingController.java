@@ -1,9 +1,11 @@
 package kup.get.controller.FX;
 
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import kup.get.config.FxmlLoader;
 import kup.get.config.MyAnchorPane;
+import kup.get.config.RSocketClientBuilderImpl;
 import kup.get.config.RSocketClientConfig;
 import kup.get.entity.Version;
 import kup.get.service.PropertyService;
@@ -29,7 +31,7 @@ public class SettingController extends MyAnchorPane {
     @FXML
     private Label versionInformationLabel;
 
-    public SettingController(PropertyService propertyService, UpdateController updateController, RSocketClientConfig config) {
+    public SettingController(PropertyService propertyService, UpdateController updateController, RSocketClientBuilderImpl config) {
         versionInformationLabel.setText("Если вы читаете это сообщение, то звоните в отдел АСУ\nВерсия программы " + propertyService.getVersion().getRelease());
 
         ipField.setText(propertyService.getIpServer());
@@ -37,13 +39,17 @@ public class SettingController extends MyAnchorPane {
 
         saveButton.setOnAction(event -> {
             propertyService.saveServerConfig(ipField.getText(), portField.getText());
-            String checkConnection = config.createRequester();
-            if (checkConnection.isEmpty()) {
-                this.getStyleClass().add("hidden");
-                updateController.checkUpdates();
-            } else {
-                versionInformationLabel.setText("Что-то пошло не так!\nСохраните следующую информация для отдела АСУ:\n" + checkConnection);
-            }
+            config.createClientTransport()
+                    .doOnSuccess(duplexConnection -> {
+                        config.createRequester();
+                        Platform.runLater(() -> {
+                            this.getStyleClass().add("hidden");
+                            updateController.checkUpdates();
+                        });
+                    })
+                    .doOnError(throwable -> Platform.runLater(() ->
+                            versionInformationLabel.setText("Что-то пошло не так!\nСохраните следующую информация для отдела АСУ:\n" + throwable.getLocalizedMessage())))
+                    .subscribe();
         });
         resetButton.setOnAction(event -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
