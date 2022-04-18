@@ -17,12 +17,14 @@ public abstract class MyAnchorPane extends AnchorPane {
 
     public MyAnchorPane() {
         try {
+
             FXMLLoader loader = new FXMLLoader();
             URL xmlUrl = getClass().getResource(this.getClass().getAnnotation(FxmlLoader.class).path());
             loader.setLocation(xmlUrl);
             loader.setRoot(this);
             loader.setController(this);
             loader.load();
+
             this.setVisible(false);
             this.setOpacity(0);
             this.setId(this.getClass().getName());

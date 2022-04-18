@@ -16,23 +16,41 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 @Slf4j
 public class UpdateTask extends Task<File> {
-    private final SocketService socketService;
     private final ZipService zipService;
     private final List<FileOfProgram> files;
+    private final double sizeFiles;
+    private final AtomicInteger iterationDownloadFiles = new AtomicInteger(0);
+    private final AtomicReference<Double> progress = new AtomicReference<>(0.0);
+
+    private final ChannelTask channelTask;
+    private final WriterTask writerTask;
 
     public UpdateTask(List<FileOfProgram> files, SocketService socketService, ZipService zipService) {
-        this.socketService = socketService;
         this.zipService = zipService;
         this.files = files;
+        this.sizeFiles = files.stream().mapToDouble(FileOfProgram::getSize).sum();
+        this.channelTask = new ChannelTask();
+        this.writerTask = new WriterTask(iterationDownloadFiles, socketService, channelTask,
+                (value, unused) -> {
+                    progress.set(progress.get() + value);
+                    this.updateInformation(progress, sizeFiles);
+                });
     }
 
     @Override
     protected File call() {
         try {
             this.updateMessage("Получение списка обновлений...");
+
+            Thread channelThread = new Thread(channelTask);
+            channelThread.start();
+
+            Thread writerThread = new Thread(writerTask);
+            writerThread.start();
 
             File programFile = createFileWithDirectory(Paths.get("bin/client.jar")).toFile();
             List<FileOfProgram> oldFiles = zipService.readFile(programFile);
@@ -43,9 +61,6 @@ public class UpdateTask extends Task<File> {
             tempDirectory = Files.createTempDirectory(directory, "Temp directory ");
             tempDirectory.toFile().deleteOnExit();
 
-            double sizeFiles = files.stream().mapToDouble(FileOfProgram::getSize).sum();
-            final AtomicReference<Double> progress = new AtomicReference<>(0.0);
-            AtomicInteger iterationDownloadFiles = new AtomicInteger(0);
 
             for (FileOfProgram fileOfProgram : files) {
                 Optional<FileOfProgram> optional = oldFiles.stream().filter(file -> file.equals(fileOfProgram)).findFirst();
@@ -57,38 +72,22 @@ public class UpdateTask extends Task<File> {
                     if (iterationDownloadFiles.incrementAndGet() == files.size())
                         writeFilesToJar(tempDirectory, programFile);
                 } else {
-
-                    AsynchronousFileChannel channel = AsynchronousFileChannel.open(
-                            createFileWithDirectory(Paths.get(tempDirectory.toAbsolutePath() + File.separator + fileOfProgram.getName())),
-                            StandardOpenOption.WRITE);
-                    DataBufferUtils.write(socketService.downloadFileOfProgram(fileOfProgram), channel)
-                            .doOnComplete(() -> Platform.runLater(() -> {
-                                //System.out.printf("d i: %d, s: %d, name: %s\n", iterationDownloadFiles.get(), files.size(), fileOfProgram.getName());
-                                if (iterationDownloadFiles.incrementAndGet() == files.size())
-                                    writeFilesToJar(tempDirectory, programFile);
-                            }))
-                            .subscribe(dataBuffer -> {
-                                progress.set(progress.get() + dataBuffer.capacity());
-                                updateInformation(progress, sizeFiles);
-                            });
+                    channelTask.putChannel(Paths.get(tempDirectory + File.separator + fileOfProgram.getName()), fileOfProgram);
                 }
             }
-            if (iterationDownloadFiles.get()!=files.size()){
-                log.info("start wait");
-                this.wait();
-                log.info("end wait");
-            }
+            channelTask.stopTask();
+            writerTask.stopTask();
 
-            /*if (threadQueryWriter.isAlive()) {
+            if (channelThread.isAlive()) {
                 try {
-                    threadQueryWriter.join();
+                    channelThread.join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }*/
+            }
 
             return programFile;
-        } catch (IOException | InterruptedException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
