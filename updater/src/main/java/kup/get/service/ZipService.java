@@ -14,7 +14,7 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 public class ZipService {
-    private List<FileOfProgram> read(ZipInputStream zipInputStream) {
+    /*private List<FileOfProgram> read(ZipInputStream zipInputStream) {
         List<FileOfProgram> list = new ArrayList<>();
         ZipEntry entry;
         try {
@@ -85,5 +85,5 @@ public class ZipService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
+    }*/
 }

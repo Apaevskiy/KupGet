@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.util.Objects;
+import java.util.jar.JarEntry;
 import java.util.zip.ZipEntry;
 
 @Data
@@ -30,7 +31,7 @@ public class FileOfProgram {
         this.content = content;
     }
 
-    public FileOfProgram(ZipEntry zipEntry) {
+    public FileOfProgram(JarEntry zipEntry) {
         this.name = zipEntry.getName().replaceAll("/","\\\\");
         this.size = zipEntry.getSize();
         this.time = zipEntry.getTime();

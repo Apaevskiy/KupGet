@@ -4,13 +4,21 @@ import javafx.concurrent.Task;
 import kup.get.controller.socket.SocketService;
 import kup.get.entity.FileOfProgram;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+import java.util.jar.JarOutputStream;
+import java.util.zip.CRC32;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 @Slf4j
 public class UpdateTask extends Task<File> {
@@ -18,11 +26,12 @@ public class UpdateTask extends Task<File> {
     private final List<FileOfProgram> files;
     private final double sizeFiles;
     private final AtomicReference<Double> progress = new AtomicReference<>(0.0);
-
+    private final SocketService socketService;
     private final ChannelTask channelTask;
 
     public UpdateTask(List<FileOfProgram> files, SocketService socketService, ZipService zipService) {
         this.zipService = zipService;
+        this.socketService = socketService;
         this.files = files;
         this.sizeFiles = files.stream().mapToDouble(FileOfProgram::getSize).sum();
         this.channelTask = new ChannelTask(socketService, (value, unused) -> {
@@ -33,51 +42,101 @@ public class UpdateTask extends Task<File> {
 
     @Override
     protected File call() {
-        try {
-            this.updateMessage("Получение списка обновлений...");
+        this.updateMessage("Получение списка обновлений...");
+//        File oldFile = createFileWithDirectory(Paths.get()).toFile();
+//        File programFile = createFileWithDirectory(Paths.get()).toFile();
 
 
-
-            File programFile = createFileWithDirectory(Paths.get("bin/client.jar")).toFile();
-//            List<FileOfProgram> oldFiles = zipService.readFile(programFile);
-
-            Path tempDirectory;
-            Path directory = Paths.get("Temp");
-            if (!Files.exists(directory)) Files.createDirectory(directory);
-            tempDirectory = Files.createTempDirectory(directory, "Temp directory ");
-            tempDirectory.toFile().deleteOnExit();
-
-            channelTask.setTempDirectory(tempDirectory);
-            Thread channelThread = new Thread(channelTask);
-            channelThread.start();
-
-            for (FileOfProgram fileOfProgram : files) {
-//                Optional<FileOfProgram> optional = oldFiles.stream().filter(file -> file.equals(fileOfProgram)).findFirst();
-                /*if (optional.isPresent()) {
-                    writeFileToTempDirectory(tempDirectory, optional.get());
-                    progress.set(progress.get() + fileOfProgram.getSize());
-                    updateInformation(progress, sizeFiles);
-                } else {
-                }*/
-                channelTask.putChannel(fileOfProgram);
-            }
-            if (channelThread.isAlive()) {
-                try {
-                    System.out.println("send stop task");
-                    channelTask.stopTask();
-                    channelThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        try (JarInputStream zipInputStream = new JarInputStream(new FileInputStream("bin/client.jar"));
+             JarOutputStream zout = new JarOutputStream(new FileOutputStream("bin/client1.jar"))) {
+            System.out.println("start");
+            JarEntry entry;
+            while ((entry = zipInputStream.getNextJarEntry()) != null) {
+                if (!entry.isDirectory()) {
+                    FileOfProgram fileOfProgram = new FileOfProgram(entry);
+                    if (files.contains(fileOfProgram)) {
+                        zout.putNextEntry(entry);
+                        if (fileOfProgram.getSize() != 0) {
+                            for (int c = zipInputStream.read(); c != -1; c = zipInputStream.read()) {
+                                zout.write(c);
+                            }
+                        }
+                        progress.set(progress.get() + fileOfProgram.getSize());
+                        this.updateInformation(progress, sizeFiles);
+                        zout.closeEntry();
+                        files.remove(fileOfProgram);
+                    }
+                    zipInputStream.closeEntry();
                 }
             }
-//            writeFilesToJar(tempDirectory, programFile);
+            downloadOtherFiles(zout);
 
-            System.out.println("stop join thread");
-            return programFile;
+//                                    socketService.downloadFileOfProgram(fileOfProgram)
+            zipInputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    synchronized void downloadOtherFiles(JarOutputStream zout) {
+        for (FileOfProgram fileOfProgram : files) {
+            try {
+
+                JarEntry entry = new JarEntry(fileOfProgram.getName());
+                entry.setTime(fileOfProgram.getTime());
+//                entry.setMethod(JarEntry.STORED);
+//                entry.setCompressedSize(fileOfProgram.getSize());
+                entry.setSize(fileOfProgram.getSize());
+                zout.putNextEntry(entry);
+
+
+                CRC32 crc = new CRC32();
+                ArrayDeque<DataBuffer> deque = new ArrayDeque<>();
+                socketService.downloadFileOfProgram(fileOfProgram)
+                        .doOnComplete(this::closeEntry)
+                        .subscribe(dataBuffer -> {
+                            byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                            dataBuffer.read(bytes);
+                            DataBufferUtils.release(dataBuffer);
+                            try {
+                                zout.write(bytes);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            progress.set(progress.get() + dataBuffer.capacity());
+                            this.updateInformation(progress, sizeFiles);
+                            /*deque.add(dataBuffer);
+                            crc.update(dataBuffer.asByteBuffer());*/
+                        });
+                wait();
+
+                /*entry.setCrc(crc.getValue());
+                zout.putNextEntry(entry);
+
+                while (!deque.isEmpty()) {
+                    DataBuffer dataBuffer = deque.poll();
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    DataBufferUtils.release(dataBuffer);
+                    zout.write(bytes);
+                    progress.set(progress.get() + dataBuffer.capacity());
+                    this.updateInformation(progress, sizeFiles);
+                }
+*/
+
+//                System.out.println("start");
+//                Thread.sleep(5000);
+                zout.closeEntry();
+            } catch (IOException | InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    synchronized void closeEntry() {
+        this.notify();
     }
 
     void updateInformation(AtomicReference<Double> progress, double size) {
@@ -99,50 +158,4 @@ public class UpdateTask extends Task<File> {
         return file;
     }
 
-    void writeFileToTempDirectory(Path tempDirectory, FileOfProgram fileOfProgram) {
-        Path file = Paths.get(tempDirectory + File.separator + fileOfProgram.getName());
-        try {
-            createFileWithDirectory(file);
-            if (fileOfProgram.getContent() != null)
-                Files.write(file, fileOfProgram.getContent());
-            Files.setLastModifiedTime(file, FileTime.fromMillis(fileOfProgram.getTime()));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    synchronized void writeFilesToJar(Path tempDirectory, File programFile) {
-        this.updateMessage("Установка обновления...");
-        List<FileOfProgram> list = new ArrayList<>();
-        listFilesForFolder(tempDirectory.toFile(), list);
-        list.forEach(file -> file.setName(file.getName().replace(tempDirectory.toString(), "")));
-        try {
-            Files.deleteIfExists(programFile.toPath());
-            Files.createFile(programFile.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        zipService.writeZip(list, programFile);
-        this.updateMessage("Обновления установены!");
-        this.notify();
-    }
-
-    void listFilesForFolder(File folder, List<FileOfProgram> list) {
-        for (File fileEntry : folder.listFiles()) {
-            if (fileEntry.isDirectory()) {
-                listFilesForFolder(fileEntry, list);
-            } else {
-                FileOfProgram fileOfProgram = new FileOfProgram();
-                fileOfProgram.setName(fileEntry.getPath());
-                fileOfProgram.setSize(fileEntry.length());
-                fileOfProgram.setTime(fileEntry.lastModified());
-                try {
-                    fileOfProgram.setContent(Files.readAllBytes(fileEntry.toPath()));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                list.add(fileOfProgram);
-            }
-        }
-    }
 }
