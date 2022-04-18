@@ -1,44 +1,34 @@
 package kup.get.service;
 
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import kup.get.controller.socket.SocketService;
 import kup.get.entity.FileOfProgram;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.buffer.DataBufferUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.channels.AsynchronousFileChannel;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 
 @Slf4j
 public class UpdateTask extends Task<File> {
     private final ZipService zipService;
     private final List<FileOfProgram> files;
     private final double sizeFiles;
-    private final AtomicInteger iterationDownloadFiles = new AtomicInteger(0);
     private final AtomicReference<Double> progress = new AtomicReference<>(0.0);
 
     private final ChannelTask channelTask;
-    private final WriterTask writerTask;
 
     public UpdateTask(List<FileOfProgram> files, SocketService socketService, ZipService zipService) {
         this.zipService = zipService;
         this.files = files;
         this.sizeFiles = files.stream().mapToDouble(FileOfProgram::getSize).sum();
-        this.channelTask = new ChannelTask();
-        this.writerTask = new WriterTask(iterationDownloadFiles, socketService, channelTask,
-                (value, unused) -> {
-                    progress.set(progress.get() + value);
-                    this.updateInformation(progress, sizeFiles);
-                });
+        this.channelTask = new ChannelTask(socketService, (value, unused) -> {
+            progress.set(progress.get() + value);
+            this.updateInformation(progress, sizeFiles);
+        });
     }
 
     @Override
@@ -46,14 +36,10 @@ public class UpdateTask extends Task<File> {
         try {
             this.updateMessage("Получение списка обновлений...");
 
-            Thread channelThread = new Thread(channelTask);
-            channelThread.start();
 
-            Thread writerThread = new Thread(writerTask);
-            writerThread.start();
 
             File programFile = createFileWithDirectory(Paths.get("bin/client.jar")).toFile();
-            List<FileOfProgram> oldFiles = zipService.readFile(programFile);
+//            List<FileOfProgram> oldFiles = zipService.readFile(programFile);
 
             Path tempDirectory;
             Path directory = Paths.get("Temp");
@@ -61,31 +47,32 @@ public class UpdateTask extends Task<File> {
             tempDirectory = Files.createTempDirectory(directory, "Temp directory ");
             tempDirectory.toFile().deleteOnExit();
 
+            channelTask.setTempDirectory(tempDirectory);
+            Thread channelThread = new Thread(channelTask);
+            channelThread.start();
 
             for (FileOfProgram fileOfProgram : files) {
-                Optional<FileOfProgram> optional = oldFiles.stream().filter(file -> file.equals(fileOfProgram)).findFirst();
-                if (optional.isPresent()) {
+//                Optional<FileOfProgram> optional = oldFiles.stream().filter(file -> file.equals(fileOfProgram)).findFirst();
+                /*if (optional.isPresent()) {
                     writeFileToTempDirectory(tempDirectory, optional.get());
                     progress.set(progress.get() + fileOfProgram.getSize());
                     updateInformation(progress, sizeFiles);
-                    //System.out.printf("w i: %d, s: %d, name: %s\n", iterationDownloadFiles.get(), files.size(), fileOfProgram.getName());
-                    if (iterationDownloadFiles.incrementAndGet() == files.size())
-                        writeFilesToJar(tempDirectory, programFile);
                 } else {
-                    channelTask.putChannel(Paths.get(tempDirectory + File.separator + fileOfProgram.getName()), fileOfProgram);
-                }
+                }*/
+                channelTask.putChannel(fileOfProgram);
             }
-            channelTask.stopTask();
-            writerTask.stopTask();
-
             if (channelThread.isAlive()) {
                 try {
+                    System.out.println("send stop task");
+                    channelTask.stopTask();
                     channelThread.join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+//            writeFilesToJar(tempDirectory, programFile);
 
+            System.out.println("stop join thread");
             return programFile;
         } catch (IOException e) {
             e.printStackTrace();
@@ -128,11 +115,7 @@ public class UpdateTask extends Task<File> {
         this.updateMessage("Установка обновления...");
         List<FileOfProgram> list = new ArrayList<>();
         listFilesForFolder(tempDirectory.toFile(), list);
-        System.out.println(tempDirectory);
-        list.forEach(file -> {
-            //System.out.println("name "+file.getName());
-            file.setName(file.getName().replace(tempDirectory.toString(), ""));
-        });
+        list.forEach(file -> file.setName(file.getName().replace(tempDirectory.toString(), "")));
         try {
             Files.deleteIfExists(programFile.toPath());
             Files.createFile(programFile.toPath());

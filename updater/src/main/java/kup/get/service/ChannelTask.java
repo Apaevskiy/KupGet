@@ -1,78 +1,103 @@
 package kup.get.service;
 
 import javafx.concurrent.Task;
+import kup.get.controller.socket.SocketService;
 import kup.get.entity.FileOfProgram;
-import lombok.Data;
+import org.springframework.core.io.buffer.DataBufferUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.AsynchronousFileChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.BiConsumer;
 
 import static kup.get.service.UpdateTask.createFileWithDirectory;
 
 public class ChannelTask extends Task<Void> {
-    private final List<Channel> states = new ArrayList<>();
-    private boolean checkStop=false;
+
+    private final SocketService socketService;
+    private final BiConsumer<Integer, Void> biConsumer;
+
+    private final ArrayDeque<FileOfProgram> waitingChannels = new ArrayDeque<>();
+    private final ArrayDeque<FileOfProgram> activeChannels = new ArrayDeque<>();
+    private Path tempDirectory;
+    private boolean checkStop = false;
+
+    public ChannelTask(SocketService socketService, BiConsumer<Integer, Void> biConsumer) {
+        this.socketService = socketService;
+        this.biConsumer = biConsumer;
+    }
+
     @Override
     protected Void call() {
-        while (!checkStop && states.size()!=0){
-
-        }
+        startTask();
+        System.out.println("stop ChannelTask");
         return null;
     }
 
-    public synchronized void stopTask(){
-        checkStop=true;
-    }
-    public synchronized Channel getChannel() {
-        List<Channel> channels = states.stream().filter(channel -> channel.fileChannel == null).collect(Collectors.toList());
-        while (channels.size()>5 || channels.size()==0) {
+    synchronized void startTask() {
+        while (!checkStop || waitingChannels.size() != 0) {
             try {
+                FileOfProgram file = getChannel();
+                if (file != null) {
+                    AsynchronousFileChannel asynchronousFileChannel = AsynchronousFileChannel.open(
+                            createFileWithDirectory(Paths.get(tempDirectory + File.separator + file.getName())),
+                            StandardOpenOption.WRITE);
+                    DataBufferUtils.write(socketService.downloadFileOfProgram(file), asynchronousFileChannel)
+                            .doOnComplete(() -> closeChannel(file))
+                            .subscribe(dataBuffer -> biConsumer.accept(dataBuffer.capacity(), null));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        while (activeChannels.size() != 0) {
+            try {
+                System.out.println("waitingChannels size: " + activeChannels.size());
                 wait();
-                channels = states.stream().filter(channel -> channel.fileChannel == null).collect(Collectors.toList());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        try {
-            Channel channel = channels.get(0);
-            channel.setFileChannel(AsynchronousFileChannel.open(
-                    createFileWithDirectory(channel.filePath),
-                    StandardOpenOption.WRITE));
-            System.out.println("start channel " + channel.fileOfProgram.getName());
-            return channel;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return getChannel();
+    }
+
+    public synchronized void stopTask() {
+        checkStop = true;
+        notifyAll();
+    }
+
+    public synchronized FileOfProgram getChannel() {
+        while (activeChannels.size() > 3 || waitingChannels.size() == 0) {
+            try {
+                wait();
+                if (checkStop && waitingChannels.size() == 0) return null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+        FileOfProgram channel = waitingChannels.poll();
+        activeChannels.add(channel);
+        return channel;
     }
 
-    public synchronized void putChannel(Path pathFile, FileOfProgram file) {
-        System.out.println("put channel " + file.getName());
-        states.add(new Channel(pathFile, file));
-        notify();
+    public synchronized void putChannel(FileOfProgram file) {
+//        System.out.println("put channel " + file.getName());
+        waitingChannels.add(file);
+        notifyAll();
     }
 
-    public synchronized void closeChannel(Channel channel) {
-        System.out.println("close channel " + channel.fileOfProgram.getName());
-        states.remove(channel);
-        notify();
+    public synchronized void closeChannel(FileOfProgram file) {
+//        System.out.println("close channel " + channel.fileOfProgram.getName());
+        activeChannels.remove(file);
+        notifyAll();
     }
 
-    @Data
-    public static class Channel {
-        private Path filePath;
-        private FileOfProgram fileOfProgram;
-        private AsynchronousFileChannel fileChannel;
-
-        public Channel(Path fileChannel, FileOfProgram fileOfProgram) {
-            this.filePath = fileChannel;
-            this.fileOfProgram = fileOfProgram;
-        }
+    public void setTempDirectory(Path tempDirectory) {
+        this.tempDirectory = tempDirectory;
     }
 }
