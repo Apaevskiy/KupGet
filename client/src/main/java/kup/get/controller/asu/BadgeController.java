@@ -31,6 +31,7 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.RegionUtil;
+import org.springframework.util.ResourceUtils;
 
 import java.awt.*;
 import java.io.File;
@@ -55,10 +56,10 @@ public class BadgeController extends MyAnchorPane {
     private byte[] logo;
     private final ObservableList<Badge> people = FXCollections.observableArrayList();
 
-    public BadgeController(Services services, File fileLogo) {
+    public BadgeController(Services services) {
         this.services = services;
         try {
-            this.logo = Files.readAllBytes(fileLogo.toPath());
+            this.logo = Files.readAllBytes(ResourceUtils.getFile("classpath:images/logo.png").toPath());
         } catch (IOException e) {
             this.logo = null;
             e.printStackTrace();

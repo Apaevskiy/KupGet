@@ -2,7 +2,6 @@ package kup.get.service.update;
 
 import kup.get.entity.postgres.update.FileOfProgram;
 import kup.get.entity.postgres.update.Version;
-import lombok.NonNull;
 import org.apache.poi.util.IOUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,9 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -99,13 +96,6 @@ public class ZipService {
 
 
     public void listFilesForFolder(File folder, List<FileOfProgram> list) {
-        try {
-            if (!folder.exists())
-                Files.createDirectory(folder.toPath());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         for (File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
                 listFilesForFolder(fileEntry, list);

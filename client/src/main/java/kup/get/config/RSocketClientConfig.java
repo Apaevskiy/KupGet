@@ -34,13 +34,4 @@ public class RSocketClientConfig {
         return new AtomicReference<>(new SequentialTransition());
     }
 
-    @Bean
-    File getLogo(){
-        try {
-            return ResourceUtils.getFile("classpath:images/logo.png");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
 }

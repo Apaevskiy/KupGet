@@ -5,6 +5,7 @@ import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -16,7 +17,6 @@ public class ZipService {
     private List<FileOfProgram> read(ZipInputStream zipInputStream) {
         List<FileOfProgram> list = new ArrayList<>();
         ZipEntry entry;
-//        ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(file));
         try {
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
@@ -36,20 +36,13 @@ public class ZipService {
         return list;
     }
 
-    public boolean writeZip(List<FileOfProgram> filesOfProgram, File file) {
+    public void writeZip(List<FileOfProgram> filesOfProgram, File file) {
         System.out.println("writeZip \t" + file.getAbsolutePath());
         try (ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(file))) {
             for (FileOfProgram fileOfProgram : filesOfProgram) {
-                ZipEntry entry;
-                if (fileOfProgram.getFile() == null) {
-                    entry = new ZipEntry(fileOfProgram.getName());
+                ZipEntry entry = new ZipEntry(fileOfProgram.getName());
                     entry.setSize(fileOfProgram.getSize());
-                    entry.setExtra(fileOfProgram.getComment().getBytes());
                     entry.setTime(fileOfProgram.getTime());
-
-                } else {
-                    entry = fileOfProgram.getFile();
-                }
                 zout.putNextEntry(entry);
                 if (fileOfProgram.getSize()!=0)
                     IOUtils.copy(new ByteArrayInputStream(fileOfProgram.getContent()), zout);
@@ -59,9 +52,7 @@ public class ZipService {
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println(e.getMessage());
-            return false;
         }
-        return true;
     }
 
     public List<FileOfProgram> readInputStream(InputStream stream) {
@@ -74,6 +65,25 @@ public class ZipService {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
             return null;
+        }
+    }
+
+    public void read(File file, Path tempDirectory) {
+        try(ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(file)))
+        {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                FileOutputStream fout = new FileOutputStream(tempDirectory + entry.getName());
+                for (int c = zipInputStream.read(); c != -1; c = zipInputStream.read()) {
+                    fout.write(c);
+                }
+                fout.flush();
+                zipInputStream.closeEntry();
+                fout.close();
+            }
+            zipInputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

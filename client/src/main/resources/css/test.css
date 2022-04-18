@@ -38,11 +38,6 @@
     -fx-text-fill: limegreen;
     -fx-font-size: 16;
 }
-.testButton {
-    -fx-padding: 8 20;
-    -fx-background-color: -background-color;
-    -fx-text-fill: -text-color;
-}
 
 .date-picker, .text-area, .text-field, .combo-box {
     -fx-border-color: -background-color;

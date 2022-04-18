@@ -20,7 +20,6 @@ public abstract class MyAnchorPane extends AnchorPane {
             loader.load();
 
             this.setId(this.getClass().getName());
-            this.getStyleClass().add("hidden");
             AnchorPane.setTopAnchor(this, 0.0);
             AnchorPane.setBottomAnchor(this, 0.0);
             AnchorPane.setLeftAnchor(this, 0.0);

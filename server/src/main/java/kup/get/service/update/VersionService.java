@@ -9,15 +9,20 @@ import lombok.Synchronized;
 import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.util.FileUtil;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.channels.AsynchronousFileChannel;
+import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -59,12 +64,20 @@ public class VersionService {
     }
 
 
-    public List<FileOfProgram> getFilesOfProgram(){
+    public List<FileOfProgram> getFilesOfProgram() {
+        File folder = new File("program");
+        try {
+            if (!folder.exists()) {
+                Files.createDirectory(folder.toPath());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         List<FileOfProgram> list = new ArrayList<>();
-        zipService.listFilesForFolder(new File("program"), list);
+        zipService.listFilesForFolder(folder, list);
+        list.forEach(fileOfProgram -> fileOfProgram.setName(fileOfProgram.getName().replaceAll("^" + folder.getName() + "\\\\", "")));
         return list;
     }
-
 
 
     @Synchronized
@@ -77,5 +90,16 @@ public class VersionService {
                     zipService.update(save(inf, comment), file, zipConfig.getZipEntry());
                     log.info("check delete buffer file " + file.delete());
                 });
+    }
+
+    public Flux<DataBuffer> getContentOfFile(FileOfProgram fileOfProgram) {
+        Resource resource;
+        try {
+            resource = new UrlResource("file:" + "program" + File.separator + fileOfProgram.getName());
+            return DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 4096);
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            return Flux.empty();
+        }
     }
 }
