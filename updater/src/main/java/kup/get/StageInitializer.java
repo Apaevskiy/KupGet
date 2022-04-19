@@ -22,9 +22,7 @@ public class StageInitializer implements ApplicationListener<JavaFxApplication.S
 
     public StageInitializer(MainController mainController) {
         this.scene = new Scene(mainController);
-//        mainController.setPrefWidth(1300);
-//        mainController.setPrefHeight(800);
-//        scene.addEventFilter(KeyEvent.KEY_PRESSED, mainController::switchPane);
+
     }
 
     @Override
@@ -34,6 +32,8 @@ public class StageInitializer implements ApplicationListener<JavaFxApplication.S
         stage.setScene(scene);
         stage.getIcons().add(new Image("/images/logo.png"));
         stage.show();
+        stage.setWidth(500);
+        stage.setHeight(200);
     }
 
 }

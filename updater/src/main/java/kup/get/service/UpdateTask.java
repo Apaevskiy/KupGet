@@ -1,160 +1,193 @@
 package kup.get.service;
 
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import kup.get.controller.socket.SocketService;
 import kup.get.entity.FileOfProgram;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 
-import java.io.*;
-import java.net.URL;
-import java.nio.file.*;
-import java.nio.file.attribute.FileTime;
-import java.util.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 import java.util.jar.*;
-import java.util.zip.CRC32;
-import java.util.zip.Deflater;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
+import java.util.zip.ZipFile;
 
 @Slf4j
-public class UpdateTask extends Task<File> {
-    private final ZipService zipService;
-    private final List<FileOfProgram> files;
-    private final double sizeFiles;
-    private final AtomicReference<Double> progress = new AtomicReference<>(0.0);
-    private final SocketService socketService;
-    private final ChannelTask channelTask;
+public class UpdateTask extends Task<Path> {
 
-    public UpdateTask(List<FileOfProgram> files, SocketService socketService, ZipService zipService) {
-        this.zipService = zipService;
+    private final SocketService socketService;
+
+    private final ArrayDeque<FileOfProgram> deque = new ArrayDeque<>();
+    private boolean checkStop = false;
+    private final AtomicReference<Long> progress = new AtomicReference<>(0L);
+    private final AtomicReference<Long> sizeFiles = new AtomicReference<>(0L);
+
+    public UpdateTask(SocketService socketService) {
         this.socketService = socketService;
-        this.files = files;
-        this.sizeFiles = files.stream().mapToDouble(FileOfProgram::getSize).sum();
-        this.channelTask = new ChannelTask(socketService, (value, unused) -> {
-            progress.set(progress.get() + value);
-            this.updateInformation(progress, sizeFiles);
-        });
     }
 
     @Override
-    protected File call() {
+    protected Path call() {
         this.updateMessage("Получение списка обновлений...");
-//        File oldFile = createFileWithDirectory(Paths.get()).toFile();
-//        File programFile = createFileWithDirectory(Paths.get()).toFile();
-
-        try (JarInputStream jarInputStream = new JarInputStream(new FileInputStream(createFileWithDirectory(Paths.get("bin/client.jar")).toFile()));
-             JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(createFileWithDirectory(Paths.get("bin/client1.jar")).toFile()), jarInputStream.getManifest())) {
-//            jarOutputStream.setLevel(Deflater.BEST_COMPRESSION);
-
-            System.out.println("start " + jarInputStream.getManifest());
-            JarEntry entry;
-            while ((entry = jarInputStream.getNextJarEntry()) != null) {
-                FileOfProgram fileOfProgram = new FileOfProgram(entry);
-                if (files.contains(fileOfProgram)) {
-
-                    jarOutputStream.putNextEntry(entry);
-                    if (fileOfProgram.getSize() != 0) {
-                        for (int c = jarInputStream.read(); c != -1; c = jarInputStream.read()) {
-                            jarOutputStream.write(c);
-                        }
-                    }
-                    progress.set(progress.get() + fileOfProgram.getSize());
-                    this.updateInformation(progress, sizeFiles);
-                    jarOutputStream.closeEntry();
-                    files.remove(fileOfProgram);
-                }
-                jarInputStream.closeEntry();
+        Path oldJarFile = Paths.get("bin/client.jar");
+        Path newPathJarFile = Paths.get("bin/client1.jar");
+        try {
+            if (oldJarFile.getParent() != null) {
+                Files.createDirectories(oldJarFile.getParent());
             }
-            downloadOtherFiles(jarOutputStream);
+            JarInputStream inputStream = new JarInputStream(new FileInputStream("update/4.jar"));
+            Manifest manifest = inputStream.getManifest();
+            System.out.println("manifest.getMainAttributes");
+            for (Object o : manifest.getMainAttributes().keySet()){
+                System.out.println("key: " + o + " value: " + manifest.getMainAttributes().get(o));
+            }
+            System.out.println("manifest.getEntries");
+            for (String o : manifest.getEntries().keySet()){
+                System.out.println("key: " + o + " value: " + manifest.getEntries().get(o));
+            }
 
-//                                    socketService.downloadFileOfProgram(fileOfProgram)
-            jarInputStream.close();
+            if (Files.exists(oldJarFile)) {
+                JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(newPathJarFile.toFile()));
+                ZipFile zipFile = new ZipFile(oldJarFile.toFile());
+                uploadJarFile(zipFile, jarOutputStream);
+                jarOutputStream.close();
+                zipFile.close();
+                return newPathJarFile;
+//                Files.delete(oldJarFile);
+//                newPathJarFile.toFile().renameTo(oldJarFile.toFile());
+            } else {
+                JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(oldJarFile.toString()));
+                uploadJarFile(jarOutputStream);
+                jarOutputStream.close();
+                return oldJarFile;
+            }
+
+        }catch (ZipException e){
+            e.printStackTrace();
+            try {
+                Files.deleteIfExists(oldJarFile);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         return null;
     }
 
-    synchronized void downloadOtherFiles(JarOutputStream zout) {
-        for (FileOfProgram fileOfProgram : files) {
+    private void uploadJarFile(JarOutputStream jarOutputStream) {
+        while (!checkStop || deque.size() != 0) {
+            FileOfProgram fileOfProgram = getFileOfProgram();
+            if (fileOfProgram != null) {
+                downloadOtherFiles(jarOutputStream, fileOfProgram);
+            }
+        }
+    }
+
+    synchronized void uploadJarFile(ZipFile zipFile, JarOutputStream jarOutputStream) {
+        while (!checkStop || deque.size() != 0) {
             try {
+                FileOfProgram fileOfProgram = getFileOfProgram();
+                if (fileOfProgram != null) {
+                    ZipEntry entry = zipFile.getEntry(fileOfProgram.getName().replaceAll("\\\\", "/"));
+                    if (entry != null) {
+                        jarOutputStream.putNextEntry(entry);
+                        if (fileOfProgram.getSize() > 0) {
+                            IOUtils.copy(zipFile.getInputStream(entry), jarOutputStream);
+                            this.updateInformation(fileOfProgram.getSize());
+                        }
+                        jarOutputStream.closeEntry();
+                    } else {
+                        downloadOtherFiles(jarOutputStream, fileOfProgram);
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
-                JarEntry entry = new JarEntry(fileOfProgram.getName());
-                entry.setTime(fileOfProgram.getTime());
-//                entry.setMethod(JarEntry.STORED);
-//                entry.setCompressedSize(fileOfProgram.getSize());
-                entry.setSize(fileOfProgram.getSize());
-                zout.putNextEntry(entry);
+    public synchronized FileOfProgram getFileOfProgram() {
+        while (deque.size() == 0) {
+            try {
+                wait();
+                if (checkStop && deque.size() == 0) return null;
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return deque.poll();
+    }
 
+    public synchronized void addFileOfProgram(FileOfProgram file) {
+        deque.add(file);
+        sizeFiles.accumulateAndGet(file.getSize(), Long::sum);
+        notify();
+    }
 
-                CRC32 crc = new CRC32();
-                ArrayDeque<DataBuffer> deque = new ArrayDeque<>();
+    public synchronized void stopTask() {
+        checkStop = true;
+        notifyAll();
+    }
+    synchronized void thisNotify() {
+        notifyAll();
+    }
+    synchronized void downloadOtherFiles(JarOutputStream jarOutputStream, FileOfProgram fileOfProgram) {
+
+        try {
+
+            JarEntry entry = new JarEntry(fileOfProgram.getName());
+            entry.setTime(fileOfProgram.getTime());
+            entry.setSize(fileOfProgram.getSize());
+            jarOutputStream.putNextEntry(entry);
+            AtomicBoolean checkReleaseDataBuffer = new AtomicBoolean(false);
                 socketService.downloadFileOfProgram(fileOfProgram)
-                        .doOnComplete(this::closeEntry)
+                        .doOnComplete(() -> {
+                            checkReleaseDataBuffer.set(true);
+                            this.thisNotify();
+                        })
                         .subscribe(dataBuffer -> {
                             byte[] bytes = new byte[dataBuffer.readableByteCount()];
                             dataBuffer.read(bytes);
                             DataBufferUtils.release(dataBuffer);
                             try {
-                                zout.write(bytes);
+                                jarOutputStream.write(bytes);
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            progress.set(progress.get() + dataBuffer.capacity());
-                            this.updateInformation(progress, sizeFiles);
-                            /*deque.add(dataBuffer);
-                            crc.update(dataBuffer.asByteBuffer());*/
+                            this.updateInformation(dataBuffer.capacity());
                         });
+            while (!checkReleaseDataBuffer.get()){
                 wait();
-
-                /*entry.setCrc(crc.getValue());
-                zout.putNextEntry(entry);
-
-                while (!deque.isEmpty()) {
-                    DataBuffer dataBuffer = deque.poll();
-                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                    dataBuffer.read(bytes);
-                    DataBufferUtils.release(dataBuffer);
-                    zout.write(bytes);
-                    progress.set(progress.get() + dataBuffer.capacity());
-                    this.updateInformation(progress, sizeFiles);
-                }
-*/
-
-//                System.out.println("start");
-//                Thread.sleep(5000);
-                zout.closeEntry();
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
             }
 
-        }
-    }
-
-    synchronized void closeEntry() {
-        this.notify();
-    }
-
-    void updateInformation(AtomicReference<Double> progress, double size) {
-        this.updateMessage(String.format("Загрузка:\n%.2f / %.2f мб", progress.get() / 1024 / 1024, size / 1024 / 1024));
-        this.updateProgress(progress.get(), size);
-    }
-
-    public static Path createFileWithDirectory(Path file) {
-        try {
-            if (!file.toFile().exists()) {
-                if (file.getParent() != null) {
-                    Files.createDirectories(file.getParent());
-                }
-                Files.createFile(file);
-            }
-        } catch (IOException e) {
+            jarOutputStream.closeEntry();
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        return file;
+
+
     }
+
+
+    void updateInformation(long size) {
+        progress.accumulateAndGet(size, Long::sum);
+        this.updateMessage(String.format("Загрузка:\n%.2f / %.2f мб", progress.get() / 1024.0 / 1024, sizeFiles.get() / 1024.0 / 1024));
+        this.updateProgress(progress.get(), sizeFiles.get());
+    }
+
 }
