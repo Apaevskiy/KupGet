@@ -9,14 +9,14 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
-import java.util.jar.JarOutputStream;
+import java.util.jar.*;
 import java.util.zip.CRC32;
+import java.util.zip.Deflater;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -46,33 +46,33 @@ public class UpdateTask extends Task<File> {
 //        File oldFile = createFileWithDirectory(Paths.get()).toFile();
 //        File programFile = createFileWithDirectory(Paths.get()).toFile();
 
+        try (JarInputStream jarInputStream = new JarInputStream(new FileInputStream(createFileWithDirectory(Paths.get("bin/client.jar")).toFile()));
+             JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(createFileWithDirectory(Paths.get("bin/client1.jar")).toFile()), jarInputStream.getManifest())) {
+//            jarOutputStream.setLevel(Deflater.BEST_COMPRESSION);
 
-        try (JarInputStream zipInputStream = new JarInputStream(new FileInputStream("bin/client.jar"));
-             JarOutputStream zout = new JarOutputStream(new FileOutputStream("bin/client1.jar"))) {
-            System.out.println("start");
+            System.out.println("start " + jarInputStream.getManifest());
             JarEntry entry;
-            while ((entry = zipInputStream.getNextJarEntry()) != null) {
-                if (!entry.isDirectory()) {
-                    FileOfProgram fileOfProgram = new FileOfProgram(entry);
-                    if (files.contains(fileOfProgram)) {
-                        zout.putNextEntry(entry);
-                        if (fileOfProgram.getSize() != 0) {
-                            for (int c = zipInputStream.read(); c != -1; c = zipInputStream.read()) {
-                                zout.write(c);
-                            }
+            while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                FileOfProgram fileOfProgram = new FileOfProgram(entry);
+                if (files.contains(fileOfProgram)) {
+
+                    jarOutputStream.putNextEntry(entry);
+                    if (fileOfProgram.getSize() != 0) {
+                        for (int c = jarInputStream.read(); c != -1; c = jarInputStream.read()) {
+                            jarOutputStream.write(c);
                         }
-                        progress.set(progress.get() + fileOfProgram.getSize());
-                        this.updateInformation(progress, sizeFiles);
-                        zout.closeEntry();
-                        files.remove(fileOfProgram);
                     }
-                    zipInputStream.closeEntry();
+                    progress.set(progress.get() + fileOfProgram.getSize());
+                    this.updateInformation(progress, sizeFiles);
+                    jarOutputStream.closeEntry();
+                    files.remove(fileOfProgram);
                 }
+                jarInputStream.closeEntry();
             }
-            downloadOtherFiles(zout);
+            downloadOtherFiles(jarOutputStream);
 
 //                                    socketService.downloadFileOfProgram(fileOfProgram)
-            zipInputStream.close();
+            jarInputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -157,5 +157,4 @@ public class UpdateTask extends Task<File> {
         }
         return file;
     }
-
 }

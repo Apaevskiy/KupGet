@@ -14,19 +14,19 @@ import java.util.zip.ZipOutputStream;
 
 @Service
 public class ZipService {
-    /*private List<FileOfProgram> read(ZipInputStream zipInputStream) {
+    private List<FileOfProgram> read(ZipInputStream zipInputStream) {
         List<FileOfProgram> list = new ArrayList<>();
         ZipEntry entry;
         try {
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 if (!entry.isDirectory()) {
-                    ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                    /*ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                     for (int c = zipInputStream.read(); c != -1; c = zipInputStream.read()) {
                         outStream.write(c);
-                    }
-                    list.add(new FileOfProgram(entry, outStream.toByteArray()));
-                    zipInputStream.closeEntry();
+                    }*/
+                    list.add(new FileOfProgram(entry/*, outStream.toByteArray()*/));
                 } else list.add(new FileOfProgram(entry));
+//                zipInputStream.closeEntry();
             }
             zipInputStream.close();
         } catch (IOException e) {
@@ -44,9 +44,9 @@ public class ZipService {
                     entry.setSize(fileOfProgram.getSize());
                     entry.setTime(fileOfProgram.getTime());
                 zout.putNextEntry(entry);
-                if (fileOfProgram.getSize()!=0)
+                /*if (fileOfProgram.getSize()!=0)
                     IOUtils.copy(new ByteArrayInputStream(fileOfProgram.getContent()), zout);
-
+*/
                 zout.closeEntry();
             }
         } catch (IOException e) {
@@ -85,5 +85,5 @@ public class ZipService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 }

@@ -4,7 +4,6 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.concurrent.WorkerStateEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -17,17 +16,21 @@ import kup.get.controller.socket.SocketService;
 import kup.get.entity.FileOfProgram;
 import kup.get.entity.Version;
 import kup.get.service.PropertyService;
-import kup.get.service.UpdateTask;
 import kup.get.service.ZipService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 @FxmlLoader(path = "/fxml/main.fxml")
 @Slf4j
@@ -116,7 +119,60 @@ public class MainController extends MyAnchorPane {
     }
 
     void updateProgram(List<FileOfProgram> files, Version versionProgram, Version actualVersion) {
-        UpdateTask task = new UpdateTask(files, socketService, zipService);
+
+        ZipInputStream jarInputStream = null;
+        ZipOutputStream jarOutputStream = null;
+        try {
+            jarInputStream = new ZipInputStream(new FileInputStream("bin/client.jar"));
+            jarOutputStream = new ZipOutputStream(new FileOutputStream("bin/client1.jar"));
+
+//            jarOutputStream.setLevel(Deflater.BEST_COMPRESSION);
+
+            System.out.println("start " /*+ jarInputStream.getManifest()*/);
+            ZipEntry entry;
+            while ((entry = jarInputStream.getNextEntry()) != null) {
+                    FileOfProgram fileOfProgram = new FileOfProgram(entry);
+                    if (files.contains(fileOfProgram)) {
+                        log.info(fileOfProgram.toString());
+                        jarOutputStream.putNextEntry(entry);
+                        if (fileOfProgram.getSize() > 0) {
+                            IOUtils.copy(jarInputStream, jarOutputStream);
+                        }
+//                        jarOutputStream.closeEntry();
+                        files.remove(fileOfProgram);
+//                        System.out.println(files.size());
+                    }
+                    else {
+                        log.error(fileOfProgram.toString());
+                        Optional<FileOfProgram> optional = files.stream().filter(file -> file.getName().equals(fileOfProgram.getName())).findFirst();
+                        if(optional.isPresent()){
+                            System.out.println(optional.get());
+//                            Thread.sleep(10000);
+                        }
+
+                    }
+                    jarInputStream.closeEntry();
+            }
+            jarInputStream.close();
+            jarOutputStream.close();
+
+            System.out.println("close");
+            System.out.println("close");
+            System.out.println("close");
+            System.out.println("close");
+
+            List<FileOfProgram> list = zipService.readFile(new File("bin/client.jar"))
+                    .stream().filter(file -> file.getSize()==-1)
+                    .collect(Collectors.toList());
+            System.out.println(list.size());
+//            list.forEach(System.out::println);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+
+        /*UpdateTask task = new UpdateTask(files, socketService, zipService);
         Thread threadTask = new Thread(task);
         updateInformationArea.setText("");
 
@@ -129,21 +185,21 @@ public class MainController extends MyAnchorPane {
 
         task.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, t -> {
             File file = task.getValue();
+            System.out.println("END " + file);
             if (file != null) {
-                System.out.println("END " + file.getAbsolutePath());
                 socketService.getUpdateInformation(versionProgram)
                         .subscribe(version ->
                                 updateInformationArea.setText(updateInformationArea.getText() + "\n\tОбновление " + version.getRelease() + ":\n" + version.getInformation()));
 //                propertyService.saveVersion(actualVersion);
 
-                /*String[] run = {"java", "-jar", file.getAbsolutePath()};
+                *//*String[] run = {"java", "-jar", file.getAbsolutePath()};
                 try {
                     Runtime.getRuntime().exec(run);
                 } catch (Exception ex) {
                     ex.printStackTrace();
-                }*/
+                }*//*
             }
         });
-        threadTask.start();
+        threadTask.start();*/
     }
 }

@@ -98,6 +98,10 @@ public class ZipService {
     public void listFilesForFolder(File folder, List<FileOfProgram> list) {
         for (File fileEntry : folder.listFiles()) {
             if (fileEntry.isDirectory()) {
+                FileOfProgram fileOfProgram = new FileOfProgram();
+                fileOfProgram.setName(fileEntry.getPath());
+                fileOfProgram.setTime(fileEntry.lastModified());
+                list.add(fileOfProgram);
                 listFilesForFolder(fileEntry, list);
             } else {
                 FileOfProgram fileOfProgram = new FileOfProgram();
