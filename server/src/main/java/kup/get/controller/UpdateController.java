@@ -9,12 +9,19 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.jar.Attributes;
 
 @Controller
 @AllArgsConstructor
@@ -28,9 +35,7 @@ public class UpdateController {
 
     @MessageMapping("update.informationAboutUpdate")
     public Flux<Version> getInformationAboutUpdate(Mono<Version> message) {
-        return message.flatMapMany(version ->
-            Flux.fromIterable(service.getInformationAboutUpdate(version))
-        );
+        return message.flatMapMany(version -> Flux.fromIterable(service.getInformationAboutUpdate(version)));
     }
 
     @MessageMapping("update.getFilesOfProgram")
@@ -41,5 +46,11 @@ public class UpdateController {
     @MessageMapping("update.getContentOfFiles")
     public Flux<DataBuffer> getContentOfFile(Mono<FileOfProgram> mono) {
         return mono.flatMapMany(service::getContentOfFile);
+    }
+    @MessageMapping("asu.update")
+    Flux<HttpStatus> update(Flux<DataBuffer> content) throws IOException {
+        return Flux.concat(service.uploadFile(content), Mono.just(HttpStatus.OK))
+                .doOnError(Throwable::printStackTrace)
+                .onErrorReturn(HttpStatus.BAD_GATEWAY);
     }
 }

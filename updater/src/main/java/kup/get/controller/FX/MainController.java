@@ -11,7 +11,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import kup.get.config.RSocketClientBuilderImpl;
-import kup.get.controller.socket.SocketService;
+import kup.get.service.SocketService;
 import kup.get.entity.Version;
 import kup.get.service.PropertyService;
 import kup.get.service.UpdateTask;
@@ -103,14 +103,13 @@ public class MainController extends AnchorPane {
 
         task.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, t -> {
             Path file = task.getValue();
-            System.out.println(file);
             progressText.textProperty().unbind();
             if (file != null) {
                 progressText.setText("Обновление успешно установлено");
                 socketService.getUpdateInformation(versionProgram)
                         .subscribe(version ->
                                 updateInformationArea.setText(updateInformationArea.getText() + "⟳\tОбновление " + version.getRelease() + ":\n" + version.getInformation() + "\n\n"));
-//                propertyService.saveVersion(actualVersion);
+                propertyService.saveVersion(actualVersion);
                 this.getScene().getWindow().setHeight(400);
                 progressPane.setVisible(false);
                 updateInformationArea.setVisible(true);
@@ -129,10 +128,10 @@ public class MainController extends AnchorPane {
     }
 
     void runProject(String path) {
-        System.out.println("run " + path);
         String[] run = {"java", "-jar", path};
         try {
             Runtime.getRuntime().exec(run);
+            System.exit(0);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

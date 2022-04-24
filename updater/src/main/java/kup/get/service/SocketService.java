@@ -1,8 +1,9 @@
-package kup.get.controller.socket;
+package kup.get.service;
 
 import kup.get.config.RSocketClientBuilderImpl;
 import kup.get.entity.FileOfProgram;
 import kup.get.entity.Version;
+import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -15,15 +16,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 @Component
+@AllArgsConstructor
 public class SocketService {
     private final RSocketClientBuilderImpl config;
-
-    public SocketService(RSocketClientBuilderImpl config) {
-        this.config = config;
-    }
 
     public Mono<Version> getActualVersion() {
         return config.getRequester()
@@ -44,13 +45,6 @@ public class SocketService {
                 .route("update.getFilesOfProgram")
                 .retrieveFlux(FileOfProgram.class);
     }
-
-    /*public Flux<FileOfProgram> getContentOfFiles(List<FileOfProgram> files) {
-        return config.getRequester()
-                .route("update.getContentOfFiles")
-                .data(Flux.fromIterable(files))
-                .retrieveFlux(FileOfProgram.class);
-    }*/
 
     public Flux<DataBuffer> downloadFileOfProgram(FileOfProgram fileOfProgram) {
         return config.getRequester()

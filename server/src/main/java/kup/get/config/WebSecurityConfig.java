@@ -84,10 +84,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Bean
     public RSocketStrategies rsocketStrategies() {
         return RSocketStrategies.builder()
-                .metadataExtractorRegistry(registry -> {
-                    registry.metadataToExtract(MimeType.valueOf("message/version.information"), String.class, "versionInf");
-                    registry.metadataToExtract(MimeType.valueOf("message/version.comment"), String.class, "versionComment");
-                })
                 .encoders(encoders -> encoders.add(new Jackson2CborEncoder()))
                 .decoders(decoders -> decoders.add(new Jackson2CborDecoder()))
                 .build();

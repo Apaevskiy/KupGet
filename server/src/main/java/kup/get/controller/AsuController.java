@@ -52,12 +52,5 @@ public class AsuController {
         return userMono.map(services.getUserService()::saveUser);
     }
 
-    @MessageMapping("asu.update")
-    Flux<HttpStatus> update(@Headers Map<String, Object> metadata, @Payload Flux<DataBuffer> content) throws IOException {
-        for (String key : metadata.keySet())
-            System.out.println(key + ": " + metadata.get(key));
-        return Flux.concat(services.getVersionService().uploadFile(content, (String) metadata.get("versionInf"), (String) metadata.get("versionComment")), Mono.just(HttpStatus.OK))
-                .doOnError(Throwable::printStackTrace)
-                .onErrorReturn(HttpStatus.BAD_GATEWAY);
-    }
+
 }
