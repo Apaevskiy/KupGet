@@ -37,7 +37,7 @@ public class RSocketClientBuilderImpl {
 
     public void createRequester(){
         SocketAcceptor responder = RSocketMessageHandler.responder(rsocketStrategies, new ClientHandler());
-        UsernamePasswordMetadata metadata = new UsernamePasswordMetadata("sanya", "1101");
+        UsernamePasswordMetadata metadata = new UsernamePasswordMetadata("setup", "123");
         this.requester = builder
                 .setupRoute("shell-client")
                 .setupData(System.getenv().get("COMPUTERNAME"))

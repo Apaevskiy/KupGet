@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.core.io.buffer.DataBufferUtils;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,10 +15,7 @@ import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
-import java.util.jar.JarEntry;
-import java.util.jar.JarOutputStream;
-import java.util.zip.CRC32;
+import java.util.jar.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -39,11 +37,13 @@ public class UpdateTask extends Task<Path> {
     @Override
     protected Path call() {
         this.updateMessage("Получение списка обновлений...");
-
         Path oldJarFile = Paths.get("bin/client.jar");
-        Path newPathJarFile = Paths.get("bin/bufferFile.jar");
-
+        Path newPathJarFile = Paths.get("bin/client1.jar");
         try {
+            if (oldJarFile.getParent() != null) {
+                Files.createDirectories(oldJarFile.getParent());
+            }
+
             if (Files.exists(oldJarFile)) {
                 JarOutputStream jarOutputStream = new JarOutputStream(new FileOutputStream(newPathJarFile.toFile()));
                 ZipFile zipFile = new ZipFile(oldJarFile.toFile());
@@ -58,11 +58,10 @@ public class UpdateTask extends Task<Path> {
                 return oldJarFile;
             }
 
-        } catch (ZipException e) {
+        }catch (ZipException e){
             e.printStackTrace();
             try {
                 Files.deleteIfExists(oldJarFile);
-                Files.deleteIfExists(newPathJarFile);
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -128,65 +127,46 @@ public class UpdateTask extends Task<Path> {
         checkStop = true;
         notifyAll();
     }
-
     synchronized void thisNotify() {
         notifyAll();
     }
-
     synchronized void downloadOtherFiles(JarOutputStream jarOutputStream, FileOfProgram fileOfProgram) {
+
         try {
-            if (fileOfProgram.getSize() != 0) {
-                JarEntry entry = new JarEntry(fileOfProgram.getName());
-                entry.setTime(fileOfProgram.getTime());
-                entry.setSize(fileOfProgram.getSize());
-                entry.setMethod(fileOfProgram.getMethod());
-                entry.setCompressedSize(fileOfProgram.getCompressedSize());
-                if (fileOfProgram.getMethod()==ZipEntry.STORED) {
-                    CRC32 crc32 = new CRC32();
-                    downloadFileOfProgram(fileOfProgram, (bytes, unused) -> crc32.update(bytes));
-                    entry.setCrc(crc32.getValue());
-                }
-                jarOutputStream.putNextEntry(entry);
-                downloadFileOfProgram(fileOfProgram, (bytes, capacity) -> {
-                    try {
-                        jarOutputStream.write(bytes);
-                        this.updateInformation(capacity);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-            } else {
-                JarEntry entry = new JarEntry(fileOfProgram.getName().endsWith("/") ? fileOfProgram.getName() : fileOfProgram.getName() + "/");
-                entry.setTime(fileOfProgram.getTime());
-                jarOutputStream.putNextEntry(entry);
+
+            JarEntry entry = new JarEntry(fileOfProgram.getName());
+            entry.setTime(fileOfProgram.getTime());
+            entry.setSize(fileOfProgram.getSize());
+            jarOutputStream.putNextEntry(entry);
+            AtomicBoolean checkReleaseDataBuffer = new AtomicBoolean(false);
+            socketService.downloadFileOfProgram(fileOfProgram)
+                    .doOnComplete(() -> {
+                        checkReleaseDataBuffer.set(true);
+                        this.thisNotify();
+                    })
+                    .subscribe(dataBuffer -> {
+                        byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                        dataBuffer.read(bytes);
+                        DataBufferUtils.release(dataBuffer);
+                        try {
+                            jarOutputStream.write(bytes);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        this.updateInformation(dataBuffer.capacity());
+                    });
+            while (!checkReleaseDataBuffer.get()){
+                wait();
             }
 
             jarOutputStream.closeEntry();
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+
+
     }
-    private synchronized void downloadFileOfProgram(FileOfProgram fileOfProgram, BiConsumer<byte[], Integer> consumer){
-        AtomicBoolean checkReleaseDataBuffer = new AtomicBoolean(false);
-        socketService.downloadFileOfProgram(fileOfProgram)
-                .doOnComplete(() -> {
-                    checkReleaseDataBuffer.set(true);
-                    this.thisNotify();
-                })
-                .subscribe(dataBuffer -> {
-                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
-                    dataBuffer.read(bytes);
-                    DataBufferUtils.release(dataBuffer);
-                    consumer.accept(bytes, dataBuffer.capacity());
-                });
-        while (!checkReleaseDataBuffer.get()) {
-            try {
-                wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+
 
     void updateInformation(long size) {
         progress.accumulateAndGet(size, Long::sum);

@@ -39,7 +39,6 @@ public class SocketService {
                 .retrieveFlux(Version.class);
     }
 
-
     public Flux<FileOfProgram> getFilesOfProgram() {
         return config.getRequester()
                 .route("update.getFilesOfProgram")

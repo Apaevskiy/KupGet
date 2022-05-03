@@ -119,7 +119,7 @@ public class MainController extends MyAnchorPane {
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("Служба движения", new MaterialDesignIconView(MaterialDesignIcon.BUS))
-                        .setRoles("ROLE_TRAFFIC", "ROLE_SUPERADMIN", "AFK")
+                        .setRoles("ROLE_TRAFFIC", "ROLE_ADMIN", "AFK")
                         .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
@@ -141,7 +141,7 @@ public class MainController extends MyAnchorPane {
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("КРС", new FontAwesomeIconView(FontAwesomeIcon.USER_SECRET))
-                        .setRoles("ROLE_KRS", "ROLE_SUPERADMIN")
+                        .setRoles("ROLE_KRS", "ROLE_ADMIN")
                         .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
@@ -154,7 +154,7 @@ public class MainController extends MyAnchorPane {
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("Энергослужба", new WeatherIconView(WeatherIcon.OWM_210))
-                        .setRoles("ROLE_ENERGY", "ROLE_SUPERADMIN")
+                        .setRoles("ROLE_ENERGY", "ROLE_ADMIN")
                         .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel));
         customMenuItemList.add(
                 CustomMenuItem.builder()
@@ -184,7 +184,7 @@ public class MainController extends MyAnchorPane {
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("Экспорт и импорт", new MaterialDesignIconView(MaterialDesignIcon.FILE_EXPORT))
-                        .setRoles("ROLE_TRAFFIC", "ROLE_SUPERADMIN", "AFK")
+                        .setRoles("ROLE_TRAFFIC", "ROLE_ADMIN", "AFK")
                         .setEventSwitchPane(event -> hiddenPages(importExportController)));
         customMenuItemList.add(
                 CustomMenuItem.builder()

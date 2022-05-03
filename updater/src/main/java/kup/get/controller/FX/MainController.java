@@ -1,4 +1,4 @@
-package kup.get.controller.FX;
+package kup.get.controller;
 
 import javafx.application.Platform;
 import javafx.concurrent.WorkerStateEvent;
