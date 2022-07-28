@@ -1,10 +1,9 @@
 package kup.get.service;
 
-import kup.get.entity.Version;
 import org.springframework.stereotype.Component;
-import org.springframework.util.ResourceUtils;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -14,29 +13,34 @@ public class PropertyService {
 
     public PropertyService() {
         try {
-            File file = ResourceUtils.getFile("classpath:setting.properties");
-            BufferedReader reader = new BufferedReader(new FileReader(file));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                String[] convertedString = line.split("=");
-                properties.put(convertedString[0], convertedString[1]);
+            File file = new File("setting.properties");
+            if (!file.exists()) {
+                Files.createFile(file.toPath());
+            } else {
+                BufferedReader reader = new BufferedReader(new FileReader(file));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] convertedString = line.split("=");
+                    if(convertedString.length == 2)
+                        properties.put(convertedString[0], convertedString[1]);
+                }
             }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public Version getVersion() {
-        return Version
-                .builder()
-                .id(Long.parseLong(properties.get("version.id")))
-                .release(properties.get("version.release"))
-                .build();
+    public Long getVersionId() {
+        try {
+            return Long.parseLong(getProperty("version.id", "0"));
+        } catch (Exception e){
+            return 0L;
+        }
     }
 
-    public void saveVersion(Version actualVersion) {
-        properties.put("version.id", String.valueOf(actualVersion.getId()));
-        properties.put("version.release", actualVersion.getRelease());
+    public void saveVersion(Long latestVersionId) {
+        properties.put("version.id", String.valueOf(latestVersionId));
         writeProperties();
     }
 
@@ -46,11 +50,24 @@ public class PropertyService {
             for (String key : properties.keySet()) {
                 sb.append(key).append('=').append(properties.get(key)).append("\r\n");
             }
-            FileWriter fileWriter = new FileWriter(ResourceUtils.getFile("classpath:setting.properties"));
+            FileWriter fileWriter = new FileWriter("setting.properties");
             fileWriter.write(sb.toString());
             fileWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public String getServerAddress() {
+        return "http://"+getProperty("server.ip", "192.168.0.2") + ":" + getProperty("server.port", "9090");
+    }
+
+    private String getProperty(String key, String value) {
+        String val = properties.get(key);
+        if(val == null){
+            properties.put(key, value);
+            writeProperties();
+            return value;
+        }
+        return val;
     }
 }

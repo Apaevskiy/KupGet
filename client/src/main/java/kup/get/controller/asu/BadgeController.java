@@ -165,8 +165,6 @@ public class BadgeController extends MyAnchorPane {
                     addLogo(bigBadgesSheet, row, column % 2 != 0 ? 1 : 4, 0.80);
                     if (column % 2 == 0) {
                         row += 5;
-                        System.out.println(row);
-
                         getRow(bigBadgesSheet, row++, 500);
                     }
                     column++;
@@ -218,7 +216,6 @@ public class BadgeController extends MyAnchorPane {
         getRow(sheet, rowNum++, 25 * 20);
 
         row = getRow(sheet, rowNum++, 25 * 20);
-        System.out.println(badge.getPerson().getRank());
         generateCell(row, colNum + 1,
                 badge.getPerson().getRank()!=null
                         ? badge.getPerson().getPosition().getName() + "\n" + RomanNumber.toRoman(badge.getPerson().getRank()) + " класса"
@@ -361,21 +358,26 @@ public class BadgeController extends MyAnchorPane {
 
     public void krsPeople() {
         services.getPersonService().getPeople()
-                .stream()
-                .filter(p -> p.getDepartment() != null && p.getDepartment().getId() == 31)
-                .forEach(p -> people.add(new Badge(p)));
+                .doFinally(signalType -> peopleTable.refresh())
+                .subscribe(p -> {
+                    if(p.getDepartment() != null && p.getDepartment().getId() == 31)
+                        people.add(new Badge(p));
+                });
     }
 
     public void trafficPeople() {
         services.getPersonService().getPeople()
-                .stream()
-                .filter(p -> p.getDepartment() != null && p.getDepartment().getId() == 151)
-                .forEach(p -> people.add(new Badge(p)));
+                .doFinally(signalType -> peopleTable.refresh())
+                .subscribe(p -> {
+                    if(p.getDepartment() != null && p.getDepartment().getId() == 151)
+                        people.add(new Badge(p));
+                });
     }
 
     public void allPeople() {
         services.getPersonService().getPeople()
-                .forEach(p -> people.add(new Badge(p)));
+                .doFinally(signalType -> peopleTable.refresh())
+                .subscribe(person -> people.add(new Badge(person)));
     }
 
     @Override

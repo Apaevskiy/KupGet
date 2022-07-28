@@ -87,7 +87,8 @@ public class TrafficItemTypeController extends MyAnchorPane {
             services.getTrafficService()
                     .saveItemType(type)
                     .onErrorResume(e -> {
-                        Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\nПри необходимости обратитесь к администратору"));
+                        createAlert("Ошибка", "Не удалось удалить элемент\n" +
+                                "При необходимости обратитесь к администратору");
                         return Mono.empty();
                     })
                     .doOnSuccess(it -> {

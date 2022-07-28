@@ -36,15 +36,11 @@ public class UserService implements UserDetailsService, ReactiveUserDetailsServi
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
-        if (user == null)
-            throw new UsernameNotFoundException("Пользователь не найден");
-        return user;
+        return getUserByUsername(username);
     }
 
     public User getUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username);
-
         if (user == null) {
             throw new UsernameNotFoundException("Пользователь не найден");
         }
@@ -81,14 +77,14 @@ public class UserService implements UserDetailsService, ReactiveUserDetailsServi
         return userRepository.save(user);
     }
 
-    public boolean deleteUser(Long userId) {
+    public Mono<Void> deleteUser(Long userId) {
         Optional<User> user = userRepository.findById(userId);
         if (user.isPresent()) {
             userRepository.deleteById(userId);
 //            logService.addLog("Удаление пользователя " + user.get().getUsername());
-            return true;
+            return Mono.empty();
         }
-        return false;
+        return null;
     }
 
     public boolean deleteUser(User user) {

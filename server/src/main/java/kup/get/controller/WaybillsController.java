@@ -1,20 +1,16 @@
 package kup.get.controller;
 
-import kup.get.entity.postgres.energy.Product;
-import kup.get.entity.postgres.energy.Waybills;
-import kup.get.service.Services;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.view.RedirectView;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Controller
 public class WaybillsController {
-    private final Services services;
+    /*private final Services services;
 
     public WaybillsController(Services services) {
         this.services = services;
@@ -51,9 +47,9 @@ public class WaybillsController {
         model.addAttribute("waybill", services.getWaybillsService().findById(id));
         model.addAttribute("products", services.getProductService().findAllByWaybillsId(id));
         return "admin/waybillsEdit";
-    }
+    }*/
 
-    @PatchMapping("/admin/waybills/{id}")
+    /*@PatchMapping("/admin/waybills/{id}")
     public RedirectView updateWaybills(@PathVariable(name = "id") Long id,
                                        @ModelAttribute(value = "waybills") Waybills waybills,
                                        RedirectAttributes redirectAttributes) {
@@ -156,5 +152,5 @@ public class WaybillsController {
                 redirectAttributes.addFlashAttribute("message", "Товар успешно изменён");
         }
         return new RedirectView("/admin/waybills/" + waybillsId, true);
-    }
+    }*/
 }

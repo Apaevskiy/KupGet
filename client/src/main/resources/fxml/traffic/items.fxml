@@ -68,7 +68,7 @@
             </TextField>
          </children>
       </HBox>
-      <Button fx:id="excelButton" alignment="CENTER" mnemonicParsing="false" styleClass="testButton" text="Выгрузить в Excel" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowSpan="2" GridPane.valignment="CENTER">
+      <Button fx:id="excelButton" alignment="CENTER" mnemonicParsing="false" styleClass="clickButton" text="Выгрузить в Excel" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowSpan="2" GridPane.valignment="CENTER">
          <graphic>
             <FontAwesomeIconView fill="WHITE" glyphName="TABLE" size="20" />
          </graphic>

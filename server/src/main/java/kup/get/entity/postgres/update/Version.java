@@ -15,7 +15,7 @@ public class Version {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-//    @Column(unique = true)
+    //    @Column(unique = true)
     private String release;
     private String information;
 

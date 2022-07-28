@@ -1,15 +1,14 @@
 package kup.get.controller.traffic;
 
-import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -22,10 +21,11 @@ import kup.get.entity.traffic.TrafficItemType;
 import kup.get.entity.traffic.TrafficTeam;
 import kup.get.entity.traffic.TrafficVehicle;
 import kup.get.service.Services;
+import kup.get.service.other.SheetService;
 import lombok.AllArgsConstructor;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
 import java.awt.*;
@@ -38,7 +38,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @FxmlLoader(path = "/fxml/traffic/items.fxml")
@@ -94,7 +93,6 @@ public class ItemController extends MyAnchorPane {
     private TextField searchVehicleField;
 
     private final Services services;
-    private final AtomicReference<SequentialTransition> transition;
     private final String nameItemColumn = "Предметы";
     private final ObservableList<Person> people = FXCollections.observableArrayList();
     private final ObservableList<TrafficItem> items = FXCollections.observableArrayList();
@@ -102,9 +100,8 @@ public class ItemController extends MyAnchorPane {
     private final ObservableList<TrafficVehicle> vehicles = FXCollections.observableArrayList();
     private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
 
-    public ItemController(Services services, AtomicReference<SequentialTransition> sequentialTransition) {
+    public ItemController(Services services) {
         this.services = services;
-        this.transition = sequentialTransition;
         ownerComboBox.setItems(FXCollections.observableArrayList(Owner.values()));
 
         itemTable
@@ -241,10 +238,10 @@ public class ItemController extends MyAnchorPane {
 
         dateStartField.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
             if (itemTypeComboBox.getValue() != null && !newValue.isEmpty()) {
-                try{
+                try {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
                     dateFinishField.setValue(LocalDate.parse(newValue, formatter).plusMonths(itemTypeComboBox.getValue().getDefaultDurationInMonth()));
-                } catch (DateTimeParseException ignored){
+                } catch (DateTimeParseException ignored) {
 
                 }
             }
@@ -353,78 +350,11 @@ public class ItemController extends MyAnchorPane {
         });
         excelButton.setOnAction(event -> {
             excelButton.setDisable(true);
-            System.out.println(itemTable.getColumns().stream().filter(col -> col.visibleProperty().get()).collect(Collectors.toList()).get(0).getCellObservableValue(0));
-            System.out.println(itemTable.getItems().size());
-
-            HSSFWorkbook workbook = new HSSFWorkbook();
-            Sheet sheet = workbook.createSheet("Отчёт");
-            org.apache.poi.ss.usermodel.Font font = workbook.createFont();
-            style = workbook.createCellStyle();
-            style.setFont(font);
-            style.setAlignment(HorizontalAlignment.CENTER);
-            style.setVerticalAlignment(VerticalAlignment.CENTER);
-            font.setFontHeight((short) (12 * 20));
-            font.setFontName("Times New Roman");
-
-            AtomicInteger colNum = new AtomicInteger(0);
-            for (TableColumn<?, ?> tableColumn : itemTable.getColumns().stream().filter(col -> col.visibleProperty().get()).collect(Collectors.toList())) {
-                getColumn(tableColumn, sheet, 0, colNum);
-                System.out.println("colNum: " + colNum);
-            }
-
-            try {
-                SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
-                File file = new File("Отчёт " + ft.format(new Date()) + ".xls");
-                FileOutputStream outFile = new FileOutputStream(file);
-                workbook.write(outFile);
-                outFile.close();
-                Desktop.getDesktop().open(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
+            SheetService sheetService = new SheetService();
+            sheetService.writeDataOfColumnsToSheet("Отчёт", itemTable);
+            sheetService.createAndOpenFile("Отчёт " + new SimpleDateFormat("yyyy-MM-dd HH-mm-ss").format(new Date()));
             excelButton.setDisable(false);
         });
-    }
-
-    CellStyle style;
-
-    <T, S> void getColumn(TableColumn<T, S> column, Sheet sheet, int rowNum, AtomicInteger colNum) {
-        if (!column.getColumns().isEmpty()) {
-            generateCell(getRow(sheet, rowNum), colNum.get(), String.valueOf(column.getText()), style);
-            sheet.addMergedRegion(new CellRangeAddress(rowNum, rowNum, colNum.get(), (int) (colNum.get() - 1 + column.getColumns().stream().filter(col -> col.visibleProperty().get()).count())));
-            for (TableColumn<T, ?> tableColumn : column.getColumns().stream().filter(col -> col.visibleProperty().get()).collect(Collectors.toList())) {
-                getColumn(tableColumn, sheet, rowNum + 1, colNum);
-                colNum.getAndIncrement();
-            }
-        } else {
-            generateCell(getRow(sheet, rowNum++), colNum.get(), String.valueOf(column.getText()), style);
-            for (int i = 0; i < itemTable.getItems().size(); i++) {
-                String value = "";
-                if(column.getCellData(i)!=null && column.getCellData(i) instanceof LocalDate){
-                    value = ((LocalDate)column.getCellData(i)).format(dateTimeFormatter);
-                }
-                else if(column.getCellData(i)!=null){
-                    value = String.valueOf(column.getCellData(i));
-                }
-                generateCell(getRow(sheet, rowNum++), colNum.get(), value, style);
-            }
-            sheet.autoSizeColumn(colNum.get());
-        }
-    }
-
-    private Row getRow(Sheet sheet, int rowNum) {
-        Row row = sheet.getRow(rowNum);
-        if (row == null) {
-            row = sheet.createRow(rowNum);
-        }
-        return row;
-    }
-
-    private void generateCell(Row row, int columnIndex, String value, CellStyle style) {
-        Cell cell = row.createCell(columnIndex, CellType.STRING);
-        cell.setCellValue(value);
-        cell.setCellStyle(style);
     }
 
     @AllArgsConstructor
@@ -443,8 +373,7 @@ public class ItemController extends MyAnchorPane {
     }
 
     private void switchPane(Pane disappearancePane, Pane appearancePane) {
-        transition.set(switchPaneTransition(disappearancePane, appearancePane));
-        transition.get().play();
+        switchPaneTransition(disappearancePane, appearancePane).play();
     }
 
     @Override
@@ -459,7 +388,7 @@ public class ItemController extends MyAnchorPane {
 
     @Override
     public void fillData() {
-        people.addAll(services.getPersonService().getPeople());
+        services.getPersonService().getPeople().subscribe(people::add);
         services.getTrafficService().getTrafficItems()
                 .doOnComplete(() -> itemTable.refresh())
                 .map(ti -> {
@@ -471,7 +400,8 @@ public class ItemController extends MyAnchorPane {
                 }).subscribe(items::add);
         services.getTrafficService().getItemsType().subscribe(type -> {
             itemTypeComboBox.getItems().add(type);
-            filterItemTypeComboBox.getItems().add(type);
+            if (type.isStatus())
+                filterItemTypeComboBox.getItems().add(type);
         });
 
 

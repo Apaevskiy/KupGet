@@ -35,4 +35,7 @@ public class Person {
 
     @Column(name = "OTCH")
     private String middleName;
+
+    @Column(name ="RAZR")
+    private Integer rank;
 }

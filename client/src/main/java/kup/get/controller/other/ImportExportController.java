@@ -129,17 +129,14 @@ public class ImportExportController extends MyAnchorPane {
                 Items items = new Items();
 
                 if (peopleTreeItem.getValue().isSelected()) {
-                    items.setPeople(services.getPersonService().getPeople());
-                        writeObject(oos, fos, items, count);
+                    items.setPeople(services.getPersonService().getPeople().collectList().block());
+                    writeObject(oos, fos, items, count);
                 }
 
                 if (photoTreeItem.getValue().isSelected()) {
                     services.getPersonService().addPhotoToPeople()
                             .doOnComplete(() -> writeObject(oos, fos, items, count))
-                            .subscribe(p -> {
-                                items.getPhotos().add(p);
-                                System.out.println(p.getId());
-                            });
+                            .subscribe(p -> items.getPhotos().add(p));
                 }
 
                 if (itemTypeTreeItem.getValue().isSelected()) {
@@ -170,30 +167,15 @@ public class ImportExportController extends MyAnchorPane {
                         int count = items.size();
                         AtomicInteger progress = new AtomicInteger(0);
                         services.getPersonService().savePeople(items.getPeople())
-                                .subscribe(p -> {
-                                    this.updateProgress(progress.getAndIncrement(), count);
-                                    System.out.println(progress.get() + "/" + count);
-                                });
+                                .subscribe(p -> this.updateProgress(progress.getAndIncrement(), count));
                         services.getTrafficService().saveTrafficTeams(items.getTeams())
-                                .subscribe(p -> {
-                                    this.updateProgress(progress.getAndIncrement(), count);
-                                    System.out.println(progress.get() + "/" + count);
-                                });
+                                .subscribe(p -> this.updateProgress(progress.getAndIncrement(), count));
                         services.getTrafficService().saveTrafficVehicles(items.getVehicles())
-                                .subscribe(p -> {
-                                    this.updateProgress(progress.getAndIncrement(), count);
-                                    System.out.println(progress.get() + "/" + count);
-                                });
+                                .subscribe(p -> this.updateProgress(progress.getAndIncrement(), count));
                         services.getTrafficService().saveItemTypes(items.getTypes())
-                                .subscribe(p -> {
-                                    this.updateProgress(progress.getAndIncrement(), count);
-                                    System.out.println(progress.get() + "/" + count);
-                                });
+                                .subscribe(p -> this.updateProgress(progress.getAndIncrement(), count));
                         services.getPersonService().savePhotos(items.getPhotos())
-                                .subscribe(p -> {
-                                    this.updateProgress(progress.getAndIncrement(), count);
-                                    System.out.println(progress.get() + "/" + count);
-                                });
+                                .subscribe(p -> this.updateProgress(progress.getAndIncrement(), count));
                         return null;
                     }
                 };
@@ -223,11 +205,11 @@ public class ImportExportController extends MyAnchorPane {
                 oos.writeObject(items);
                 oos.close();
                 fos.close();
-                Platform.runLater(() -> createAlert("Успешно", "Экспорт данных прошёл успешно"));
+                createAlert("Успешно", "Экспорт данных прошёл успешно");
             }
         } catch (IOException e) {
             e.printStackTrace();
-            Platform.runLater(() -> createAlert("Ошибка writeObject", e.getMessage()));
+            createAlert("Ошибка writeObject", e.getMessage());
         }
     }
 
@@ -251,7 +233,7 @@ public class ImportExportController extends MyAnchorPane {
         List<TrafficItemType> types = new ArrayList<>();
 
         public int size() {
-            return people.size()+photos.size()+teams.size()+vehicles.size()+types.size();
+            return people.size() + photos.size() + teams.size() + vehicles.size() + types.size();
         }
     }
 

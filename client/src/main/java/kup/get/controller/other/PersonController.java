@@ -15,6 +15,8 @@ import kup.get.entity.alfa.Person;
 import kup.get.entity.alfa.Position;
 import kup.get.service.DAO.PersonDaoService;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -26,6 +28,7 @@ public class PersonController extends MyAnchorPane {
     private MyTable<Person> peopleTable;
 
     private final PersonDaoService service;
+    private final List<Person> people = new ArrayList<>();
 
     public PersonController(PersonDaoService service) {
 
@@ -141,7 +144,7 @@ public class PersonController extends MyAnchorPane {
 
     @Override
     public void fillData() {
-        peopleTable.getItems().addAll(service.getPeople());
+        service.getPeople().subscribe(people::add);
     }
 
     @Override

@@ -3,31 +3,31 @@ package kup.get.controller;
 import kup.get.entity.alfa.Person;
 import kup.get.entity.alfa.Photo;
 import kup.get.service.alfa.AlfaService;
-import kup.get.service.traffic.TrafficItemService;
 import lombok.AllArgsConstructor;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
-@Controller
+@RestController
 public class PersonController {
-    private final TrafficItemService trafficItemService;
     private final AlfaService alfaService;
 
-    @MessageMapping("auth.people")
-    Flux<Person> getDrivers() {
+    @GetMapping("/auth/people")
+    Flux<Person> getPeople() {
         return Flux.fromIterable(alfaService.getPeople());
     }
 
 
-    @MessageMapping("auth.getPhotoByPerson")
-    Mono<byte[]> getPhotoByPerson(Mono<Long> idMono) {
-        return idMono.map(alfaService::getPhotoByPerson);
+    @GetMapping("/auth/getPhotoByPerson/{id}")
+    byte[] getPhotoByPerson(@PathVariable("id") long id) {
+        return alfaService.getPhotoByPerson(id);
     }
 
-    @MessageMapping("auth.getPhotoByPeople")
+    @GetMapping("/auth/getPhotoByPeople")
     Flux<Photo> getPhotoByPeople() {
         return Flux.fromIterable(alfaService.getPhotoByPeople());
     }

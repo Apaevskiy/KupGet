@@ -22,62 +22,64 @@ public class PersonSocketService implements PersonService {
     }
 
     public void updatePeople() {
-            socketService.route("auth.people")
-                    .retrieveFlux(Person.class)
-                    .subscribe(people::add);
+
     }
 
-    public List<Person> getPeople() {
-        return people;
+    public Flux<Person> getPeople() {
+        return socketService.getClient().get().uri("/auth/people")
+                .retrieve().bodyToFlux(Person.class);
     }
 
     public Mono<Person> savePerson(Person person) {
-        return socketService.route("asu.savePerson")
-                .data(person)
-                .retrieveMono(Person.class);
+        return socketService.getClient().post().uri("/asu/savePerson")
+                .bodyValue(person)
+                .retrieve().bodyToMono(Person.class);
     }
 
+    @Deprecated
     public Mono<byte[]> getPhotoByPerson(Long id) {
-        return socketService.route("auth.getPhotoByPerson")
-                .data(id)
-                .retrieveMono(byte[].class);
+        return socketService.getClient().get().uri("/auth/getPhotoByPerson/{id}",id)
+                .retrieve().bodyToMono(byte[].class);
     }
 
+    @Deprecated
     public Flux<Person> savePeople(List<Person> people) {
-        return socketService.route("asu.savePeople")
-                .data(Flux.fromIterable(people))
-                .retrieveFlux(Person.class);
+        return socketService.getClient().post().uri("/asu/savePeople")
+                .bodyValue(Flux.fromIterable(people))
+                .retrieve().bodyToFlux(Person.class);
     }
 
+    @Deprecated
     public Flux<Photo> addPhotoToPeople() {
-        return socketService.route("auth.getPhotoByPeople")
-                .retrieveFlux(Photo.class);
+        return socketService.getClient().get().uri("/auth/getPhotoByPeople")
+                .retrieve().bodyToFlux(Photo.class);
     }
 
+    @Deprecated
     @Override
     public Flux<Photo> savePhotos(List<Photo> photos) {
         return null;
     }
 
     public Flux<Role> getRoles() {
-        return socketService.route("asu.getRoles")
-                .retrieveFlux(Role.class);
+        return socketService.getClient().get().uri("/asu/getRoles")
+                .retrieve().bodyToFlux(Role.class);
     }
 
     public Flux<User> getUsers() {
-        return socketService.route("asu.getUsers")
-                .retrieveFlux(User.class);
+        return socketService.getClient().get().uri("/asu/getUsers")
+                .retrieve().bodyToFlux(User.class);
     }
 
+    @Deprecated
     public Mono<Boolean> deleteUser(User user) {
-        return socketService.route("asu.deleteUser")
-                .data(user)
-                .retrieveMono(Boolean.class);
+        return socketService.getClient().delete().uri("/asu/deleteUser/{id}",user.getId())
+                .retrieve().bodyToMono(Boolean.class);
     }
 
     public Mono<User> saveUser(User user) {
-        return socketService.route("asu.saveUser")
-                .data(user)
-                .retrieveMono(User.class);
+        return socketService.getClient().patch().uri("/asu/saveUser")
+                .bodyValue(user)
+                .retrieve().bodyToMono(User.class);
     }
 }

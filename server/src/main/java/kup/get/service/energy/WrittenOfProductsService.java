@@ -3,21 +3,7 @@ package kup.get.service.energy;
 import kup.get.entity.postgres.energy.WrittenOfProducts;
 import kup.get.repository.postgres.energy.WrittenOfProductsRepository;
 import kup.get.service.LogService;
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFFont;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.List;
 
 @Service
 public class WrittenOfProductsService {
@@ -37,7 +23,7 @@ public class WrittenOfProductsService {
                 writtenOfProducts.getProductsOnMaster().getProduct().getType().getUnit());
     }
 
-    public List<WrittenOfProducts> getProducts(LocalDate begin, LocalDate end) {
+    /*public List<WrittenOfProducts> getProducts(LocalDate begin, LocalDate end) {
         return repository.findAll(
                 WrittenOfProductsRepository.dataFilter(begin, end).and(WrittenOfProductsRepository.userFilter()),
                 WrittenOfProductsRepository.getPageable()).getContent();
@@ -137,5 +123,5 @@ public class WrittenOfProductsService {
         Cell cell = row.createCell(i, CellType.STRING);
         cell.setCellValue(name.toString());
         cell.setCellStyle(style);
-    }
+    }*/
 }

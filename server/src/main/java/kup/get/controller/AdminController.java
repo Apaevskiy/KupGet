@@ -2,38 +2,31 @@ package kup.get.controller;
 
 import kup.get.entity.postgres.security.User;
 import kup.get.service.LogService;
-import kup.get.service.Services;
-import org.springframework.stereotype.Controller;
+import kup.get.service.security.UserService;
+import lombok.AllArgsConstructor;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.servlet.view.RedirectView;
-
-import javax.validation.Valid;
 import java.time.LocalDate;
 
-@Controller
+@RestController
 @RequestMapping("/admin")
+@AllArgsConstructor
+@Deprecated
 public class AdminController {
-    private final Services services;
     private final LogService logService;
-
-    public AdminController(Services services, LogService logService) {
-        this.services = services;
-        this.logService = logService;
-    }
+    private final UserService userService;
 
     @GetMapping("/users")
     public String userMenu(Model model) {
-        model.addAttribute("users", services.getUserService().allUsers());
+        model.addAttribute("users", userService.allUsers());
         return "admin/users";
     }
 
     @GetMapping("/users/{id}")
     public String getUser(@PathVariable(name = "id") Long id, Model model) {
         try {
-            model.addAttribute("roles", services.getUserService().allRoles());
-            model.addAttribute("user", services.getUserService().findUserById(id));
+            model.addAttribute("roles", userService.allRoles());
+            model.addAttribute("user", userService.findUserById(id));
         } catch (Exception e) {
             model.addAttribute("message", "Пользователя невозможно удалить");
         }
@@ -42,14 +35,14 @@ public class AdminController {
 
     @GetMapping("/users/new")
     public String addUserPage(Model model) {
-        model.addAttribute("roles", services.getUserService().allRoles());
+        model.addAttribute("roles", userService.allRoles());
         model.addAttribute("user", new User());
         return "admin/newUser";
     }
 
-    @PutMapping("/users/new")
+   /* @PutMapping("/users/new")
     public RedirectView addUser(@ModelAttribute(value = "user") User user, RedirectAttributes redirectAttributes) {
-        if (services.getUserService().saveUser(user)!=null) {
+        if (userService.saveUser(user)!=null) {
             redirectAttributes.addFlashAttribute("message", "Пользователь успешно создан");
         } else {
             redirectAttributes.addFlashAttribute("error", "Что-то пошло не так");
@@ -60,7 +53,7 @@ public class AdminController {
     @PatchMapping("/users/{id}")
     public RedirectView updateUser(@ModelAttribute(value = "user") @Valid User user,
                                    RedirectAttributes redirectAttributes) {
-        if (services.getUserService().saveUser(user)!=null) {
+        if (userService.saveUser(user)!=null) {
             redirectAttributes.addFlashAttribute("message", "Пользователь успешно изменён");
         } else {
             redirectAttributes.addFlashAttribute("error", "Что-то пошло не так");
@@ -71,13 +64,13 @@ public class AdminController {
     @DeleteMapping("/users/{id}")
     public RedirectView deleteUser(@PathVariable(name = "id") Long id,
                                    RedirectAttributes redirectAttributes) {
-        if (services.getUserService().deleteUser(id)) {
+        if (userService.deleteUser(id)) {
             redirectAttributes.addFlashAttribute("message","Пользователь успешно удалён");
         } else {
             redirectAttributes.addFlashAttribute("error", "Пользователя нельзя удалить");
         }
         return new RedirectView("/admin/users", true);
-    }
+    }*/
 
     @GetMapping("/log")
     public String log(@RequestParam(value = "dateBegin", required = false) String dateBegin,
@@ -85,7 +78,7 @@ public class AdminController {
                       Model model) {
         LocalDate begin = dateBegin != null && !dateBegin.isEmpty() ? LocalDate.parse(dateBegin) : null;
         LocalDate end = dateEnd != null && !dateEnd.isEmpty() ? LocalDate.parse(dateEnd) : null;
-        model.addAttribute("logs", logService.findAll(begin, end));
+        model.addAttribute("logs", logService.findAllByDateIsBetween(begin, end));
         return "admin/log";
     }
 }

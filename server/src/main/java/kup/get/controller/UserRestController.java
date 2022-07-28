@@ -1,19 +1,14 @@
 package kup.get.controller;
 
 import kup.get.entity.postgres.energy.*;
-import kup.get.service.Services;
+import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
-import java.io.File;
 import java.net.MalformedURLException;
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -22,14 +17,13 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/user")
+@Deprecated
+@AllArgsConstructor
 public class UserRestController {
-    private final Services services;
 
-    public UserRestController(Services services) {
-        this.services = services;
-    }
 
-    @PostMapping("/addWaybills")
+    /*@PostMapping("/addWaybills")
+    @Deprecated
     public ResponseEntity<String> addWaybills(@RequestBody List<Product> products) {
         Waybills waybills = null;
         if (products != null && products.size() > 0)
@@ -41,7 +35,7 @@ public class UserRestController {
             if (products != null && products.size() > 0) {
                 services.getWaybillsService().addWaybills(waybills);
                 services.getTypeOfProductService().addAllTypeOfProduct(products.stream().map(Product::getType).collect(Collectors.toList()));
-                services.getProductService().addProducts(products);
+//                services.getProductService().addProducts(products);
                 return new ResponseEntity<>("\"Накладная успешно добавлена\"", HttpStatus.OK);
             }
         } catch (Exception e) {
@@ -73,7 +67,7 @@ public class UserRestController {
         Long id = Long.valueOf(map.get("id"));
         double count = Double.parseDouble(map.get("count"));
         try {
-            Product product = services.getProductService().findProductsById(id);
+            Product product = services.getProductService().findProductsById(id).block();
             if (product.getRemaining() < count)
                 return new ResponseEntity<>("\"Такого количества нет на складе\"", HttpStatus.CONFLICT);
             ProductsOnMaster master = new ProductsOnMaster();
@@ -121,11 +115,12 @@ public class UserRestController {
         }
     }
 
+    @Deprecated
     @GetMapping("/reportExcel")
     public ResponseEntity<Resource> getExcelFile(@RequestParam(value = "dateBegin", required = false) String dateBegin,
-                                                 @RequestParam(value = "dateEnd", required = false) String dateEnd,
-                                                 HttpServletRequest request) throws MalformedURLException {
-        LocalDate begin = dateBegin != null ? LocalDate.parse(dateBegin) : null;
+                                                 @RequestParam(value = "dateEnd", required = false) String dateEnd*//*,
+                                                 HttpServletRequest request*//*) throws MalformedURLException {
+        *//*LocalDate begin = dateBegin != null ? LocalDate.parse(dateBegin) : null;
         LocalDate end = dateEnd != null ? LocalDate.parse(dateEnd) : null;
         List<WrittenOfProducts> list = services.getWrittenOfService().getAllProducts(begin, end);
         File file = services.getWrittenOfService().getExcelFile(list);
@@ -137,6 +132,7 @@ public class UserRestController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(contentType))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
-                .body(resource);
-    }
+                .body(resource);*//*
+        return null;
+    }*/
 }

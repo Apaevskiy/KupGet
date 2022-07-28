@@ -25,7 +25,7 @@ public class StageInitializer implements ApplicationListener<JavaFxApplication.S
         Stage stage = event.getStage();
         stage.setTitle("Портал КУП Горэлектротранспорт");
         stage.setScene(scene);
-        stage.getIcons().add(new Image("/images/logo.png"));
+        stage.getIcons().add(new Image("/images/icon.png"));
         stage.show();
     }
 }

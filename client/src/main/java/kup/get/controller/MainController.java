@@ -13,11 +13,14 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 import kup.get.config.FX.CustomMenuItem;
 import kup.get.config.FX.FxmlLoader;
@@ -26,21 +29,31 @@ import kup.get.controller.asu.BadgeController;
 import kup.get.controller.asu.ScheduleController;
 import kup.get.controller.asu.UpdateController;
 import kup.get.controller.asu.UsersController;
+import kup.get.controller.clinic.ClinicController;
 import kup.get.controller.other.ImportExportController;
 import kup.get.controller.other.PersonController;
 import kup.get.controller.traffic.ItemController;
 import kup.get.controller.traffic.TeamAndVehicleController;
 import kup.get.controller.traffic.TrafficItemTypeController;
+import kup.get.service.DAO.PersonDaoService;
 import kup.get.service.Services;
+import kup.get.service.other.PropertyService;
+import kup.get.service.socket.AsuSocketService;
+import kup.get.service.socket.ClinicService;
+import kup.get.service.socket.PersonSocketService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Hooks;
+import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Component
 @FxmlLoader(path = "/fxml/main.fxml")
 public class MainController extends MyAnchorPane {
 
@@ -88,52 +101,83 @@ public class MainController extends MyAnchorPane {
     private final List<CustomMenuItem> customMenuItemList = new ArrayList<>();
     private final Services services;
     private boolean checkHiddenMenu = true;
+
     private MyAnchorPane actualPane;
 
-    public MainController(TrafficItemTypeController typeController,
-                          TeamAndVehicleController teamAndVehicleController,
-                          ItemController itemController,
-                          BadgeController badgeController,
-                          ImportExportController importExportController,
-                          PersonController personController,
-                          UpdateController updateController,
-                          UsersController usersController,
-                          ScheduleController scheduleController,
-                          Services services) {
+    private TrafficItemTypeController typeController;
+    private TeamAndVehicleController teamAndVehicleController;
+    private ItemController itemController;
+    private BadgeController badgeController;
+    private ImportExportController importExportController;
+    private PersonController personController;
+    private UpdateController updateController;
+    private UsersController usersController;
+    private ScheduleController scheduleController;
+    private ClinicController clinicController;
+    private final PropertyService propertyService;
+
+    public MainController(Services services, PropertyService propertyService, PersonSocketService personSocketService, AsuSocketService asuSocketService,
+                          PersonDaoService personDaoService, ClinicService clinicService) {
         this.services = services;
+        this.propertyService = propertyService;
         this.setVisible(true);
         this.setOpacity(1);
 
-        mainPane.getChildren().addAll(typeController, teamAndVehicleController, itemController,
-                badgeController, importExportController, usersController, updateController,
-                scheduleController, personController);
+        usernameField.setText(propertyService.getUsername());
 
         Hooks.onErrorDropped(err -> Platform.runLater(() -> {
-            workPlace.setOpacity(0);
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("ERROR");
+            alert.setHeaderText("Возникла ошибка!");
+            alert.setContentText(err.getMessage());
+            alert.showAndWait();
+            log.error("Hooks.onErrorDropped");
+           /* workPlace.setOpacity(0);
             workPlace.setVisible(false);
             errorPane.setOpacity(1);
-            errorPane.setVisible(true);
+            errorPane.setVisible(true);*/
         }));
-
 
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("Служба движения", new MaterialDesignIconView(MaterialDesignIcon.BUS))
-                        .setRoles("ROLE_TRAFFIC", "ROLE_ADMIN", "AFK")
+                        .setRoles("ROLE_TRAFFIC", "ROLE_ASU", "AFK")
                         .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
                                         .menuItem("Отчёты", new MaterialDesignIconView(MaterialDesignIcon.CLIPBOARD_TEXT))
-                                        .setEventSwitchPane(event -> hiddenPages(itemController)),
+                                        .setEventSwitchPane(event -> {
+                                            if (itemController == null) {
+                                                itemController = new ItemController(services);
+                                                mainPane.getChildren().add(itemController);
+                                            }
+                                            hiddenPages(itemController);
+                                        }),
                                 CustomMenuItem.builder()
                                         .menuItem("Перечень пунктов", new FontAwesomeIconView(FontAwesomeIcon.CART_PLUS))
-                                        .setEventSwitchPane(event -> hiddenPages(typeController)),
+                                        .setEventSwitchPane(event -> {
+                                            if (typeController == null) {
+                                                typeController = new TrafficItemTypeController(services);
+                                                mainPane.getChildren().add(typeController);
+                                            }
+                                            hiddenPages(typeController);
+                                        }),
                                 CustomMenuItem.builder()
                                         .menuItem("Экипажи и ТС", new FontAwesomeIconView(FontAwesomeIcon.USERS))
-                                        .setEventSwitchPane(event -> hiddenPages(teamAndVehicleController)),
+                                        .setEventSwitchPane(event -> {
+                                            if (teamAndVehicleController == null) {
+                                                teamAndVehicleController = new TeamAndVehicleController(services);
+                                                mainPane.getChildren().add(teamAndVehicleController);
+                                            }
+                                            hiddenPages(teamAndVehicleController);
+                                        }),
                                 CustomMenuItem.builder()
                                         .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
                                         .setEventSwitchPane(event -> {
+                                            if (badgeController == null) {
+                                                badgeController = new BadgeController(services);
+                                                mainPane.getChildren().add(badgeController);
+                                            }
                                             badgeController.trafficPeople();
                                             hiddenPages(badgeController);
                                         })
@@ -141,56 +185,116 @@ public class MainController extends MyAnchorPane {
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("КРС", new FontAwesomeIconView(FontAwesomeIcon.USER_SECRET))
-                        .setRoles("ROLE_KRS", "ROLE_ADMIN")
+                        .setRoles("ROLE_KRS", "ROLE_ASU")
                         .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
                                         .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
                                         .setEventSwitchPane(event -> {
+                                            if (badgeController == null) {
+                                                badgeController = new BadgeController(services);
+                                                mainPane.getChildren().add(badgeController);
+                                            }
                                             badgeController.krsPeople();
                                             hiddenPages(badgeController);
                                         }))
         );
         customMenuItemList.add(
                 CustomMenuItem.builder()
+                        .menuItem("Здравпункт", new FontAwesomeIconView(FontAwesomeIcon.PLUS_SQUARE))
+                        .setRoles("ROLE_CLINIC", "ROLE_ASU")
+                        .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
+                        .addChildren(
+                                CustomMenuItem.builder()
+                                        .menuItem("Медосмотры", new FontAwesomeIconView(FontAwesomeIcon.CALENDAR_CHECK_ALT))
+                                        .setEventSwitchPane(event -> {
+                                            if (clinicController == null) {
+                                                clinicController = new ClinicController(clinicService, services);
+                                                mainPane.getChildren().add(clinicController);
+                                            }
+                                            hiddenPages(clinicController);
+                                        }))
+        );
+        customMenuItemList.add(
+                CustomMenuItem.builder()
                         .menuItem("Энергослужба", new WeatherIconView(WeatherIcon.OWM_210))
-                        .setRoles("ROLE_ENERGY", "ROLE_ADMIN")
+                        .setRoles("ROLE_ENERGY", "ROLE_ASU")
                         .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel));
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("АСУ", new FontAwesomeIconView(FontAwesomeIcon.PIED_PIPER_ALT))
-                        .setRoles("ROLE_SUPERADMIN")
+                        .setRoles("ROLE_ASU")
                         .setEventOpenMenu(vBoxMenuItems, actualMenuItem, returnButton, menuLabel)
                         .addChildren(
                                 CustomMenuItem.builder()
                                         .menuItem("Пропуска", new OctIconView(OctIcon.CREDIT_CARD))
-                                        .setEventSwitchPane(event -> hiddenPages(itemController)),
+                                        .setEventSwitchPane(event -> {
+                                            if (itemController == null) {
+                                                itemController = new ItemController(services);
+                                                mainPane.getChildren().add(itemController);
+                                            }
+                                            hiddenPages(itemController);
+                                        }),
                                 CustomMenuItem.builder()
                                         .menuItem("Бейджи", new MaterialDesignIconView(MaterialDesignIcon.TICKET_ACCOUNT))
                                         .setEventSwitchPane(event -> {
+                                            if (badgeController == null) {
+                                                badgeController = new BadgeController(services);
+                                                mainPane.getChildren().add(badgeController);
+                                            }
                                             badgeController.allPeople();
                                             hiddenPages(badgeController);
                                         }),
                                 CustomMenuItem.builder()
                                         .menuItem("Пользователи", new FontAwesomeIconView(FontAwesomeIcon.USER))
-                                        .setEventSwitchPane(event -> hiddenPages(usersController)),
+                                        .setEventSwitchPane(event -> {
+                                            if (usersController == null) {
+                                                usersController = new UsersController(personSocketService);
+                                                mainPane.getChildren().add(usersController);
+                                            }
+                                            hiddenPages(usersController);
+                                        }),
                                 CustomMenuItem.builder()
                                         .menuItem("Обновления", new FontAwesomeIconView(FontAwesomeIcon.CLOUD_UPLOAD))
-                                        .setEventSwitchPane(event -> hiddenPages(updateController)),
+                                        .setEventSwitchPane(event -> {
+                                            if (updateController == null) {
+                                                updateController = new UpdateController(asuSocketService);
+                                                mainPane.getChildren().add(updateController);
+                                            }
+                                            hiddenPages(updateController);
+                                        }),
                                 CustomMenuItem.builder()
                                         .menuItem("Расписание", new MaterialDesignIconView(MaterialDesignIcon.CALENDAR_CLOCK))
-                                        .setEventSwitchPane(event -> hiddenPages(scheduleController))
+                                        .setEventSwitchPane(event -> {
+                                            if (scheduleController == null) {
+                                                scheduleController = new ScheduleController();
+                                                mainPane.getChildren().add(scheduleController);
+                                            }
+                                            hiddenPages(scheduleController);
+                                        })
                         ));
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("Экспорт и импорт", new MaterialDesignIconView(MaterialDesignIcon.FILE_EXPORT))
-                        .setRoles("ROLE_TRAFFIC", "ROLE_ADMIN", "AFK")
-                        .setEventSwitchPane(event -> hiddenPages(importExportController)));
+                        .setRoles("ROLE_TRAFFIC", "ROLE_ASU", "AFK")
+                        .setEventSwitchPane(event -> {
+                            if (importExportController == null) {
+                                importExportController = new ImportExportController(services);
+                                mainPane.getChildren().add(importExportController);
+                            }
+                            hiddenPages(importExportController);
+                        }));
         customMenuItemList.add(
                 CustomMenuItem.builder()
                         .menuItem("Сотрудники", new FontAwesomeIconView(FontAwesomeIcon.USERS))
                         .setRoles("AFK")
-                        .setEventSwitchPane(event -> hiddenPages(personController)));
+                        .setEventSwitchPane(event -> {
+                            if (personController == null) {
+                                personController = new PersonController(personDaoService);
+                                mainPane.getChildren().add(personController);
+                            }
+                            hiddenPages(personController);
+                        }));
 
         returnButton.setOnMouseClicked(event -> {
             if (actualMenuItem.get() != null) {
@@ -217,17 +321,22 @@ public class MainController extends MyAnchorPane {
             checkHiddenMenu = !checkHiddenMenu;
         });
         loginButton.setOnAction(event -> {
-            vBoxMenuItems.getChildren().clear();
             loginButton.setDisable(true);
+            infoLabel.setText("");
+            propertyService.saveUsername(usernameField.getText());
             auth();
         });
         logoutButton.setOnAction(event -> {
-            services.closeConnection();
             vBoxMenuItems.getChildren().clear();
-            switchPaneTransition(workPlace, loginPane).play();
-            actualPane.setOpacity(0);
-            actualPane.setVisible(false);
+            customMenuItemList.clear();
+
+            if (actualPane != null) {
+                actualPane.setOpacity(0);
+                actualPane.setVisible(false);
+            }
             passwordField.setText("");
+            switchPaneTransition(workPlace, loginPane).play();
+            services.disconnect();
         });
         offlineButton.setOnAction(event -> {
             errorPane.setOpacity(0);
@@ -246,7 +355,7 @@ public class MainController extends MyAnchorPane {
 
     @PostConstruct
     void connectToServer() {
-        services.createClientTransport()
+        services.connectToServer()
                 .doOnSuccess(dc -> {
                     loginPane.setOpacity(1);
                     loginPane.setVisible(true);
@@ -263,7 +372,36 @@ public class MainController extends MyAnchorPane {
                         Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage()));
                     }
                 })
-                .subscribe();
+                .subscribe(this::checkUpdates);
+    }
+
+    private void checkUpdates(Long latestVersionId) {
+        Long actualVersionId = propertyService.getVersionId();
+        if (!actualVersionId.equals(latestVersionId)) {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Обновление");
+                alert.setHeaderText(null);
+                alert.setContentText("Доступно обновление программы.\nНажмите \"Установить\" для установки обновления.");
+                ButtonType setupButton = new ButtonType("Установить");
+                ButtonType exitButton = new ButtonType("Выход");
+                alert.getButtonTypes().clear();
+
+                alert.getButtonTypes().addAll(setupButton, exitButton);
+
+                Optional<ButtonType> option = alert.showAndWait();
+
+                if (option.isPresent() && option.get() == setupButton) {
+                    String[] run = {Paths.get("updater.exe").toAbsolutePath().toString()};
+                    try {
+                        Runtime.getRuntime().exec(run);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                }
+                System.exit(130);
+            });
+        }
     }
 
     void addCustomMenuItems(String role) {
@@ -275,12 +413,16 @@ public class MainController extends MyAnchorPane {
     }
 
     void auth() {
-        services.createRequester(usernameField.getText(), passwordField.getText())
+        services.getAuthorities(usernameField.getText(), passwordField.getText())
                 .doFinally(signalType -> Platform.runLater(() -> loginButton.setDisable(false)))
-                .doOnError(throwable -> Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage())))
-                .doOnComplete(() -> {
-                    services.getPersonService().updatePeople();
-                    switchPaneTransition(loginPane, workPlace).play();
+                .doOnComplete(() -> switchPaneTransition(loginPane, workPlace).play())
+                .onErrorResume(throwable -> {
+                    Platform.runLater(() -> infoLabel.setText(throwable.getLocalizedMessage()));
+                    return Mono.empty();
+                })
+                .switchOnFirst((s, t) -> {
+                    Platform.runLater(() -> usernameLabel.setText(s.get()));
+                    return t.skip(1);
                 })
                 .subscribe(s -> Platform.runLater(() -> this.addCustomMenuItems(s)));
     }
@@ -292,6 +434,7 @@ public class MainController extends MyAnchorPane {
         } else {
             appearancePaneTransition(appearancePane).play();
         }
+
         appearancePane.fillData();
         actualPane = appearancePane;
     }

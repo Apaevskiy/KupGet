@@ -38,7 +38,7 @@ public class WaybillsService {
         logService.addLog("Добавление накладной " + waybills.getId());
     }
 
-    public List<Waybills> getSortWaybills(Long id,
+    /*public List<Waybills> getSortWaybills(Long id,
                                           String person,
                                           String department,
                                           LocalDate dateBegin,
@@ -46,7 +46,7 @@ public class WaybillsService {
         return repository.findAll(
                 WaybillsRepository.search(id, person, department, dateBegin, dateEnd),
                 WaybillsRepository.getPageable()).getContent();
-    }
+    }*/
 
     public Waybills findById(Long id) {
         return repository.getById(id);

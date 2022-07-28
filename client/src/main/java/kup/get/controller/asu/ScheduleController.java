@@ -193,7 +193,6 @@ public class ScheduleController extends MyAnchorPane {
                     if (start.isEmpty())
                         start = matcher.group();
                     end = matcher.group();
-                    System.out.println(end);
                 }
                 String[] startList = start.replaceAll("\n", "").split("\\."),
                         endList = end.replaceAll("\n", "").split("\\.");

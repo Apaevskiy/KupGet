@@ -42,7 +42,7 @@
                      <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                   </rowConstraints>
                   <children>
-                     <Button fx:id="loginButton" alignment="CENTER" mnemonicParsing="false" prefHeight="37.0" prefWidth="142.0" styleClass="clickButton" text="Login" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
+                     <Button fx:id="loginButton" alignment="CENTER" defaultButton="true" mnemonicParsing="false" prefHeight="37.0" prefWidth="142.0" styleClass="clickButton" text="Login" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.valignment="TOP">
                         <GridPane.margin>
                            <Insets top="10.0" />
                         </GridPane.margin>
@@ -77,7 +77,7 @@
                            <Insets bottom="5.0" />
                         </padding>
                      </Label>
-                     <PasswordField fx:id="passwordField" alignment="CENTER" maxWidth="300.0" promptText="Password" text="1101" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="TOP">
+                     <PasswordField fx:id="passwordField" alignment="CENTER" maxWidth="300.0" promptText="Password" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="TOP">
                         <padding>
                            <Insets bottom="5.0" left="3.0" right="3.0" top="5.0" />
                         </padding>

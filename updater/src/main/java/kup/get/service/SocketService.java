@@ -1,54 +1,51 @@
 package kup.get.service;
 
-import kup.get.config.RSocketClientBuilderImpl;
 import kup.get.entity.FileOfProgram;
 import kup.get.entity.Version;
-import lombok.AllArgsConstructor;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import reactor.core.CorePublisher;
+import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.Manifest;
-
 @Component
-@AllArgsConstructor
 public class SocketService {
-    private final RSocketClientBuilderImpl config;
+    private WebClient client;
+    private final String url;
 
-    public Mono<Version> getActualVersion() {
-        return config.getRequester()
-                .route("update.getActualVersion")
-                .retrieveMono(Version.class);
+    public SocketService(PropertyService propertyService) {
+    this.url=propertyService.getServerAddress();
     }
 
-    public Flux<Version> getUpdateInformation(Version version) {
-        return config.getRequester()
-                .route("update.informationAboutUpdate")
-                .data(version)
-                .retrieveFlux(Version.class);
+    public Mono<Boolean> checkConnection(){
+        return client.get().uri("/info").retrieve().bodyToMono(Boolean.class);
+    }
+    public void createWebClient(String username, String password) {
+        this.client = WebClient.builder()
+                .baseUrl(url)
+                .filter(ExchangeFilterFunctions.basicAuthentication(username, password))
+                .build();
+    }
+
+    public Mono<Long> getActualVersion() {
+        return client.get().uri("/update/getActualVersion")
+                .retrieve().bodyToMono(Long.class);
+    }
+
+    public Flux<Version> getUpdateInformation(Long versionId) {
+        return client.get().uri("/update/informationAboutUpdate/{id}",versionId)
+                .retrieve().bodyToFlux(Version.class);
     }
 
     public Flux<FileOfProgram> getFilesOfProgram() {
-        return config.getRequester()
-                .route("update.getFilesOfProgram")
-                .retrieveFlux(FileOfProgram.class);
+        return client.get().uri("/update/getFilesOfProgram")
+                .retrieve().bodyToFlux(FileOfProgram.class);
     }
 
     public Flux<DataBuffer> downloadFileOfProgram(FileOfProgram fileOfProgram) {
-        return config.getRequester()
-                .route("update.getContentOfFiles")
-                .data(fileOfProgram)
-                .retrieveFlux(DataBuffer.class);
+        return client.post().uri("/update/getContentOfFiles")
+                .bodyValue(fileOfProgram.getName())
+                .retrieve().bodyToFlux(DataBuffer.class);
     }
 }

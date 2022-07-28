@@ -3,11 +3,6 @@
     -background-color: #11101D;
 }
 
-.clickButton {
-    -fx-padding: 5 10;
-    -fx-background-color: -background-color;
-    -fx-text-fill: -text-color;
-}
 .menuPane .glyph-icon {
     -fx-fill: -text-color;
 }

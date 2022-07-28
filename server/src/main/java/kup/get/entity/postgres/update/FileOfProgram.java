@@ -4,12 +4,13 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.zip.ZipEntry;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class FileOfProgram {
+public class FileOfProgram implements Serializable {
     private String name;
     private long size;
     private long time;

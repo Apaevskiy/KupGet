@@ -6,6 +6,7 @@
     -fx-padding: 5 10;
     -fx-background-color: -background-color;
     -fx-text-fill: -text-color;
+    -fx-font-size: 15;
 }
 
 .switchButton {
@@ -23,7 +24,7 @@
     -fx-text-fill: white;
     -fx-font-size: 15;
 }
-.clickButton:hover, .testButton:hover {
+.clickButton:hover{
     -fx-effect: dropshadow(three-pass-box, rgb(17, 16, 29), 15, 0, 0, 0);
 }
 .shadowGridPane{

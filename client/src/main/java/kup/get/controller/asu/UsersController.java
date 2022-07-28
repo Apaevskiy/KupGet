@@ -44,7 +44,7 @@ public class UsersController extends MyAnchorPane {
     private final PersonSocketService services;
     private User user;
 
-    private final List<Role> roles = new ArrayList<>();
+    private final ObservableList<Role> roles = FXCollections.observableArrayList();
     private final ObservableList<User> users = FXCollections.observableArrayList();
 
     public UsersController(PersonSocketService services) {
@@ -76,7 +76,7 @@ public class UsersController extends MyAnchorPane {
                 .addColumn(col -> col.header("Таб. №").cellValueFactory(User::getTabNum));
 
         rolesView.setCellFactory(CheckBoxListCell.forListView(Role::getChanged));
-        rolesView.setItems(FXCollections.observableArrayList(roles));
+        rolesView.setItems(roles);
 
         saveButton.setOnAction(event -> {
             if (loginField.getText().isEmpty()) {
@@ -143,15 +143,17 @@ public class UsersController extends MyAnchorPane {
         nameField.setText("");
         numberField.setText("");
         passwordField.setText("");
-        roles.forEach(u -> u.getChanged().set(false));
-
+//        roles.forEach(u -> u.getChanged().set(false));
     }
 
     @Override
     public void fillData() {
         services.getRoles()
                 .doFinally(signalType -> Platform.runLater(() -> rolesView.refresh()))
-                .subscribe(roles::add);
+                .subscribe(e -> {
+                    Platform.runLater(() -> rolesView.getItems().add(e));
+//                    roles.add(e);
+                });
         services.getUsers()
                 .doFinally(signalType -> Platform.runLater(() -> usersTable.refresh()))
                 .subscribe(users::add);

@@ -37,6 +37,10 @@ public class Person  implements Serializable {
     @Transient
     transient private byte[] photo;
 
+    public String getFullName() {
+        return lastName + " " + firstName + " " + middleName;
+    }
+
     /*@Override
     public String toString() {
         return personnelNumber + ' ' + lastName + ' ' + firstName + ' ' + middleName;

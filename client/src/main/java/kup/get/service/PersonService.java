@@ -8,8 +8,7 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 public interface PersonService {
-    void updatePeople();
-    List<Person> getPeople();
+    Flux<Person> getPeople();
     Mono<byte[]> getPhotoByPerson(Long id);
 
     Flux<Person> savePeople(List<Person> people);

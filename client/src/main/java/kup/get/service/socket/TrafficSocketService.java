@@ -15,93 +15,99 @@ public class TrafficSocketService implements MyTrafficService {
     private final SocketService socketService;
 
     public Flux<TrafficItemType> getItemsType() {
-        return socketService.route("traffic.trafficItemType")
-                .retrieveFlux(TrafficItemType.class);
+        return socketService.getClient().get()
+                .uri("/traffic/trafficItemType")
+                .retrieve()
+                .bodyToFlux(TrafficItemType.class);
     }
 
     public Mono<TrafficItemType> saveItemType(TrafficItemType type) {
-        return socketService.route("traffic.saveItemType")
-                .data(type)
-                .retrieveMono(TrafficItemType.class);
+        return socketService.getClient().post().uri("/traffic/saveItemType")
+                .bodyValue(type)
+                .retrieve().bodyToMono(TrafficItemType.class);
     }
 
     public Mono<TrafficTeam> saveTrafficTeam(TrafficTeam trafficTeam) {
-        return socketService.route("traffic.saveTrafficTeam")
-                .data(trafficTeam)
-                .retrieveMono(TrafficTeam.class);
+        return socketService.getClient().post().uri("/traffic/saveTrafficTeam")
+                .bodyValue(trafficTeam)
+                .retrieve().bodyToMono(TrafficTeam.class);
     }
 
     public Mono<TrafficVehicle> saveTrafficVehicle(TrafficVehicle trafficVehicle) {
-        return socketService.route("traffic.saveTrafficVehicle")
-                .data(trafficVehicle)
-                .retrieveMono(TrafficVehicle.class);
+        return socketService.getClient().post().uri("/traffic/saveTrafficVehicle")
+                .bodyValue(trafficVehicle)
+                .retrieve().bodyToMono(TrafficVehicle.class);
     }
 
     public Mono<Void> deleteTrafficVehicle(TrafficVehicle vehicle) {
-        return socketService.route("traffic.deleteTrafficVehicle")
-                .data(vehicle)
-                .retrieveMono(Void.class);
+        return socketService.getClient().delete()
+                .uri("/traffic/deleteTrafficVehicle/{id}", vehicle.getId())
+                .retrieve().bodyToMono(Void.class);
     }
 
     public Flux<TrafficVehicle> getTrafficVehicle() {
-        return socketService.route("traffic.getTrafficVehicle")
-                .retrieveFlux(TrafficVehicle.class);
+        return socketService.getClient().get().uri("/traffic/getTrafficVehicle")
+                .retrieve().bodyToFlux(TrafficVehicle.class);
     }
 
     public Flux<TrafficTeam> getAllTrafficTeam() {
-        return socketService.route("traffic.getTrafficTeam")
-                .retrieveFlux(TrafficTeam.class);
+        return socketService.getClient().get().uri("/traffic/getTrafficTeam")
+                .retrieve().bodyToFlux(TrafficTeam.class);
     }
 
     public Mono<Void> deleteTrafficTeam(TrafficTeam trafficTeam) {
-        return socketService.route("traffic.deleteTrafficTeam")
-                .data(trafficTeam)
-                .retrieveMono(Void.class);
+        return socketService.getClient().delete()
+                .uri("/traffic/deleteTrafficTeam/{id}", trafficTeam.getId())
+                .retrieve().bodyToMono(Void.class);
     }
 
     public Mono<TrafficPerson> saveTrafficPerson(TrafficPerson person) {
-        return socketService.route("traffic.saveTrafficPerson")
-                .data(person)
-                .retrieveMono(TrafficPerson.class);
+        return socketService.getClient().post()
+                .uri("/traffic/saveTrafficPerson")
+                .bodyValue(person)
+                .retrieve().bodyToMono(TrafficPerson.class);
     }
 
     public Flux<TrafficPerson> getTrafficPeople() {
-        return socketService.route("traffic.getTrafficPeople")
-                .retrieveFlux(TrafficPerson.class);
+        return socketService.getClient().get().uri("/traffic/getTrafficPeople")
+                .retrieve().bodyToFlux(TrafficPerson.class);
     }
 
     public Flux<TrafficItem> getTrafficItems() {
-        return socketService.route("traffic.getTrafficItems")
-                .retrieveFlux(TrafficItem.class);
+        return socketService.getClient().get().uri("/traffic/getTrafficItems")
+                .retrieve().bodyToFlux(TrafficItem.class);
     }
 
     public Flux<TrafficPerson> getPeopleByTeam(TrafficTeam team) {
-        return socketService.route("traffic.getPeopleByTeam")
-                .data(team.getId())
-                .retrieveFlux(TrafficPerson.class);
+        return socketService.getClient().get()
+                .uri("/traffic/getPeopleByTeam/{id}", team.getId())
+                .retrieve().bodyToFlux(TrafficPerson.class);
     }
 
     public Mono<TrafficItem> saveTrafficItem(TrafficItem item) {
-        return socketService.route("traffic.saveTrafficItem")
-                .data(item)
-                .retrieveMono(TrafficItem.class);
+        return socketService.getClient().post().uri("/traffic/saveTrafficItem")
+                .bodyValue(item)
+                .retrieve().bodyToMono(TrafficItem.class);
     }
 
+    @Deprecated
     public Flux<TrafficTeam> saveTrafficTeams(List<TrafficTeam> teams) {
-        return socketService.route("traffic.saveTrafficTeams")
-                .data(Flux.fromIterable(teams))
-                .retrieveFlux(TrafficTeam.class);
+        return socketService.getClient().post().uri("/traffic/saveTrafficTeams")
+                .bodyValue(Flux.fromIterable(teams))
+                .retrieve().bodyToFlux(TrafficTeam.class);
     }
 
+    @Deprecated
     public Flux<TrafficVehicle> saveTrafficVehicles(List<TrafficVehicle> vehicles) {
-        return socketService.route("traffic.saveTrafficVehicles")
-                .data(Flux.fromIterable(vehicles))
-                .retrieveFlux(TrafficVehicle.class);
+        return socketService.getClient().post().uri("/traffic/saveTrafficVehicles")
+                .bodyValue(Flux.fromIterable(vehicles))
+                .retrieve().bodyToFlux(TrafficVehicle.class);
     }
 
+    @Deprecated
     public Flux<TrafficItemType> saveItemTypes(List<TrafficItemType> types) {
-        return socketService.route("traffic.saveItemTypes")
-                .data(Flux.fromIterable(types))
-                .retrieveFlux(TrafficItemType.class);
+        return socketService.getClient().post().uri("/traffic/saveItemTypes")
+                .bodyValue(Flux.fromIterable(types))
+                .retrieve().bodyToFlux(TrafficItemType.class);
     }
 }

@@ -309,7 +309,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
 
     @Override
     public void fillData() {
-        people.addAll(services.getPersonService().getPeople());
+        services.getPersonService().getPeople().subscribe(people::add);
         services.getTrafficService().getTrafficVehicle().subscribe(vehicleTable.getItems()::add);
         services.getTrafficService().getAllTrafficTeam().subscribe(teamTable.getItems()::add);
     }

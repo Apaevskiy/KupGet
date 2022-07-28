@@ -18,9 +18,6 @@ public class Role implements GrantedAuthority {
     private Long id;
     private String name;
     private String fullName;
-    /*@Transient
-    @OneToMany(fetch = FetchType.EAGER)
-    private Set<User> users;*/
 
     @Override
     public String getAuthority() {

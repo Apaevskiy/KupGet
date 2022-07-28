@@ -1,6 +1,5 @@
 package kup.get.controller;
 
-import javafx.application.Platform;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -10,17 +9,14 @@ import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import kup.get.config.RSocketClientBuilderImpl;
-import kup.get.service.SocketService;
-import kup.get.entity.Version;
 import kup.get.service.PropertyService;
+import kup.get.service.SocketService;
 import kup.get.service.UpdateTask;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 
 @Component
@@ -36,18 +32,12 @@ public class MainController extends AnchorPane {
     @FXML
     private VBox progressPane;
 
-    private final RSocketClientBuilderImpl config;
     private final SocketService socketService;
     private final PropertyService propertyService;
 
-    public MainController(RSocketClientBuilderImpl config, SocketService socketService, PropertyService propertyService) {
-        this.config = config;
+    public MainController(SocketService socketService, PropertyService propertyService) {
         this.socketService = socketService;
         this.propertyService = propertyService;
-        connectToServer();
-    }
-
-    void openGUI() {
         FXMLLoader loader = new FXMLLoader();
         URL xmlUrl = getClass().getResource("/fxml/main.fxml");
         loader.setLocation(xmlUrl);
@@ -64,33 +54,7 @@ public class MainController extends AnchorPane {
         }
     }
 
-    void connectToServer() {
-        this.config.createClientTransport()
-                .doOnSuccess(duplexConnection -> {
-                    this.config.createRequester();
-                    checkUpdates();
-                })
-                .doOnError(throwable -> Platform.runLater(() -> runProject(Paths.get("bin/client.jar").toAbsolutePath().toString())))
-                .subscribe();
-    }
-
-    void checkUpdates() {
-        Version versionProgram = propertyService.getVersion();
-        socketService.getActualVersion().doOnSuccess(actualVersion -> {
-            if (actualVersion.getId() != versionProgram.getId()) {
-                Platform.runLater(() -> {
-                    this.openGUI();
-                    this.initializeUpdate(versionProgram, actualVersion);
-                });
-            } else {
-                runProject(Paths.get("bin/client.jar").toAbsolutePath().toString());
-                System.exit(0);
-            }
-
-        }).subscribe();
-    }
-
-    void initializeUpdate(Version versionProgram, Version actualVersion) {
+    public void initializeUpdate(Long actualVersionId, Long latestVersionId) {
         UpdateTask task = new UpdateTask(socketService);
         Thread threadTask = new Thread(task);
 
@@ -105,11 +69,10 @@ public class MainController extends AnchorPane {
             Path file = task.getValue();
             progressText.textProperty().unbind();
             if (file != null) {
-                progressText.setText("Обновление успешно установлено");
-                socketService.getUpdateInformation(versionProgram)
+                socketService.getUpdateInformation(actualVersionId)
                         .subscribe(version ->
                                 updateInformationArea.setText(updateInformationArea.getText() + "⟳\tОбновление " + version.getRelease() + ":\n" + version.getInformation() + "\n\n"));
-                propertyService.saveVersion(actualVersion);
+                propertyService.saveVersion(latestVersionId);
                 this.getScene().getWindow().setHeight(400);
                 progressPane.setVisible(false);
                 updateInformationArea.setVisible(true);
@@ -127,11 +90,11 @@ public class MainController extends AnchorPane {
                 .subscribe(task::addFileOfProgram);
     }
 
-    void runProject(String path) {
+    public void runProject(String path) {
         String[] run = {"java", "-jar", path};
         try {
             Runtime.getRuntime().exec(run);
-            System.exit(0);
+//            System.exit(0);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -34,15 +34,9 @@ public class PersonDaoService implements PersonService {
     private final PositionRepository positionRepository;
 
     private final PhotoRepository photoRepository;
-    private final List<Person> people = new ArrayList<>();
 
-    public void updatePeople() {
-        people.clear();
-        people.addAll(personRepository.findAll(/*String.valueOf(LocalDate.now())*/));
-    }
-
-    public List<Person> getPeople() {
-        return personRepository.findAll();
+    public Flux<Person> getPeople() {
+        return Flux.fromIterable(personRepository.findAll());
     }
 
     public Person savePerson(Person person) {

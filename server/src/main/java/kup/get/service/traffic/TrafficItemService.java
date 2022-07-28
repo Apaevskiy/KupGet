@@ -41,16 +41,16 @@ public class TrafficItemService {
     public TrafficVehicle saveTrafficVehicle(TrafficVehicle tv) {
         return vehicleRepository.save(tv);
     }
-    public void deleteTrafficVehicle(TrafficVehicle tv){
-        vehicleRepository.delete(tv);
+    public void deleteTrafficVehicle(Long id){
+        vehicleRepository.deleteById(id);
     }
 
     public List<TrafficTeam> getAllTrafficTeam() {
         return teamRepository.findAll();
     }
 
-    public void deleteTrafficTeam(TrafficTeam trafficTeam) {
-        teamRepository.delete(trafficTeam);
+    public void deleteTrafficTeam(Long id) {
+        teamRepository.deleteById(id);
     }
 
     public TrafficPerson saveTrafficPerson(TrafficPerson trafficPerson) {

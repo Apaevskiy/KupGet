@@ -3,54 +3,42 @@ package kup.get.controller;
 import kup.get.entity.alfa.Person;
 import kup.get.entity.postgres.security.Role;
 import kup.get.entity.postgres.security.User;
-import kup.get.service.Services;
 import kup.get.service.alfa.AlfaService;
+import kup.get.service.security.UserService;
 import lombok.AllArgsConstructor;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.http.HttpStatus;
-import org.springframework.messaging.handler.annotation.Headers;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.util.Map;
-
-@Controller
+@RestController
 @AllArgsConstructor
 public class AsuController {
 
-    private final Services services;
     private final AlfaService alfaService;
+    private final UserService userService;
 
-
-    @MessageMapping("asu.getRoles")
+    @GetMapping("/asu/getRoles")
     Flux<Role> getRoles() {
-        return Flux.fromIterable(services.getUserService().allRoles());
+        return Flux.fromIterable(userService.allRoles());
     }
 
-    @MessageMapping("asu.getUsers")
+    @GetMapping("/asu/getUsers")
     Flux<User> getUsers() {
-        return Flux.fromIterable(services.getUserService().allUsers());
+        return Flux.fromIterable(userService.allUsers());
     }
 
-    @MessageMapping("asu.savePeople")
-    Flux<Person> savePeople(Flux<Person> people) {
+    @PostMapping("/asu/savePeople")
+    Flux<Person> savePeople(@RequestBody Flux<Person> people) {
         return people.map(alfaService::savePerson);
     }
 
-    @MessageMapping("asu.deleteUser")
-    Mono<Boolean> deleteUser(Mono<User> userMono) {
-        return userMono.map(services.getUserService()::deleteUser);
+    @DeleteMapping("/asu/deleteUser/{id}")
+    Mono<Void> deleteUser(@PathVariable("id") long id) {
+        return userService.deleteUser(id);
     }
 
-    @MessageMapping("asu.saveUser")
-    Mono<User> saveUser(Mono<User> userMono) {
-        return userMono.map(services.getUserService()::saveUser);
+    @PatchMapping("/asu/saveUser")
+    Mono<User> saveUser(@RequestBody User user) {
+        return Mono.just(userService.saveUser(user));
     }
-
-
 }

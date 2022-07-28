@@ -3,13 +3,11 @@ package kup.get.entity.alfa;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import java.util.Arrays;
 
 @Entity
 @Table(name = "sp_ol_blobs")
@@ -27,13 +25,4 @@ public class Photo {
 
     @Column(name = "pict")
     private byte[] photo;
-
-    @Override
-    public String toString() {
-        return "Photo{" +
-                "id=" + id +
-                ", personId=" + personId +
-                ", photo=" + (photo != null) +
-                '}';
-    }
 }

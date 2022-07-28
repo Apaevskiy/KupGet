@@ -4,53 +4,46 @@ import kup.get.entity.postgres.update.FileOfProgram;
 import kup.get.entity.postgres.update.Version;
 import kup.get.service.update.VersionService;
 import lombok.AllArgsConstructor;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferUtils;
-import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.jar.Attributes;
 
-@Controller
+@RestController
 @AllArgsConstructor
 public class UpdateController {
     private final VersionService service;
 
-    @MessageMapping("update.getActualVersion")
-    public Mono<Version> getActualVersion() {
-        return Mono.just(service.getActualVersion());
+    @GetMapping("/update/getActualVersion")
+    public Mono<Long> getActualVersion() {
+        return Mono.just(service.getActualVersionId());
     }
 
-    @MessageMapping("update.informationAboutUpdate")
-    public Flux<Version> getInformationAboutUpdate(Mono<Version> message) {
-        return message.flatMapMany(version -> Flux.fromIterable(service.getInformationAboutUpdate(version)));
+    @GetMapping("/update/informationAboutUpdate/{id}")
+    public Flux<Version> getInformationAboutUpdate(@PathVariable Long id) {
+        return Flux.fromIterable(service.getInformationAboutUpdate(id));
     }
 
-    @MessageMapping("update.getFilesOfProgram")
+    @GetMapping("/update/getFilesOfProgram")
     public Flux<FileOfProgram> getFilesOfProgram() {
         return Flux.fromIterable(service.getFilesOfProgram());
     }
 
-    @MessageMapping("update.getContentOfFiles")
-    public Flux<DataBuffer> getContentOfFile(Mono<FileOfProgram> mono) {
+    @PostMapping("/update/getContentOfFiles")
+    public Flux<DataBuffer> getContentOfFile(@RequestBody Mono<String> mono) {
         return mono.flatMapMany(service::getContentOfFile);
     }
-    @MessageMapping("asu.update")
-    Flux<HttpStatus> update(Flux<DataBuffer> content) throws IOException {
+    @PostMapping("/asu/uploadFile")
+    Flux<HttpStatus> update(@RequestBody Flux<DataBuffer> content) throws IOException {
         return Flux.concat(service.uploadFile(content), Mono.just(HttpStatus.OK))
                 .doOnError(Throwable::printStackTrace)
                 .onErrorReturn(HttpStatus.BAD_GATEWAY);
+    }
+    @PostMapping("/asu/version")
+    Mono<Version> addVersion(@RequestBody Mono<Version> versionMono) {
+        return versionMono.map(service::save);
     }
 }
