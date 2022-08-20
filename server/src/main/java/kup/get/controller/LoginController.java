@@ -19,10 +19,6 @@ import java.util.stream.Collectors;
 public class LoginController {
     private final UserService userService;
 
-    @GetMapping("/info")
-    Mono<Boolean> getInfo(){
-        return Mono.just(true);
-    }
 
     @GetMapping("/auth/getAuthorities")
     Flux<String> getAuthorities(@AuthenticationPrincipal Mono<UserDetails> user) {

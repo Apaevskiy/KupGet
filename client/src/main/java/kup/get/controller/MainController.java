@@ -13,14 +13,11 @@ import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import kup.get.config.FX.CustomMenuItem;
 import kup.get.config.FX.FxmlLoader;
@@ -36,6 +33,7 @@ import kup.get.controller.traffic.ItemController;
 import kup.get.controller.traffic.TeamAndVehicleController;
 import kup.get.controller.traffic.TrafficItemTypeController;
 import kup.get.service.DAO.PersonDaoService;
+import kup.get.service.DAO.TrafficDaoService;
 import kup.get.service.Services;
 import kup.get.service.other.PropertyService;
 import kup.get.service.socket.AsuSocketService;
@@ -116,8 +114,12 @@ public class MainController extends MyAnchorPane {
     private ClinicController clinicController;
     private final PropertyService propertyService;
 
-    public MainController(Services services, PropertyService propertyService, PersonSocketService personSocketService, AsuSocketService asuSocketService,
-                          PersonDaoService personDaoService, ClinicService clinicService) {
+    public MainController(Services services,
+                          PropertyService propertyService,
+                          PersonSocketService personSocketService, PersonDaoService personDaoService,
+                          TrafficDaoService trafficDaoService,
+                          AsuSocketService asuSocketService,
+                          ClinicService clinicService) {
         this.services = services;
         this.propertyService = propertyService;
         this.setVisible(true);
@@ -166,7 +168,7 @@ public class MainController extends MyAnchorPane {
                                         .menuItem("Экипажи и ТС", new FontAwesomeIconView(FontAwesomeIcon.USERS))
                                         .setEventSwitchPane(event -> {
                                             if (teamAndVehicleController == null) {
-                                                teamAndVehicleController = new TeamAndVehicleController(services);
+                                                teamAndVehicleController = new TeamAndVehicleController(trafficDaoService,services);
                                                 mainPane.getChildren().add(teamAndVehicleController);
                                             }
                                             hiddenPages(teamAndVehicleController);

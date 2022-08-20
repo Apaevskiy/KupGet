@@ -1,25 +1,31 @@
 package kup.get.controller;
 
-import javafx.concurrent.WorkerStateEvent;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import kup.get.service.PropertyService;
 import kup.get.service.SocketService;
-import kup.get.service.UpdateTask;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.channels.AsynchronousFileChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @Component
+@Slf4j
 public class MainController extends AnchorPane {
     @FXML
     private TextArea updateInformationArea;
@@ -34,6 +40,7 @@ public class MainController extends AnchorPane {
 
     private final SocketService socketService;
     private final PropertyService propertyService;
+    private final AtomicReference<Long> progress = new AtomicReference<>(0L);
 
     public MainController(SocketService socketService, PropertyService propertyService) {
         this.socketService = socketService;
@@ -50,53 +57,93 @@ public class MainController extends AnchorPane {
         try {
             loader.load();
         } catch (IOException e) {
-            e.printStackTrace();
+            createAlert(e.getMessage());
         }
     }
 
-    public void initializeUpdate(Long actualVersionId, Long latestVersionId) {
-        UpdateTask task = new UpdateTask(socketService);
-        Thread threadTask = new Thread(task);
-
+    public void initializeUpdate(Long actualVersionId, Long latestVersionId, Long sizeProgramFile) {
+        progressText.setText("Получение списка обновлений...");
         progressBar.setProgress(0);
-        progressBar.progressProperty().unbind();
-        progressBar.progressProperty().bind(task.progressProperty());
+        Path file = Paths.get("client.exe");
+        if (Files.exists(file)) {
+            try {
+                Files.delete(file);
+            } catch (IOException e) {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Ошибка");
+                alert.setHeaderText("В процессе работы программы возникла ошибка");
+                alert.setContentText(e.getMessage());
+                ButtonType returnButton = new ButtonType("Повторить");
+                ButtonType exitButton = new ButtonType("Выход");
+                alert.getButtonTypes().clear();
 
-        progressText.textProperty().unbind();
-        progressText.textProperty().bind(task.messageProperty());
+                alert.getButtonTypes().addAll(returnButton, exitButton);
 
-        task.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, t -> {
-            Path file = task.getValue();
-            progressText.textProperty().unbind();
-            if (file != null) {
-                socketService.getUpdateInformation(actualVersionId)
-                        .subscribe(version ->
-                                updateInformationArea.setText(updateInformationArea.getText() + "⟳\tОбновление " + version.getRelease() + ":\n" + version.getInformation() + "\n\n"));
-                propertyService.saveVersion(latestVersionId);
-                this.getScene().getWindow().setHeight(400);
-                progressPane.setVisible(false);
-                updateInformationArea.setVisible(true);
-                runProject(file.toAbsolutePath().toString());
-            } else {
-                progressText.setTextFill(Color.RED);
-                progressText.setText("Произошёл сбой!!!");
+                Optional<ButtonType> option = alert.showAndWait();
+
+                if (option.isPresent() && option.get() == returnButton) {
+                    initializeUpdate(actualVersionId, latestVersionId, sizeProgramFile);
+                    return;
+                }
             }
+        }
+        try {
+            AsynchronousFileChannel channel = AsynchronousFileChannel.open(file, StandardOpenOption.CREATE, StandardOpenOption.WRITE);
 
-        });
-        threadTask.start();
+            DataBufferUtils.write(socketService.getProgram(), channel)
+                    .doOnComplete(() -> {
+                        try {
+                            channel.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        saveUpdate(actualVersionId, latestVersionId, file);
+                    })
+                    .doOnError(throwable -> log.error(throwable.getMessage()))
+                    .map(DataBuffer::capacity)
+                    .subscribe(capacity -> {
+                        Platform.runLater(() -> updateInformation(
+                                progress.accumulateAndGet((long) capacity, Long::sum),
+                                sizeProgramFile));
+                    });
+        } catch (IOException e) {
+            createAlert(e.getMessage());
+        }
 
-        socketService.getFilesOfProgram()
-                .doOnComplete(task::stopTask)
-                .subscribe(task::addFileOfProgram);
     }
 
     public void runProject(String path) {
-        String[] run = {"java", "-jar", path};
+        String[] run = {/*"java", "-jar", */path};
         try {
             Runtime.getRuntime().exec(run);
-//            System.exit(0);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            createAlert(ex.getMessage());
         }
+    }
+
+    private void updateInformation(Long progress, Long sizeOfFile) {
+        progressText.setText(String.format("%.2f/%.2f", progress / 1048576.0, sizeOfFile / 1048576.0));
+        progressBar.setProgress(progress * 1.0 / sizeOfFile);
+    }
+
+    private void saveUpdate(Long actualVersionId, Long latestVersionId, Path file) {
+        socketService.getUpdateInformation(actualVersionId)
+                .subscribe(version ->
+                        updateInformationArea.setText(updateInformationArea.getText() + "⟳\tОбновление " + version.getRelease() + ":\n" + version.getInformation() + "\n\n"));
+        propertyService.saveVersion(latestVersionId);
+        this.getScene().getWindow().setHeight(400);
+        progressPane.setVisible(false);
+        updateInformationArea.setVisible(true);
+        runProject(file.toString());
+    }
+
+    protected void createAlert(String message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Ошибка");
+            alert.setHeaderText("В процессе работы программы возникла ошибка");
+            alert.setContentText(message);
+            alert.showAndWait();
+        });
     }
 }

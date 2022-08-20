@@ -23,13 +23,8 @@ public interface MyTrafficService {
 
     Mono<Void> deleteTrafficTeam(TrafficTeam trafficTeam);
 
-    Mono<TrafficPerson> saveTrafficPerson(TrafficPerson person);
-
-    Flux<TrafficPerson> getTrafficPeople();
 
     Flux<TrafficItem> getTrafficItems();
-
-    Flux<TrafficPerson> getPeopleByTeam(TrafficTeam team);
 
     Mono<TrafficItem> saveTrafficItem(TrafficItem item);
 

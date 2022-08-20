@@ -61,27 +61,9 @@ public class TrafficSocketService implements MyTrafficService {
                 .retrieve().bodyToMono(Void.class);
     }
 
-    public Mono<TrafficPerson> saveTrafficPerson(TrafficPerson person) {
-        return socketService.getClient().post()
-                .uri("/traffic/saveTrafficPerson")
-                .bodyValue(person)
-                .retrieve().bodyToMono(TrafficPerson.class);
-    }
-
-    public Flux<TrafficPerson> getTrafficPeople() {
-        return socketService.getClient().get().uri("/traffic/getTrafficPeople")
-                .retrieve().bodyToFlux(TrafficPerson.class);
-    }
-
     public Flux<TrafficItem> getTrafficItems() {
         return socketService.getClient().get().uri("/traffic/getTrafficItems")
                 .retrieve().bodyToFlux(TrafficItem.class);
-    }
-
-    public Flux<TrafficPerson> getPeopleByTeam(TrafficTeam team) {
-        return socketService.getClient().get()
-                .uri("/traffic/getPeopleByTeam/{id}", team.getId())
-                .retrieve().bodyToFlux(TrafficPerson.class);
     }
 
     public Mono<TrafficItem> saveTrafficItem(TrafficItem item) {

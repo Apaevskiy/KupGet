@@ -21,7 +21,7 @@ public class WebFluxConfig {
                                 .pathMatchers("/asu/**").hasRole("ASU")
                                 .pathMatchers("/traffic/**").hasAnyRole("TRAFFIC", "ASU")
                                 .pathMatchers("/energy/**").hasAnyRole("ENERGY", "ASU")
-                                .pathMatchers("/info").permitAll()
+                                .pathMatchers("/info", "/program").permitAll()
                                 .anyExchange().authenticated()
                                 .and().csrf().disable())
                         .httpBasic(withDefaults())

@@ -1,6 +1,8 @@
 package kup.get.entity.alfa;
 
 import lombok.*;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 
 import javax.persistence.*;
 
@@ -19,12 +21,14 @@ public class Person {
     @Column(name = "TAB_NOM")
     private String personnelNumber;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "k_podr")
+    @NotFound(action = NotFoundAction.IGNORE)
     private Department department;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "k_doljn")
+    @NotFound(action = NotFoundAction.IGNORE)
     private Position position;
 
     @Column(name = "FAM")

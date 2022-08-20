@@ -2,6 +2,7 @@
 
 <?import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView?>
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -10,7 +11,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import kup.get.config.MyTable?>
 
-<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1">
+<fx:root maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" stylesheets="@../../css/test.css" type="javafx.scene.layout.AnchorPane" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <GridPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <columnConstraints>
@@ -19,57 +20,111 @@
             <ColumnConstraints />
         </columnConstraints>
         <rowConstraints>
+            <RowConstraints minHeight="30.0" vgrow="SOMETIMES" />
           <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <MyTable fx:id="vehicleTable" editable="true" tableMenuButtonVisible="true">
-               <columnResizePolicy>
-                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
-               <GridPane.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </GridPane.margin>
-            </MyTable>
-            <MyTable fx:id="peopleTable" editable="true" tableMenuButtonVisible="true" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="2">
-               <columnResizePolicy>
-                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
-               <GridPane.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </GridPane.margin>
-            </MyTable>
-            <MyTable fx:id="trafficPeopleTable" editable="true" tableMenuButtonVisible="true" GridPane.columnIndex="1" GridPane.columnSpan="2">
-               <GridPane.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </GridPane.margin>
-               <columnResizePolicy>
-                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
-            </MyTable>
-            <MyTable fx:id="teamTable" editable="true" tableMenuButtonVisible="true" GridPane.rowIndex="1" GridPane.rowSpan="2">
-               <columnResizePolicy>
-                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
-               </columnResizePolicy>
-               <GridPane.margin>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
-               </GridPane.margin>
-            </MyTable>
-            <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+            <HBox prefHeight="100.0" prefWidth="200.0">
                <children>
                   <FontAwesomeIconView glyphName="SEARCH" size="20">
                      <HBox.margin>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </HBox.margin>
                   </FontAwesomeIconView>
-                  <TextField fx:id="searchField" maxWidth="300.0" prefWidth="300.0">
+                  <TextField fx:id="vehicleSearchField" maxWidth="300.0" prefWidth="300.0">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </TextField>
+               </children>
+               <GridPane.margin>
+                  <Insets top="5.0" />
+               </GridPane.margin>
+            </HBox>
+            <MyTable fx:id="vehicleTable" editable="true" tableMenuButtonVisible="true" GridPane.rowIndex="1">
+               <columnResizePolicy>
+                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+            </MyTable>
+            <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1">
+               <children>
+                  <FontAwesomeIconView glyphName="SEARCH" size="20">
+                     <HBox.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </HBox.margin>
+                  </FontAwesomeIconView>
+                  <TextField fx:id="consolidationSearchField" maxWidth="300.0" prefWidth="300.0">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </TextField>
+                  <DatePicker fx:id="dateConsolidationField">
+                     <HBox.margin>
+                        <Insets left="30.0" />
+                     </HBox.margin>
+                  </DatePicker>
+               </children>
+               <GridPane.margin>
+                  <Insets top="5.0" />
+               </GridPane.margin>
+            </HBox>
+            <MyTable fx:id="peopleTable" editable="true" tableMenuButtonVisible="true" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="3">
+               <columnResizePolicy>
+                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+            </MyTable>
+            <HBox prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="2">
+               <children>
+                  <FontAwesomeIconView glyphName="SEARCH" size="20">
+                     <HBox.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </HBox.margin>
+                  </FontAwesomeIconView>
+                  <TextField fx:id="teamSearchField" maxWidth="300.0" prefWidth="300.0">
                      <padding>
                         <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                      </padding>
                   </TextField>
                </children>
             </HBox>
+            <MyTable fx:id="trafficPeopleTable" editable="true" tableMenuButtonVisible="true" GridPane.columnIndex="1" GridPane.columnSpan="2" GridPane.rowIndex="1">
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+               <columnResizePolicy>
+                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+            </MyTable>
+            <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+               <children>
+                  <FontAwesomeIconView glyphName="SEARCH" size="20">
+                     <HBox.margin>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </HBox.margin>
+                  </FontAwesomeIconView>
+                  <TextField fx:id="peopleSearchField" maxWidth="300.0" prefWidth="300.0">
+                     <padding>
+                        <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                     </padding>
+                  </TextField>
+               </children>
+            </HBox>
+            <MyTable fx:id="teamTable" editable="true" tableMenuButtonVisible="true" GridPane.rowIndex="3">
+               <columnResizePolicy>
+                  <MyTable fx:constant="CONSTRAINED_RESIZE_POLICY" />
+               </columnResizePolicy>
+               <GridPane.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </GridPane.margin>
+            </MyTable>
          </children>
       </GridPane>
    </children>

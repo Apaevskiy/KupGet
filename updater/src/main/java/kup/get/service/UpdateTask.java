@@ -44,7 +44,10 @@ public class UpdateTask extends Task<Path> {
     protected Path call() {
         this.updateMessage("Получение списка обновлений...");
         Path oldJarFile = Paths.get("client.jar");
-        Path newJarFile = Paths.get("client1.jar");
+
+
+
+        /*Path newJarFile = Paths.get("client1.jar");
         try {
             if (oldJarFile.getParent() != null) {
                 Files.createDirectories(oldJarFile.getParent());
@@ -76,7 +79,7 @@ public class UpdateTask extends Task<Path> {
 
         } catch (IOException e) {
             log.error(e.getMessage());
-        }
+        }*/
 
         return null;
     }

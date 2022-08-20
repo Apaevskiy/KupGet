@@ -7,10 +7,16 @@ import kup.get.controller.MainController;
 import kup.get.service.PropertyService;
 import kup.get.service.SocketService;
 import org.springframework.context.ApplicationListener;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Flux;
 
 import java.io.*;
+import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -34,12 +40,11 @@ public class StageInitializer implements ApplicationListener<JavaFxApplication.S
 
     @Override
     public void onApplicationEvent(@NonNull JavaFxApplication.StageReadyEvent event) {
-        createLink();
-        this.socketService.createWebClient("setup", "1488325");
-        if (socketService.checkConnection().block() != null) {
+        Long sizeProgramFile;
+        if (( sizeProgramFile = socketService.checkConnection("setup", "1488325").block()) != null) {
             Long actualVersionId = propertyService.getVersionId();
             Long latestVersionId = socketService.getActualVersion().block();
-            if (!actualVersionId.equals(latestVersionId)) {
+            if (!actualVersionId.equals(latestVersionId) || !Files.exists(Paths.get("client.exe"))) {
                 Stage stage = event.getStage();
                 stage.setTitle("Обновление программы");
                 stage.setScene(new Scene(mainController));
@@ -48,28 +53,15 @@ public class StageInitializer implements ApplicationListener<JavaFxApplication.S
                 stage.setWidth(500);
                 stage.setHeight(200);
                 stage.show();
-                mainController.initializeUpdate(actualVersionId, latestVersionId);
+
+                mainController.initializeUpdate(actualVersionId, latestVersionId, sizeProgramFile);
             } else {
-                mainController.runProject(Paths.get("client.jar").toAbsolutePath().toString());
+                mainController.runProject(Paths.get("client.exe").toAbsolutePath().toString());
                 System.exit(0);
             }
         } else {
-            mainController.runProject(Paths.get("client.jar").toAbsolutePath().toString());
+            mainController.runProject(Paths.get("client.exe").toAbsolutePath().toString());
             System.exit(0);
-        }
-    }
-
-    private void createLink() {
-        Path batFile = Paths.get("client.bat");
-        if (!Files.exists(batFile)) {
-            try {
-                Files.createFile(batFile);
-                String contentOfBatFile = batFile.toAbsolutePath().getParent() + File.separator + "jre" + File.separator + "bin" + File.separator + "javaw.exe" +
-                        " -jar " + batFile.toAbsolutePath().getParent() + File.separator + "client.jar";
-                Files.write(batFile, contentOfBatFile.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 }

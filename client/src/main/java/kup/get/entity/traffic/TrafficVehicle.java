@@ -1,28 +1,23 @@
 package kup.get.entity.traffic;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
-import java.io.Serializable;
-import java.util.List;
 
 @Entity
 @Table(name = "traffic_vehicle")
 @Getter
 @Setter
 @ToString
-@AllArgsConstructor
-@NoArgsConstructor
-public class TrafficVehicle  implements Serializable {
+public class TrafficVehicle {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long localId;
-
     private Long id;
-    private int number;
+    private String number;
     private String model;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "traffic_team_id")
+    @OneToOne
     private TrafficTeam team;
 }

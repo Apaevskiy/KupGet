@@ -31,7 +31,7 @@ public class PropertyService {
         }
     }
     public String getServerAddress() {
-        return "http://"+getProperty("server.ip", "192.168.0.2") + ":" + getProperty("server.port", "9090");
+        return "http://"+getProperty("server.ip", "192.168.0.6") + ":" + getProperty("server.port", "9090");
     }
     public Long getVersionId() {
         try {

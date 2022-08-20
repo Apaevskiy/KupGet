@@ -1,24 +1,23 @@
 package kup.get.entity.traffic;
 
-import lombok.*;
+import kup.get.entity.alfa.Person;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name="traffic_team")
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
-public class TrafficTeam  implements Serializable {
+public class TrafficTeam {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long localId;
-
     private Long id;
-    private String number;
-    private String workingMode;
+    @ManyToMany
+    private List<Person> people;
+    @OneToOne
+    @JoinColumn(name = "vehicleId")
+    private TrafficVehicle vehicle;
 }

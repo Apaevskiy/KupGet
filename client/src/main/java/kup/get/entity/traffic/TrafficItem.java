@@ -29,18 +29,22 @@ public class TrafficItem {
     @JoinColumn(name = "item_type_id")
     private TrafficItemType type;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "person_id")
+    private Person person;
+
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "team_id")
     private TrafficTeam team;
 
-    @OneToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "person_id")
-    private Person transientPerson;
-
-    @Transient
-    private transient Long person;
-
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vehicle_id")
     private TrafficVehicle vehicle;
+
+    @Transient
+    private transient Long personId;
+    @Transient
+    private transient Long teamId;
+    @Transient
+    private transient Long vehicleId;
 }

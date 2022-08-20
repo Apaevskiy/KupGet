@@ -1,27 +1,24 @@
 package kup.get.service.traffic;
 
+import kup.get.entity.alfa.traffic.TrafficTeam;
+import kup.get.entity.alfa.traffic.TrafficVehicle;
 import kup.get.entity.postgres.traffic.*;
+import kup.get.repository.alfa.TrafficTeamRepository;
+import kup.get.repository.alfa.TrafficVehicleRepository;
 import kup.get.repository.postgres.traffic.*;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import javax.annotation.PostConstruct;
 import java.util.List;
 
 @Service
 @AllArgsConstructor
 public class TrafficItemService {
     private final TrafficItemRepository itemRepository;
-    private final TrafficPersonRepository personRepository;
     private final TrafficItemTypeRepository typeRepository;
     private final TrafficTeamRepository teamRepository;
     private final TrafficVehicleRepository vehicleRepository;
-
-    public List<TrafficPerson> getBriefingOfPeople(LocalDate date) {
-//        Long id = typeRepository.findFirstByName("Инструктажи по охране труда").getId();
-//        return personRepository.findAllByItemsTypeIdAndItemsDateFinishAfter(1L, date);
-        return null;
-    }
 
     public TrafficItemType saveType(TrafficItemType type) {
         return typeRepository.save(type);
@@ -38,6 +35,7 @@ public class TrafficItemService {
     public List<TrafficVehicle> getTrafficVehicle(){
         return vehicleRepository.findAll();
     }
+
     public TrafficVehicle saveTrafficVehicle(TrafficVehicle tv) {
         return vehicleRepository.save(tv);
     }
@@ -49,24 +47,23 @@ public class TrafficItemService {
         return teamRepository.findAll();
     }
 
+    @PostConstruct
+    public void test(){
+        int i=0;
+        for(TrafficTeam team: getAllTrafficTeam()){
+            if(i++ > 5)
+                break;
+            System.out.println(team);
+        }
+    }
+
     public void deleteTrafficTeam(Long id) {
         teamRepository.deleteById(id);
     }
 
-    public TrafficPerson saveTrafficPerson(TrafficPerson trafficPerson) {
-        return personRepository.save(trafficPerson);
-    }
-
-    public List<TrafficPerson> getTrafficPeople() {
-        return personRepository.findAll();
-    }
 
     public List<TrafficItem> getTrafficItems() {
         return itemRepository.findAll();
-    }
-
-    public List<TrafficPerson> getTrafficPeopleByTeam(Long id) {
-        return personRepository.findAllByTeamId(id);
     }
 
     public TrafficItem saveTrafficItem(TrafficItem trafficItem) {

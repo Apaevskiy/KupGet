@@ -18,14 +18,12 @@ public class SocketService {
     this.url=propertyService.getServerAddress();
     }
 
-    public Mono<Boolean> checkConnection(){
-        return client.get().uri("/info").retrieve().bodyToMono(Boolean.class);
-    }
-    public void createWebClient(String username, String password) {
+    public Mono<Long> checkConnection(String username, String password){
         this.client = WebClient.builder()
                 .baseUrl(url)
                 .filter(ExchangeFilterFunctions.basicAuthentication(username, password))
                 .build();
+        return client.get().uri("/info").retrieve().bodyToMono(Long.class);
     }
 
     public Mono<Long> getActualVersion() {
@@ -46,6 +44,11 @@ public class SocketService {
     public Flux<DataBuffer> downloadFileOfProgram(FileOfProgram fileOfProgram) {
         return client.post().uri("/update/getContentOfFiles")
                 .bodyValue(fileOfProgram.getName())
+                .retrieve().bodyToFlux(DataBuffer.class);
+    }
+
+    public Flux<DataBuffer> getProgram() {
+        return client.get().uri("/update/getProgram")
                 .retrieve().bodyToFlux(DataBuffer.class);
     }
 }

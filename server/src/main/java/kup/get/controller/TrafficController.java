@@ -1,5 +1,7 @@
 package kup.get.controller;
 
+import kup.get.entity.alfa.traffic.TrafficTeam;
+import kup.get.entity.alfa.traffic.TrafficVehicle;
 import kup.get.entity.postgres.traffic.*;
 import kup.get.service.traffic.TrafficItemService;
 import lombok.AllArgsConstructor;
@@ -15,17 +17,7 @@ import java.time.LocalDate;
 public class TrafficController {
     private final TrafficItemService trafficItemService;
 
-    @Deprecated
-    @PostMapping("/traffic/briefing")
-    Flux<TrafficPerson> getBriefing(@RequestBody Mono<LocalDate> dateMono) {
-        return dateMono.flatMapMany(date -> Flux.fromIterable(trafficItemService.getBriefingOfPeople(date)));
-    }
 
-
-    @GetMapping("/traffic/getPeopleByTeam/{id}")
-    Flux<TrafficPerson> getPeopleByTeam(@PathVariable("id") Long id) {
-        return Flux.fromIterable(trafficItemService.getTrafficPeopleByTeam(id));
-    }
 
     @GetMapping("/traffic/trafficItemType")
     Flux<TrafficItemType> getTrafficItemType() {
@@ -37,15 +29,6 @@ public class TrafficController {
         return itemType.map(trafficItemService::saveType);
     }
 
-    @PostMapping("/traffic/saveTrafficPerson")
-    Mono<TrafficPerson> saveTrafficPerson(@RequestBody Mono<TrafficPerson> person) {
-        return person.map(trafficItemService::saveTrafficPerson);
-    }
-
-    @GetMapping("/traffic/getTrafficPeople")
-    Flux<TrafficPerson> getTrafficPeople() {
-        return Flux.fromIterable(trafficItemService.getTrafficPeople());
-    }
 
     @PostMapping("/traffic/saveTrafficTeam")
     Mono<TrafficTeam> saveTrafficTeam(@RequestBody Mono<TrafficTeam> trafficTeam) {

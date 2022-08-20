@@ -1,30 +1,23 @@
 package kup.get.controller.traffic;
 
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.SelectionModel;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.AnchorPane;
-import javafx.util.converter.IntegerStringConverter;
 import kup.get.config.FX.FxmlLoader;
 import kup.get.config.FX.MyAnchorPane;
 import kup.get.config.MyTable;
 import kup.get.entity.alfa.Person;
-import kup.get.entity.traffic.TrafficPerson;
 import kup.get.entity.traffic.TrafficTeam;
 import kup.get.entity.traffic.TrafficVehicle;
+import kup.get.service.DAO.TrafficDaoService;
 import kup.get.service.Services;
 import reactor.core.publisher.Mono;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
 
 @FxmlLoader(path = "/fxml/traffic/TeamAndVehicle.fxml")
 public class TeamAndVehicleController extends MyAnchorPane {
@@ -33,25 +26,37 @@ public class TeamAndVehicleController extends MyAnchorPane {
     private AnchorPane briefingPane;
 
     @FXML
-    private TextField searchField;
+    private TextField vehicleSearchField;
+
+    @FXML
+    private TextField consolidationSearchField;
+    @FXML
+    private DatePicker dateConsolidationField;
+    @FXML
+    private TextField teamSearchField;
+    @FXML
+    private TextField peopleSearchField;
+
 
     @FXML
     private MyTable<TrafficVehicle> vehicleTable;
     @FXML
     private MyTable<TrafficTeam> teamTable;
     @FXML
-    private MyTable<TrafficPerson> trafficPeopleTable;
+    private MyTable<Person> trafficPeopleTable;
     @FXML
     private MyTable<Person> peopleTable;
 
+    private final TrafficDaoService trafficDaoService;
     private final Services services;
     private final ObservableList<Person> people = FXCollections.observableArrayList();
 
-    public TeamAndVehicleController(Services services) {
+    public TeamAndVehicleController(TrafficDaoService trafficDaoService, Services services) {
+        this.trafficDaoService = trafficDaoService;
         this.services = services;
 
         trafficPeopleTable
-                .contextMenu(myContextMenu -> myContextMenu
+                /*.contextMenu(myContextMenu -> myContextMenu
                         .item("Открепить сотрудника", event -> {
                             SelectionModel<TrafficPerson> personModel = trafficPeopleTable.getSelectionModel();
                             if (personModel != null && personModel.getSelectedItem() != null) {
@@ -65,23 +70,23 @@ public class TeamAndVehicleController extends MyAnchorPane {
                                         })
                                         .subscribe();
                             }
-                        }))
+                        }))*/
                 .addColumn(parentColumn ->
                         parentColumn.header("Водители экипажа")
                                 .childColumn(col -> col
                                         .header("Таб.№")
-                                        .cellValueFactory(p -> p.getTransientPerson().getPersonnelNumber()))
+                                        .cellValueFactory(p -> p.getPersonnelNumber()))
                                 .childColumn(col -> col
                                         .header("Фамилия")
-                                        .cellValueFactory(p -> p.getTransientPerson().getLastName()))
+                                        .cellValueFactory(p -> p.getLastName()))
                                 .childColumn(col -> col
                                         .header("Имя")
-                                        .cellValueFactory(p -> p.getTransientPerson().getFirstName()))
+                                        .cellValueFactory(p -> p.getFirstName()))
                                 .childColumn(col -> col
                                         .header("Отчество")
-                                        .cellValueFactory(p -> p.getTransientPerson().getMiddleName())));
+                                        .cellValueFactory(p -> p.getMiddleName())));
         teamTable
-                .contextMenu(cm -> cm
+                /*.contextMenu(cm -> cm
                         .item("Добавить экипаж", event -> {
                             teamTable.getItems().add(new TrafficTeam());
                             teamTable.getSelectionModel().selectLast();
@@ -104,26 +109,25 @@ public class TeamAndVehicleController extends MyAnchorPane {
                                     saveTrafficVehicle(TrafficVehicle::setTeam).accept(vehicleModel.getSelectedItem(), teamModel.getSelectedItem());
                                 }
                             }
-                        }))
+                        }))*/
                 .addColumn(parentColumn ->
                         parentColumn.header("Экипажи")
                                 .childColumn(col -> col
-                                        .header("id экипажа")
-                                        .cellValueFactory(TrafficTeam::getId)
-                                        .property(TableColumn::visibleProperty, false))
-                                .<String>childColumn(col -> col
                                         .header("№ экипажа")
-                                        .cellValueFactory(TrafficTeam::getNumber)
-                                        .editable(saveTrafficTeam(TrafficTeam::setNumber))
+                                        .cellValueFactory(TrafficTeam::getId))
+                                .<String>childColumn(col -> col
+                                        .header("Тип")
+                                        .cellValueFactory(tt -> tt.getVehicle().getModel())
+//                                        .editable(saveTrafficTeam(TrafficTeam::setNumber))
                                         .cellFactory(TextFieldTableCell.forTableColumn()))
                                 .<String>childColumn(col -> col
-                                        .header("Режим работы")
-                                        .cellValueFactory(TrafficTeam::getWorkingMode)
-                                        .editable(saveTrafficTeam(TrafficTeam::setWorkingMode))
+                                        .header("Гаражный номер")
+                                        .cellValueFactory(tt -> tt.getVehicle().getNumber())
+//                                        .editable(saveTrafficTeam(TrafficTeam::setVehicle))
                                         .cellFactory(TextFieldTableCell.forTableColumn())));
 
         vehicleTable
-                .contextMenu(cm -> cm
+                /*.contextMenu(cm -> cm
                         .item("Добавить ТС", event -> {
                             vehicleTable.getItems().add(new TrafficVehicle());
                             vehicleTable.getSelectionModel().selectLast();
@@ -142,24 +146,24 @@ public class TeamAndVehicleController extends MyAnchorPane {
                             if (model != null && model.getSelectedItem() != null) {
                                 saveTrafficVehicle(TrafficVehicle::setTeam).accept(model.getSelectedItem(), null);
                             }
-                        }))
+                        }))*/
                 .addColumn(parentColumn ->
                         parentColumn.header("Транспортные стредства")
                                 .childColumn(col -> col
                                         .header("id")
                                         .cellValueFactory(TrafficVehicle::getId)
                                         .property(TableColumn::visibleProperty, false))
-                                .<Integer>childColumn(col -> col
-                                        .header("№ ТС")
-                                        .cellValueFactory(TrafficVehicle::getNumber)
-                                        .editable(saveTrafficVehicle(TrafficVehicle::setNumber))
-                                        .cellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter())))
                                 .<String>childColumn(col -> col
                                         .header("Модель ТС")
                                         .cellValueFactory(TrafficVehicle::getModel)
-                                        .editable(saveTrafficVehicle(TrafficVehicle::setModel))
+//                                        .editable(saveTrafficVehicle(TrafficVehicle::setModel))
                                         .cellFactory(TextFieldTableCell.forTableColumn()))
-                                .childColumn(col -> col
+                                .<String>childColumn(col -> col
+                                        .header("№ ТС")
+                                        .cellValueFactory(TrafficVehicle::getNumber)
+//                                        .editable(saveTrafficVehicle(TrafficVehicle::setNumber))
+                                        .cellFactory(TextFieldTableCell.forTableColumn()))
+                                /*.childColumn(col -> col
                                         .header("id экипажа")
                                         .cellValueFactory(tv -> tv.getTeam().getId())
                                         .property(TableColumn::visibleProperty, false))
@@ -168,16 +172,16 @@ public class TeamAndVehicleController extends MyAnchorPane {
                                         .cellValueFactory(tv -> tv.getTeam().getNumber()))
                                 .<String>childColumn(col -> col
                                         .header("Режим работы")
-                                        .cellValueFactory(tv -> tv.getTeam().getWorkingMode())));
+                                        .cellValueFactory(tv -> tv.getTeam().getWorkingMode()))*/);
 
         peopleTable
                 .items(people)
-                .searchBox(searchField.textProperty(), person -> {
-                    if (searchField.getText() == null || searchField.getText().isEmpty()) {
+                .searchBox(peopleSearchField.textProperty(), person -> {
+                    if (peopleSearchField.getText() == null || peopleSearchField.getText().isEmpty()) {
                         return true;
                     }
 
-                    String lowerCaseFilter = searchField.getText().toLowerCase();
+                    String lowerCaseFilter = peopleSearchField.getText().toLowerCase();
                     if (person == null)
                         return false;
                     return person.getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
@@ -187,7 +191,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
                             || person.getDepartment().getName().toLowerCase().contains(lowerCaseFilter)
                             || person.getPosition().getName().toLowerCase().contains(lowerCaseFilter);
                 })
-                .contextMenu(cm -> cm
+                /*.contextMenu(cm -> cm
                         .item("Закрепить сотрудника", event -> {
                             SelectionModel<TrafficTeam> teamModel = teamTable.getSelectionModel();
                             if (teamModel != null && teamModel.getSelectedItem() != null) {
@@ -206,7 +210,7 @@ public class TeamAndVehicleController extends MyAnchorPane {
                                             .subscribe();
                                 }
                             }
-                        }))
+                        }))*/
                 .addColumn(parentColumn ->
                         parentColumn.header("Сотрудники")
                                 .childColumn(col -> col.header("id").cellValueFactory(Person::getId)
@@ -226,17 +230,8 @@ public class TeamAndVehicleController extends MyAnchorPane {
                 if (event.getClickCount() == 1 && (!row.isEmpty())) {
                     trafficPeopleTable.getItems().clear();
                     if (row.getItem().getTeam() != null) {
-                        services.getTrafficService()
-                                .getPeopleByTeam(row.getItem().getTeam())
-                                .doOnCancel(() -> trafficPeopleTable.refresh())
-                                .map(ti -> {
-                                    if (!people.isEmpty() && ti.getTransientPerson() == null) {
-                                        Person person = people.stream().filter(p -> p.getId().equals(ti.getPerson())).findFirst().orElse(null);
-                                        ti.setTransientPerson(person);
-                                    }
-                                    return ti;
-                                })
-                                .subscribe(trafficPeopleTable.getItems()::add);
+                        trafficPeopleTable.getItems().addAll(row.getItem().getTeam().getPeople());
+                        trafficPeopleTable.refresh();
                     }
                 }
             });
@@ -247,17 +242,10 @@ public class TeamAndVehicleController extends MyAnchorPane {
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 1 && (!row.isEmpty())) {
                     trafficPeopleTable.getItems().clear();
-                    services.getTrafficService()
-                            .getPeopleByTeam(row.getItem())
-                            .doOnCancel(() -> trafficPeopleTable.refresh())
-                            .map(ti -> {
-                                if (!people.isEmpty() && ti.getTransientPerson() == null) {
-                                    Person person = people.stream().filter(p -> p.getId().equals(ti.getPerson())).findFirst().orElse(null);
-                                    ti.setTransientPerson(person);
-                                }
-                                return ti;
-                            })
-                            .subscribe(trafficPeopleTable.getItems()::add);
+                    if (row.getItem() != null) {
+                        trafficPeopleTable.getItems().addAll(row.getItem().getPeople());
+                        trafficPeopleTable.refresh();
+                    }
                 }
             });
             return row;
@@ -265,13 +253,13 @@ public class TeamAndVehicleController extends MyAnchorPane {
     }
 
 
-    private <T> BiConsumer<TrafficTeam, T> saveTrafficTeam(BiConsumer<TrafficTeam, T> consumer) {
+    /*private <T> BiConsumer<TrafficTeam, T> saveTrafficTeam(BiConsumer<TrafficTeam, T> consumer) {
         return consumer.andThen((trafficTeam, t) ->
                 services.getTrafficService().saveTrafficTeam(trafficTeam)
                         .onErrorResume(this::error)
                         .doOnSuccess(tt -> {
                             trafficTeam.setId(tt.getId());
-                            trafficTeam.setWorkingMode(tt.getWorkingMode());
+                            trafficTeam.setVehicle(tt.getVehicle());
                             trafficTeam.setNumber(tt.getNumber());
                             teamTable.refresh();
                         })
@@ -292,10 +280,10 @@ public class TeamAndVehicleController extends MyAnchorPane {
                             vehicleTable.refresh();
                         })
                         .subscribe());
-    }
+    }*/
 
     private <t> Mono<t> error(Throwable throwable) {
-        Platform.runLater(() -> createAlert("Ошибка", "Не удалось удалить элемент\n" + throwable.getLocalizedMessage()));
+        createAlert("Ошибка", "Не удалось удалить элемент\n" + throwable.getLocalizedMessage());
         return Mono.empty();
     }
 

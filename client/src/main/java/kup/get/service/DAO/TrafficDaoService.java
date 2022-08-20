@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class TrafficDaoService implements MyTrafficService {
     private final TrafficItemRepository itemRepository;
-    private final TrafficPersonRepository personRepository;
     private final TrafficItemTypeRepository typeRepository;
     private final TrafficTeamRepository teamRepository;
     private final TrafficVehicleRepository vehicleRepository;
@@ -55,20 +54,8 @@ public class TrafficDaoService implements MyTrafficService {
         return Mono.empty();
     }
 
-    public Mono<TrafficPerson> saveTrafficPerson(TrafficPerson trafficPerson) {
-        return Mono.just(trafficPerson).map(personRepository::save);
-    }
-
-    public Flux<TrafficPerson> getTrafficPeople() {
-        return Flux.fromIterable(personRepository.findAll());
-    }
-
     public Flux<TrafficItem> getTrafficItems() {
         return Flux.fromIterable(itemRepository.findAll());
-    }
-
-    public Flux<TrafficPerson> getPeopleByTeam(TrafficTeam team) {
-        return Flux.fromIterable(personRepository.findAllByTeamId(team.getId()));
     }
 
     public Mono<TrafficItem> saveTrafficItem(TrafficItem trafficItem) {
@@ -87,7 +74,7 @@ public class TrafficDaoService implements MyTrafficService {
     }
 
     public Flux<TrafficVehicle> saveTrafficVehicles(List<TrafficVehicle> vehicles) {
-        teamRepository.saveAll(vehicles.stream().map(TrafficVehicle::getTeam).filter(Objects::nonNull).collect(Collectors.toList()));
+//        teamRepository.saveAll(vehicles.stream().map(TrafficVehicle::getTeam).filter(Objects::nonNull).collect(Collectors.toList()));
         return Flux.fromIterable(vehicleRepository.saveAll(vehicles));
     }
 

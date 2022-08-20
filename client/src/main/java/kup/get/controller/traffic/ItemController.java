@@ -23,22 +23,12 @@ import kup.get.entity.traffic.TrafficVehicle;
 import kup.get.service.Services;
 import kup.get.service.other.SheetService;
 import lombok.AllArgsConstructor;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
 
-import java.awt.*;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @FxmlLoader(path = "/fxml/traffic/items.fxml")
 public class ItemController extends MyAnchorPane {
@@ -127,7 +117,7 @@ public class ItemController extends MyAnchorPane {
                         }
                         case PERSON: {
                             itemTable.getColumns().forEach(column -> column.setVisible(column.getText().equals(owner.title) || column.getText().equals(nameItemColumn)));
-                            return item.getTransientPerson() != null || item.getPerson() != null;
+                            return item.getPerson() != null;
                         }
                     }
                     return true;
@@ -158,15 +148,13 @@ public class ItemController extends MyAnchorPane {
                     String lowerCaseFilter = searchItemField.getText().toLowerCase();
                     if (item == null)
                         return false;
-                    if (item.getTransientPerson() != null &&
-                            (item.getTransientPerson().getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
-                                    || item.getTransientPerson().getLastName().toLowerCase().contains(lowerCaseFilter)
-                                    || item.getTransientPerson().getFirstName().toLowerCase().contains(lowerCaseFilter)
-                                    || item.getTransientPerson().getMiddleName().toLowerCase().contains(lowerCaseFilter)))
+                    if (item.getPerson() != null &&
+                            (item.getPerson().getPersonnelNumber().toLowerCase().contains(lowerCaseFilter)
+                                    || item.getPerson().getLastName().toLowerCase().contains(lowerCaseFilter)
+                                    || item.getPerson().getFirstName().toLowerCase().contains(lowerCaseFilter)
+                                    || item.getPerson().getMiddleName().toLowerCase().contains(lowerCaseFilter)))
                         return true;
-                    if (item.getTeam() != null &&
-                            (item.getTeam().getNumber().toLowerCase().contains(lowerCaseFilter)
-                                    || item.getTeam().getWorkingMode().toLowerCase().contains(lowerCaseFilter)))
+                    if (item.getTeam() != null && item.getTeam().getId().toString().toLowerCase().contains(lowerCaseFilter))
                         return true;
                     if (item.getVehicle() != null && (
                             String.valueOf(item.getVehicle().getNumber()).toLowerCase().contains(lowerCaseFilter)
@@ -217,16 +205,15 @@ public class ItemController extends MyAnchorPane {
                 .addColumn(itemColumn -> itemColumn
                         .header(Owner.PERSON.title)
                         .property(TableColumnBase::visibleProperty, false)
-                        .childColumn(col -> col.header("Таб. №").cellValueFactory(ti -> ti.getTransientPerson().getPersonnelNumber()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Фамилия").cellValueFactory(ti -> ti.getTransientPerson().getLastName()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Имя").cellValueFactory(ti -> ti.getTransientPerson().getFirstName()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Отчество").cellValueFactory(ti -> ti.getTransientPerson().getMiddleName()).property(TableColumnBase::visibleProperty, false)))
+                        .childColumn(col -> col.header("Таб. №").cellValueFactory(ti -> ti.getPerson().getPersonnelNumber()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Фамилия").cellValueFactory(ti -> ti.getPerson().getLastName()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Имя").cellValueFactory(ti -> ti.getPerson().getFirstName()).property(TableColumnBase::visibleProperty, false))
+                        .childColumn(col -> col.header("Отчество").cellValueFactory(ti -> ti.getPerson().getMiddleName()).property(TableColumnBase::visibleProperty, false)))
                 .addColumn(itemColumn -> itemColumn
                         .header(Owner.TEAM.title)
                         .property(TableColumnBase::visibleProperty, false)
-                        .childColumn(col -> col.header("id").cellValueFactory(ti -> ti.getTeam().getId()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Номер экипажа").cellValueFactory(ti -> ti.getTeam().getNumber()).property(TableColumnBase::visibleProperty, false))
-                        .childColumn(col -> col.header("Режим работы").cellValueFactory(ti -> ti.getTeam().getWorkingMode()).property(TableColumnBase::visibleProperty, false)))
+                        .childColumn(col -> col.header("Номер экипажа").cellValueFactory(ti -> ti.getTeam().getId()))
+                        .childColumn(col -> col.header("Гаражный номер").cellValueFactory(ti -> ti.getTeam().getId())))
                 .addColumn(itemColumn -> itemColumn
                         .header(Owner.VEHICLE.title)
                         .property(TableColumnBase::visibleProperty, false)
@@ -276,11 +263,10 @@ public class ItemController extends MyAnchorPane {
                     String lowerCaseFilter = searchTeamField.getText().toLowerCase();
                     if (team == null)
                         return false;
-                    return team.getNumber().toLowerCase().contains(lowerCaseFilter) || team.getWorkingMode().toLowerCase().contains(lowerCaseFilter);
+                    return team.getId().toString().toLowerCase().contains(lowerCaseFilter);
                 })
-                .addColumn(col -> col.header("id").cellValueFactory(TrafficTeam::getId).property(TableColumnBase::visibleProperty, false))
-                .addColumn(col -> col.header("Номер экипажа").cellValueFactory(TrafficTeam::getNumber))
-                .addColumn(col -> col.header("Режим работы").cellValueFactory(TrafficTeam::getWorkingMode));
+                .addColumn(col -> col.header("Номер экипажа").cellValueFactory(TrafficTeam::getId))
+                .addColumn(col -> col.header("Гаражный номер").cellValueFactory(tt -> tt.getVehicle().getNumber()));
         vehicleTable
                 .items(vehicles)
                 .searchBox(searchVehicleField.textProperty(), team -> {
@@ -292,14 +278,12 @@ public class ItemController extends MyAnchorPane {
                         return false;
                     return String.valueOf(team.getNumber()).toLowerCase().contains(lowerCaseFilter)
                             || team.getModel().toLowerCase().contains(lowerCaseFilter)
-                            || team.getTeam().getNumber().toLowerCase().contains(lowerCaseFilter)
-                            || team.getTeam().getWorkingMode().toLowerCase().contains(lowerCaseFilter);
+                            || team.getTeam().getId().toString().toLowerCase().contains(lowerCaseFilter);
                 })
                 .addColumn(col -> col.header("id").cellValueFactory(TrafficVehicle::getId).property(TableColumnBase::visibleProperty, false))
                 .addColumn(col -> col.header("Номер ТС").cellValueFactory(TrafficVehicle::getNumber))
                 .addColumn(col -> col.header("Модель ТС").cellValueFactory(TrafficVehicle::getModel))
-                .addColumn(col -> col.header("Номер экипажа").cellValueFactory(tv -> tv.getTeam().getNumber()))
-                .addColumn(col -> col.header("Режим работы").cellValueFactory(tv -> tv.getTeam().getWorkingMode()));
+                .addColumn(col -> col.header("Номер экипажа").cellValueFactory(tv -> tv.getTeam().getId()));
 
         addButton.setOnAction(event -> {
             SelectionModel<?> model = null;
@@ -308,8 +292,7 @@ public class ItemController extends MyAnchorPane {
             if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Водители")) {
                 model = peopleTable.getSelectionModel();
                 Person person = (Person) model.getSelectedItem();
-                item.setTransientPerson(person);
-                item.setPerson(person.getId());
+                item.setPerson(person);
             } else if (tabPane.getSelectionModel().getSelectedItem().getText().equals("Экипажи")) {
                 model = teamTable.getSelectionModel();
                 item.setTeam((TrafficTeam) model.getSelectedItem());
@@ -389,15 +372,7 @@ public class ItemController extends MyAnchorPane {
     @Override
     public void fillData() {
         services.getPersonService().getPeople().subscribe(people::add);
-        services.getTrafficService().getTrafficItems()
-                .doOnComplete(() -> itemTable.refresh())
-                .map(ti -> {
-                    if (!people.isEmpty() && ti.getTransientPerson() == null) {
-                        Person person = people.stream().filter(p -> p.getId().equals(ti.getPerson())).findFirst().orElse(null);
-                        ti.setTransientPerson(person);
-                    }
-                    return ti;
-                }).subscribe(items::add);
+        services.getTrafficService().getTrafficItems().doOnComplete(() -> itemTable.refresh()).subscribe(items::add);
         services.getTrafficService().getItemsType().subscribe(type -> {
             itemTypeComboBox.getItems().add(type);
             if (type.isStatus())
